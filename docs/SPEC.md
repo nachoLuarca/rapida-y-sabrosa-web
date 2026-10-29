@@ -42,8 +42,9 @@ Es una sola página (sin router), en este orden:
    - Productos con variantes (jugos 500 cc / 1 litro): un botón por variante con su precio.
    - Soporte para foto opcional por producto (`image`); sin foto, la fila se ve completa igual.
    - La categoría "Arma tu pizza" es un bloque destacado con botón "Elegir ingredientes" que abre el modal.
-   - Buscador: filtra por nombre y descripción, sin distinguir tildes ni mayúsculas, y muestra cuántos
-     resultados hay o un mensaje útil si no hay ninguno.
+   - Buscador: filtra por nombre y descripción del producto y por nombre de su categoría, sin distinguir
+     tildes ni mayúsculas; cada palabra buscada debe aparecer en alguno de esos textos ("jugo mango" encuentra
+     el jugo de mango). Muestra cuántos resultados hay o un mensaje útil si no hay ninguno.
 4. **Despacho**: zonas agrupadas por costo, formas de pago, retiro en local y horario (solo si está definido).
 5. **Footer**: marca, ubicación, Instagram.
 6. **Barra flotante en celular**: con productos en el pedido, botón fijo abajo "Ver pedido" con cantidad y subtotal.

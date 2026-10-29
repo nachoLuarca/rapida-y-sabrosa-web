@@ -20,14 +20,15 @@ export function Menu({ onChooseIngredients }: MenuProps) {
         .map((category) => {
           const isBuildPizza = category.id === buildPizza.productId
           const matches = isBuildPizza
-            ? matchesSearch(query, buildPizza.name, buildPizza.description, category.description)
+            ? matchesSearch(query, buildPizza.name, buildPizza.description, category.name, category.description)
             : false
           return {
             category,
             isBuildPizza,
             products: products.filter(
               (product) =>
-                product.categoryId === category.id && matchesSearch(query, product.name, product.description),
+                product.categoryId === category.id &&
+                matchesSearch(query, product.name, product.description, category.name),
             ),
             visible: isBuildPizza ? matches : undefined,
           }

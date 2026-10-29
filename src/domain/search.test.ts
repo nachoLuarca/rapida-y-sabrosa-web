@@ -23,6 +23,12 @@ describe('matchesSearch', () => {
     expect(matchesSearch('mechada pollo', name, description)).toBe(false)
   })
 
+  it('las palabras pueden estar repartidas entre producto y categoría', () => {
+    expect(matchesSearch('JUGO', 'Mango', undefined, 'Jugos naturales')).toBe(true)
+    expect(matchesSearch('jugo mango', 'Mango', undefined, 'Jugos naturales')).toBe(true)
+    expect(matchesSearch('jugo mango', 'Piña', undefined, 'Jugos naturales')).toBe(false)
+  })
+
   it('una búsqueda vacía coincide con todo y acepta textos opcionales', () => {
     expect(matchesSearch('   ', name)).toBe(true)
     expect(matchesSearch('coca', 'Coca-Cola', undefined)).toBe(true)

@@ -56,6 +56,22 @@ describe('App', () => {
     expect(within(menu).getAllByRole('heading', { level: 4 })).toHaveLength(expected.length)
   })
 
+  it('el buscador también busca en el nombre de la categoría', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    const search = screen.getByRole('searchbox', { name: 'Buscar en la carta' })
+    const menu = screen.getByRole('region', { name: 'La carta' })
+    const juices = products.filter((product) => product.categoryId === 'jugos').map((product) => product.name)
+
+    await user.type(search, 'jugo')
+    expect(within(menu).getAllByRole('heading', { level: 4 }).map((h) => h.textContent)).toEqual(juices)
+    expect(within(menu).getByRole('status')).toHaveTextContent(`${juices.length} resultados para “jugo”`)
+
+    await user.type(search, ' mango')
+    expect(within(menu).getAllByRole('heading', { level: 4 }).map((h) => h.textContent)).toEqual(['Mango'])
+    expect(within(menu).getByRole('status')).toHaveTextContent('1 resultado para “jugo mango”')
+  })
+
   it('sin resultados lo dice y permite volver a la carta completa', async () => {
     const user = userEvent.setup()
     render(<App />)
