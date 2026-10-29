@@ -1,0 +1,141 @@
+// Copia exacta de docs/data/ingredients.json. Si cambia la carta, actualiza ambos (un test lo verifica).
+// Precios provisorios: pendientes de confirmar con el local (docs/SPEC.md).
+import type { Ingredient } from '../domain/types'
+
+export const ingredients: Ingredient[] = [
+  {
+    id: 'aceitunas',
+    name: 'Aceitunas',
+    price: 1500,
+  },
+  {
+    id: 'alcachofa',
+    name: 'Alcachofa',
+    price: 1500,
+  },
+  {
+    id: 'camaron-ecuatoriano',
+    name: 'Camarón ecuatoriano',
+    price: 2500,
+  },
+  {
+    id: 'carne-mechada',
+    name: 'Carne mechada',
+    price: 2500,
+  },
+  {
+    id: 'cebolla-caramelizada',
+    name: 'Cebolla caramelizada',
+    price: 1500,
+  },
+  {
+    id: 'cebolla-en-aros',
+    name: 'Cebolla en aros',
+    price: 1500,
+  },
+  {
+    id: 'cebolla-morada',
+    name: 'Cebolla morada',
+    price: 1500,
+  },
+  {
+    id: 'champinon',
+    name: 'Champiñón',
+    price: 1500,
+  },
+  {
+    id: 'choclo',
+    name: 'Choclo',
+    price: 1500,
+  },
+  {
+    id: 'filete-de-res',
+    name: 'Filete de res',
+    price: 2500,
+  },
+  {
+    id: 'jalapeno',
+    name: 'Jalapeño',
+    price: 1500,
+  },
+  {
+    id: 'jamon-pierna',
+    name: 'Jamón pierna',
+    price: 1500,
+  },
+  {
+    id: 'jamon-serrano',
+    name: 'Jamón serrano',
+    price: 2500,
+  },
+  {
+    id: 'palmito',
+    name: 'Palmito',
+    price: 1500,
+  },
+  {
+    id: 'palta',
+    name: 'Palta',
+    price: 1500,
+  },
+  {
+    id: 'pepperoni',
+    name: 'Pepperoni',
+    price: 1500,
+  },
+  {
+    id: 'pimenton',
+    name: 'Pimentón',
+    price: 1500,
+  },
+  {
+    id: 'pina',
+    name: 'Piña',
+    price: 1500,
+  },
+  {
+    id: 'pollo',
+    name: 'Pollo',
+    price: 1500,
+  },
+  {
+    id: 'queso-azul',
+    name: 'Queso azul',
+    price: 1500,
+  },
+  {
+    id: 'queso-cheddar',
+    name: 'Queso cheddar',
+    price: 1500,
+  },
+  {
+    id: 'queso-crema',
+    name: 'Queso crema',
+    price: 1500,
+  },
+  {
+    id: 'rucula',
+    name: 'Rúcula',
+    price: 1500,
+  },
+  {
+    id: 'salame',
+    name: 'Salame',
+    price: 1500,
+  },
+  {
+    id: 'salchicha-surena',
+    name: 'Salchicha sureña',
+    price: 1500,
+  },
+  {
+    id: 'tocino',
+    name: 'Tocino',
+    price: 1500,
+  },
+  {
+    id: 'tomate',
+    name: 'Tomate',
+    price: 1500,
+  },
+]

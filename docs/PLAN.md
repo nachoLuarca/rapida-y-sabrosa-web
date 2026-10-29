@@ -2,13 +2,20 @@
 
 Cada fase termina con: lint + typecheck + tests + build sin errores, revisión en el navegador (escritorio y 390 px)
 y un resumen de lo hecho. **Después de cada fase, detente y espera mi revisión antes de seguir.**
-Desde la Fase 1, cada fase va en su propia rama y el merge a `main` es con `--no-ff`, solo cuando yo lo apruebe.
+
+Flujo de git:
+- Cada fase va en su propia rama `feature/fase-N-<nombre>`, creada desde lo último de `main`
+  (`git switch main` y luego `git switch -c <rama>`). Nunca hay commits directos en `main`.
+- Commits pequeños con Conventional Commits en español, autor `nachoLuarca`.
+- El resumen final incluye qué se hizo, el nombre de la rama y `git log --oneline main..<rama>`.
+- Claude Code nunca hace push, merge, tags ni borra ramas: eso lo hago yo a mano.
+- Nada de `--force`, `reset`, `rebase` ni reescribir historia.
 
 Copia el prompt de cada fase tal cual en Claude Code.
 
 ---
 
-## Fase 0 — Base del proyecto (en `main`)
+## Fase 0 — Base del proyecto (rama `feature/fase-0-base`)
 
 ```
 Lee CLAUDE.md y docs/ completo. Ejecuta la Fase 0 de docs/PLAN.md:
@@ -21,13 +28,14 @@ Lee CLAUDE.md y docs/ completo. Ejecuta la Fase 0 de docs/PLAN.md:
   VITE_*, .env.example y .env.demo (VITE_DEMO=true). Agrega dist-demo a .gitignore.
 - index.html con los metadatos de docs/SPEC.md y un favicon SVG propio.
 - App mínima que muestre el header rojo con el nombre en la tipografía display, para comprobar tokens y fuentes.
-- Si la carpeta no es repo, haz git init -b main. Configura y verifica git config (nachoLuarca) y haz commits pequeños en main, partiendo por los docs existentes.
+- Si la carpeta no es repo, haz git init -b main. Configura y verifica git config (nachoLuarca) y haz commits
+  pequeños en la rama feature/fase-0-base, partiendo por los docs existentes.
 ```
 
-## Fase 1 — Dominio y datos (rama `feat/dominio`)
+## Fase 1 — Dominio y datos (rama `feature/fase-1-dominio`)
 
 ```
-Fase 1 de docs/PLAN.md, en la rama feat/dominio:
+Fase 1 de docs/PLAN.md, en la rama feature/fase-1-dominio:
 - src/domain/types.ts con los tipos de la especificación.
 - src/data/menu.ts, zones.ts e ingredients.ts tipados, copiando exactamente docs/data/*.json.
 - src/domain/format.ts: formatClp, normalizeChileanMobile, formatChileanMobile.
@@ -39,10 +47,10 @@ Fase 1 de docs/PLAN.md, en la rama feat/dominio:
 Sin UI en esta fase.
 ```
 
-## Fase 2 — Landing y carta (rama `feat/carta`)
+## Fase 2 — Landing y carta (rama `feature/fase-2-carta`)
 
 ```
-Fase 2 de docs/PLAN.md, en la rama feat/carta:
+Fase 2 de docs/PLAN.md, en la rama feature/fase-2-carta:
 - Store del carrito (contexto + useReducer + persistencia en localStorage con try/catch). Separa el contexto
   y el hook useCart del componente Provider para que el lint de fast refresh no reclame.
 - Header, Hero (con ilustración SVG propia de pizza), sección La carta (barra fija con buscador y chips con la
@@ -54,10 +62,10 @@ Fase 2 de docs/PLAN.md, en la rama feat/carta:
   sin distinguir tildes.
 ```
 
-## Fase 3 — Pedido, Arma tu pizza y checkout (rama `feat/pedido`)
+## Fase 3 — Pedido, Arma tu pizza y checkout (rama `feature/fase-3-pedido`)
 
 ```
-Fase 3 de docs/PLAN.md, en la rama feat/pedido:
+Fase 3 de docs/PLAN.md, en la rama feature/fase-3-pedido:
 - Panel del pedido con <dialog> desde la derecha, estado vacío, líneas con control de cantidad y subtotal.
 - Barra flotante del pedido en celular.
 - Modal Arma tu pizza con la regla de precio en vivo, que agrega al pedido y abre el carrito.
@@ -67,10 +75,10 @@ Fase 3 de docs/PLAN.md, en la rama feat/pedido:
   retiro, y que en modo demo no se llame a window.open.
 ```
 
-## Fase 4 — Pulido y entrega (rama `chore/pulido`)
+## Fase 4 — Pulido y entrega (rama `feature/fase-4-pulido`)
 
 ```
-Fase 4 de docs/PLAN.md, en la rama chore/pulido:
+Fase 4 de docs/PLAN.md, en la rama feature/fase-4-pulido:
 - Revisión de accesibilidad: teclado completo, Esc cierra modales, foco visible, contraste AA, aria correctos.
 - Lighthouse en celular con las metas de docs/SPEC.md; corrige lo que falte.
 - README.md para el cliente y para mí: cómo correr, cómo cambiar precios/zonas/horario/número, cómo agregar

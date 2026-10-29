@@ -1,6 +1,8 @@
 // Datos del local. Lo que el local podría cambiar se edita aquí, nunca dentro de un componente.
 // Lo marcado como `null` está pendiente de confirmar con el local (ver docs/SPEC.md); no se inventa.
 
+import type { PaymentMethod } from '../domain/types'
+
 /** Número público del local, usado si VITE_WHATSAPP_NUMBER falta o no es válido. */
 const DEFAULT_WHATSAPP_NUMBER = '56974314602'
 
@@ -34,5 +36,7 @@ export const business = {
   openingHours: null as OpeningHours[] | null,
   /** Dirección para retiro. Pendiente de confirmar con el local. */
   pickupAddress: null as string | null,
+  /** Se paga al recibir o al retirar. */
+  paymentMethods: ['Efectivo', 'Transferencia', 'Tarjeta'] as PaymentMethod[],
   isDemo: parseDemoFlag(import.meta.env.VITE_DEMO),
 } as const
