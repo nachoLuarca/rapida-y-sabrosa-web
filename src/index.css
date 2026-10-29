@@ -17,6 +17,23 @@
 
   --font-display: 'Barlow Condensed', 'Arial Narrow', sans-serif;
   --font-sans: 'Figtree', ui-sans-serif, system-ui, sans-serif;
+
+  /* Única animación de entrada: la pizza del hero gira y se asienta */
+  --animate-pizza-in: pizza-in 900ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+
+  @keyframes pizza-in {
+    0% {
+      opacity: 0;
+      transform: rotate(-140deg) scale(0.7);
+    }
+    70% {
+      opacity: 1;
+      transform: rotate(8deg) scale(1.02);
+    }
+    100% {
+      transform: rotate(0) scale(1);
+    }
+  }
 }
 
 /* Titulares: Barlow Condensed 900 itálica, en mayúsculas */
@@ -31,6 +48,16 @@
 @layer base {
   html {
     -webkit-text-size-adjust: 100%;
+    /* Header (4rem) + barra de la carta, para que los anclajes no queden tapados */
+    scroll-padding-top: 11.5rem;
+
+    @media (width >= 48rem) {
+      scroll-padding-top: 9.5rem;
+    }
+
+    @media (prefers-reduced-motion: no-preference) {
+      scroll-behavior: smooth;
+    }
   }
 
   body {
