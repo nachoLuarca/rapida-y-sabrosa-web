@@ -16,8 +16,15 @@ export function orderTotals(lines: CartLine[], fulfillment: Fulfillment): OrderT
   return { subtotal, deliveryFee, total: subtotal + deliveryFee }
 }
 
-/** Deja el texto del cliente en una sola línea para no romper el formato del mensaje. */
-const oneLine = (text: string) => text.replace(/\s+/g, ' ').trim()
+/**
+ * Limpia lo que escribe el cliente: quita los caracteres de formato de WhatsApp (* _ ~ `)
+ * y lo deja en una sola línea, para que solo la app decida el formato del mensaje.
+ */
+const customerText = (text: string) =>
+  text
+    .replace(/[*_~`]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
 
 function lineText(line: CartLine): string[] {
   const name = line.variantLabel ? `${line.name} (${line.variantLabel})` : line.name
@@ -36,7 +43,7 @@ function lineText(line: CartLine): string[] {
 export function buildOrderMessage(lines: CartLine[], order: OrderDetails): string {
   const { fulfillment } = order
   const totals = orderTotals(lines, fulfillment)
-  const comment = oneLine(order.comment ?? '')
+  const comment = customerText(order.comment ?? '')
 
   const blocks: string[][] = [
     [`*Nuevo pedido — ${business.name}*`],
@@ -48,11 +55,11 @@ export function buildOrderMessage(lines: CartLine[], order: OrderDetails): strin
     ],
     [
       ...(fulfillment.type === 'delivery'
-        ? [`*Despacho* a ${fulfillment.zone.name}`, `Dirección: ${oneLine(fulfillment.address)}`]
+        ? [`*Despacho* a ${fulfillment.zone.name}`, `Dirección: ${customerText(fulfillment.address)}`]
         : ['*Retiro en local*']),
       `Pago: ${order.payment}`,
     ],
-    [`Cliente: ${oneLine(order.customerName)}`, `Teléfono: ${formatChileanMobile(order.phone)}`],
+    [`Cliente: ${customerText(order.customerName)}`, `Teléfono: ${formatChileanMobile(order.phone)}`],
   ]
   if (comment) blocks.push([`Comentario: ${comment}`])
 

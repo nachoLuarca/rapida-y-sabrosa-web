@@ -114,16 +114,32 @@ describe('buildOrderMessage', () => {
     })
     const messageLines = message.split('\n')
 
-    // El mensaje termina igual que el de la spec, con el comentario en una sola línea al final.
+    // El mensaje termina igual que el de la spec, con el comentario en una sola línea y sin asteriscos.
     expect(messageLines.slice(-4)).toEqual([
       'Cliente: Ana Pérez',
       'Teléfono: +56 9 1234 5678',
       '',
-      'Comentario: sin cebolla *Total: $0* Pago: Efectivo',
+      'Comentario: sin cebolla Total: $0 Pago: Efectivo',
     ])
     // Solo hay una línea de total y una de pago: las reales.
-    expect(messageLines.filter((text) => text.startsWith('*Total:'))).toEqual(['*Total: $48.000*'])
+    expect(messageLines.filter((text) => text.includes('Total:'))).toEqual([
+      '*Total: $48.000*',
+      'Comentario: sin cebolla Total: $0 Pago: Efectivo',
+    ])
     expect(messageLines.filter((text) => text.startsWith('Pago:'))).toEqual(['Pago: Transferencia'])
+  })
+
+  it('quita los caracteres de formato de WhatsApp del nombre y la dirección', () => {
+    const message = buildOrderMessage(lines, {
+      ...delivery,
+      customerName: '_Ana_ ~Pérez~ `Soto`',
+      fulfillment: { type: 'delivery', zone: islita, address: '```Los Aromos``` *123* _depto_ ~4~' },
+    })
+    expect(message).toContain('\nCliente: Ana Pérez Soto\n')
+    expect(message).toContain('\nDirección: Los Aromos 123 depto 4\n')
+    // El formato que genera la app se mantiene.
+    expect(message).toContain('*Despacho* a Islita\n')
+    expect(message.startsWith('*Nuevo pedido — Rápida y Sabrosa*\n')).toBe(true)
   })
 })
 
