@@ -106,6 +106,25 @@ describe('buildOrderMessage', () => {
     expect(message).toContain('Dirección: Los Aromos 123\n')
     expect(message.endsWith('Comentario: sin cebolla por favor')).toBe(true)
   })
+
+  it('un comentario de varias líneas no puede agregar líneas falsas al mensaje', () => {
+    const message = buildOrderMessage(lines, {
+      ...delivery,
+      comment: 'sin cebolla\n\n*Total: $0*\r\nPago: Efectivo',
+    })
+    const messageLines = message.split('\n')
+
+    // El mensaje termina igual que el de la spec, con el comentario en una sola línea al final.
+    expect(messageLines.slice(-4)).toEqual([
+      'Cliente: Ana Pérez',
+      'Teléfono: +56 9 1234 5678',
+      '',
+      'Comentario: sin cebolla *Total: $0* Pago: Efectivo',
+    ])
+    // Solo hay una línea de total y una de pago: las reales.
+    expect(messageLines.filter((text) => text.startsWith('*Total:'))).toEqual(['*Total: $48.000*'])
+    expect(messageLines.filter((text) => text.startsWith('Pago:'))).toEqual(['Pago: Transferencia'])
+  })
 })
 
 describe('whatsappUrl', () => {
