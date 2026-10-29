@@ -1,0 +1,55 @@
+@import 'tailwindcss';
+
+@theme {
+  /* Marca (docs/DESIGN.md) */
+  --color-rojo: #d9141b;
+  --color-rojo-oscuro: #a00e13;
+  --color-queso: #ffc72c;
+  --color-queso-claro: #fff3cc;
+  --color-carbon: #1c1917;
+  --color-tinta: #57534e;
+  --color-linea: #e7e2de;
+  --color-fondo: #f7f5f4;
+
+  /* Solo para el botón de enviar por WhatsApp */
+  --color-whatsapp: #1f8f4e;
+  --color-whatsapp-oscuro: #17703c;
+
+  --font-display: 'Barlow Condensed', 'Arial Narrow', sans-serif;
+  --font-sans: 'Figtree', ui-sans-serif, system-ui, sans-serif;
+}
+
+/* Titulares: Barlow Condensed 900 itálica, en mayúsculas */
+@utility display {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-style: italic;
+  text-transform: uppercase;
+  line-height: 0.88;
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    @apply bg-white font-sans text-carbon antialiased;
+  }
+
+  :focus-visible {
+    outline: 3px solid var(--color-queso);
+    outline-offset: 2px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
