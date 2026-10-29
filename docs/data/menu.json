@@ -1,0 +1,737 @@
+{
+  "categories": [
+    {
+      "id": "pizzas-carnes",
+      "name": "Pizzas de mechada y charcutería"
+    },
+    {
+      "id": "pizzas-pollo-filete",
+      "name": "Pizzas de pollo y filete"
+    },
+    {
+      "id": "pizzas-veggie-camaron",
+      "name": "Pizzas vegetarianas y con camarón"
+    },
+    {
+      "id": "arma-tu-pizza",
+      "name": "Arma tu pizza",
+      "description": "Elige tus ingredientes. Los 3 primeros van incluidos en la promoción."
+    },
+    {
+      "id": "lasanas",
+      "name": "Lasañas"
+    },
+    {
+      "id": "hamburguesas",
+      "name": "Hamburguesas",
+      "description": "Pan brioche casero, 200 g de hamburguesa casera de vacuno y nuestras papas fritas."
+    },
+    {
+      "id": "platos",
+      "name": "Platos"
+    },
+    {
+      "id": "bebidas",
+      "name": "Bebidas"
+    },
+    {
+      "id": "jugos",
+      "name": "Jugos naturales",
+      "description": "Botella de 500 cc o de 1 litro."
+    }
+  ],
+  "products": [
+    {
+      "id": "california",
+      "categoryId": "pizzas-carnes",
+      "name": "California",
+      "description": "Salame, pepperoni y aceitunas.",
+      "price": 13000
+    },
+    {
+      "id": "alemana",
+      "categoryId": "pizzas-carnes",
+      "name": "Alemana",
+      "description": "Pepperoni, tocino y champiñones.",
+      "price": 13000
+    },
+    {
+      "id": "napolitana",
+      "categoryId": "pizzas-carnes",
+      "name": "Napolitana",
+      "description": "Tomate, jamón pierna, aceituna negra, mozzarella y salsa de tomate.",
+      "price": 13000
+    },
+    {
+      "id": "suprema",
+      "categoryId": "pizzas-carnes",
+      "name": "Suprema",
+      "description": "Carne mechada, papas fritas artesanales, salsa de queso, mozzarella y salsa de tomate.",
+      "price": 13000
+    },
+    {
+      "id": "itachi",
+      "categoryId": "pizzas-carnes",
+      "name": "Itachi",
+      "description": "Carne mechada, queso cheddar, salchichas sureñas, mozzarella y salsa de tomate.",
+      "price": 13000
+    },
+    {
+      "id": "clasica-salame",
+      "categoryId": "pizzas-carnes",
+      "name": "Clásica salame",
+      "description": "Salame, mozzarella y salsa de tomate.",
+      "price": 13000
+    },
+    {
+      "id": "cuatro-quesos",
+      "categoryId": "pizzas-carnes",
+      "name": "Cuatro quesos",
+      "description": "Cheddar, mozzarella, queso azul, queso crema y salsa de tomate.",
+      "price": 13000
+    },
+    {
+      "id": "so-good",
+      "categoryId": "pizzas-carnes",
+      "name": "So Good",
+      "description": "Cebolla pluma, carne mechada, queso cheddar, salsa BBQ, mozzarella y salsa de tomate.",
+      "price": 13000
+    },
+    {
+      "id": "jamon-queso",
+      "categoryId": "pizzas-carnes",
+      "name": "Jamón queso",
+      "description": "Jamón pierna, mozzarella y salsa de tomate.",
+      "price": 13000
+    },
+    {
+      "id": "mechada-champinon",
+      "categoryId": "pizzas-carnes",
+      "name": "Mechada champiñón",
+      "description": "Champiñón, carne mechada, mozzarella y salsa de tomate.",
+      "price": 13000
+    },
+    {
+      "id": "mechada-palta",
+      "categoryId": "pizzas-carnes",
+      "name": "Mechada palta",
+      "description": "Cebolla en aros, carne mechada, mozzarella y salsa de tomate.",
+      "price": 13000
+    },
+    {
+      "id": "clasica-pepperoni",
+      "categoryId": "pizzas-carnes",
+      "name": "Clásica pepperoni",
+      "description": "Pepperoni, mozzarella y salsa de tomate.",
+      "price": 13000
+    },
+    {
+      "id": "caprichosa",
+      "categoryId": "pizzas-carnes",
+      "name": "Caprichosa",
+      "description": "Cebolla caramelizada, carne mechada, queso azul, mozzarella y salsa de tomate.",
+      "price": 13000
+    },
+    {
+      "id": "jalisco",
+      "categoryId": "pizzas-carnes",
+      "name": "Jalisco",
+      "description": "Pimentón, queso cheddar, carne mechada, jalapeño, mozzarella y salsa de tomate.",
+      "price": 13000
+    },
+    {
+      "id": "mechada-salame",
+      "categoryId": "pizzas-carnes",
+      "name": "Mechada salame",
+      "description": "Choclo, salame, carne mechada, mozzarella y salsa de tomate.",
+      "price": 13000
+    },
+    {
+      "id": "cuatro-carnes-bbq",
+      "categoryId": "pizzas-carnes",
+      "name": "Cuatro carnes BBQ",
+      "description": "Filete de res en salsa BBQ, carne mechada, pollo en salsa BBQ, tocino, mozzarella y salsa de tomate.",
+      "price": 13000
+    },
+    {
+      "id": "pizza-kids",
+      "categoryId": "pizzas-carnes",
+      "name": "Pizza kids",
+      "description": "Salchichas sureñas, papas fritas, mozzarella y salsa de tomate.",
+      "price": 13000
+    },
+    {
+      "id": "cuatro-estaciones",
+      "categoryId": "pizzas-carnes",
+      "name": "Cuatro estaciones",
+      "description": "¼ jamón pierna, ¼ pepperoni, ¼ alcachofas, ¼ champiñón, mozzarella y salsa de tomate.",
+      "price": 13000
+    },
+    {
+      "id": "espanola",
+      "categoryId": "pizzas-carnes",
+      "name": "Española",
+      "description": "Tomate, pimentón, jamón pierna, pepperoni, mozzarella y salsa de tomate.",
+      "price": 13000
+    },
+    {
+      "id": "pepperoni-oliva",
+      "categoryId": "pizzas-carnes",
+      "name": "Pepperoni oliva",
+      "description": "Cebolla frita, pimentón, pepperoni, aceitunas, mozzarella y salsa de tomate.",
+      "price": 13000
+    },
+    {
+      "id": "mediterranea",
+      "categoryId": "pizzas-carnes",
+      "name": "Mediterránea",
+      "description": "Jamón serrano, ricotta, rúcula, mozzarella y salsa de tomate.",
+      "price": 13000
+    },
+    {
+      "id": "charcuteria-fina",
+      "categoryId": "pizzas-carnes",
+      "name": "Charcutería fina",
+      "description": "Salame, pepperoni, tocino, jamón serrano, mozzarella y salsa de tomate.",
+      "price": 13000
+    },
+    {
+      "id": "jamon-a-la-crema",
+      "categoryId": "pizzas-carnes",
+      "name": "Jamón a la crema",
+      "description": "Choclo, salsa bechamel, jamón pierna, salame, mozzarella y salsa de tomate.",
+      "price": 13000
+    },
+    {
+      "id": "salame-champinon",
+      "categoryId": "pizzas-carnes",
+      "name": "Salame champiñón",
+      "description": "Tomate, champiñón, salame, queso azul, mozzarella y salsa de tomate.",
+      "price": 13000
+    },
+    {
+      "id": "meche-de-la-isla",
+      "categoryId": "pizzas-carnes",
+      "name": "Nuestra Meche de la Isla",
+      "description": "Pepperoni, queso cheddar, pimentón y mechada.",
+      "price": 13000
+    },
+    {
+      "id": "pollo-a-la-crema",
+      "categoryId": "pizzas-pollo-filete",
+      "name": "Pollo a la crema",
+      "description": "Pollo, salsa bechamel y cebolla en pluma.",
+      "price": 13000
+    },
+    {
+      "id": "pollo-choclo",
+      "categoryId": "pizzas-pollo-filete",
+      "name": "Pollo choclo",
+      "description": "Pollo, choclo, mozzarella y salsa de tomate.",
+      "price": 13000
+    },
+    {
+      "id": "confluencia",
+      "categoryId": "pizzas-pollo-filete",
+      "name": "Confluencia",
+      "description": "Cebolla caramelizada, tocino, filete en salsa BBQ, queso azul, mozzarella y salsa de tomate.",
+      "price": 13000
+    },
+    {
+      "id": "pollo-bechamel",
+      "categoryId": "pizzas-pollo-filete",
+      "name": "Pollo bechamel",
+      "description": "Choclo, champiñón, pollo, salsa bechamel, ciboulette, mozzarella y salsa de tomate.",
+      "price": 13000
+    },
+    {
+      "id": "filete-queso-azul",
+      "categoryId": "pizzas-pollo-filete",
+      "name": "Filete queso azul",
+      "description": "Filete al estragón, cebolla en aros, champiñón, queso azul, mozzarella y salsa de tomate.",
+      "price": 13000
+    },
+    {
+      "id": "peppe-pollo",
+      "categoryId": "pizzas-pollo-filete",
+      "name": "Peppe-pollo",
+      "description": "Pepperoni, tocino, pollo, mozzarella y salsa de tomate.",
+      "price": 13000
+    },
+    {
+      "id": "filete-pobre",
+      "categoryId": "pizzas-pollo-filete",
+      "name": "Filete pobre",
+      "description": "Cebolla frita, filete de res, papas fritas, huevos de codorniz, mozzarella y salsa de tomate.",
+      "price": 13000
+    },
+    {
+      "id": "happy",
+      "categoryId": "pizzas-pollo-filete",
+      "name": "Happy",
+      "description": "Jamón pierna, pepperoni, pollo, palta, mozzarella y salsa de tomate.",
+      "price": 13000
+    },
+    {
+      "id": "filete-bbq",
+      "categoryId": "pizzas-pollo-filete",
+      "name": "Filete BBQ",
+      "description": "Filete en salsa BBQ, cebolla en aros, champiñón, tocino, mozzarella y salsa de tomate.",
+      "price": 13000
+    },
+    {
+      "id": "pollo-jamon",
+      "categoryId": "pizzas-pollo-filete",
+      "name": "Pollo jamón",
+      "description": "Champiñón, jamón pierna, pollo, rúcula, mozzarella y salsa de tomate.",
+      "price": 13000
+    },
+    {
+      "id": "filete-mignon",
+      "categoryId": "pizzas-pollo-filete",
+      "name": "Filete mignon",
+      "description": "Filete en reducción de vino tinto, champiñones, tocino, mozzarella y salsa de tomate.",
+      "price": 13000
+    },
+    {
+      "id": "pollo-saltado",
+      "categoryId": "pizzas-pollo-filete",
+      "name": "Pollo saltado",
+      "description": "Pollo, cebolla morada, tomate, cebollín, mozzarella y salsa de tomate.",
+      "price": 13000
+    },
+    {
+      "id": "la-308",
+      "categoryId": "pizzas-pollo-filete",
+      "name": "#308",
+      "description": "Cebolla en aros, cheddar, filete de res, salsa 308 de pepinillo y mostaza, mozzarella y salsa de tomate.",
+      "price": 13000
+    },
+    {
+      "id": "texas-bbq",
+      "categoryId": "pizzas-pollo-filete",
+      "name": "Texas BBQ",
+      "description": "Pollo en salsa BBQ, tocino, papas fritas artesanales, salsa BBQ, mozzarella y salsa de tomate.",
+      "price": 13000
+    },
+    {
+      "id": "filete-saltado",
+      "categoryId": "pizzas-pollo-filete",
+      "name": "Filete saltado",
+      "description": "Filete de res, cebolla morada, cebollín, tomate, mozzarella y salsa de tomate.",
+      "price": 13000
+    },
+    {
+      "id": "pollo-tocino",
+      "categoryId": "pizzas-pollo-filete",
+      "name": "Pollo tocino",
+      "description": "Tomate, queso cheddar, tocino, pollo, mozzarella y salsa de tomate.",
+      "price": 13000
+    },
+    {
+      "id": "mexicana",
+      "categoryId": "pizzas-pollo-filete",
+      "name": "Mexicana",
+      "description": "Choclo, cebolla en aros, filete de res, jalapeño, mozzarella y salsa de tomate.",
+      "price": 13000
+    },
+    {
+      "id": "tropical",
+      "categoryId": "pizzas-pollo-filete",
+      "name": "Tropical",
+      "description": "Jamón pierna, piña, pollo, mozzarella y salsa de tomate.",
+      "price": 13000
+    },
+    {
+      "id": "filete-chilena",
+      "categoryId": "pizzas-pollo-filete",
+      "name": "Filete chilena",
+      "description": "Tomate, cebolla en aros, filete de res, ají cristal, cilantro, mozzarella y salsa de tomate.",
+      "price": 13000
+    },
+    {
+      "id": "americana-pizza",
+      "categoryId": "pizzas-pollo-filete",
+      "name": "Americana",
+      "description": "Cheddar, pepinillo, tocino, pollo, mozzarella y salsa de tomate.",
+      "price": 13000
+    },
+    {
+      "id": "pollo-bbq",
+      "categoryId": "pizzas-pollo-filete",
+      "name": "Pollo BBQ",
+      "description": "Pollo en salsa BBQ, pimentón, champiñón, mozzarella y salsa de tomate.",
+      "price": 13000
+    },
+    {
+      "id": "bombastic",
+      "categoryId": "pizzas-pollo-filete",
+      "name": "Bombastic",
+      "description": "Pollo en salsa BBQ, champiñón, tocino, queso cheddar, mozzarella y salsa de tomate.",
+      "price": 13000
+    },
+    {
+      "id": "vino-valle-isla",
+      "categoryId": "pizzas-pollo-filete",
+      "name": "Al vino del Valle de la Isla",
+      "description": "Filete, champiñones, tocino, mozzarella y reducción de vino.",
+      "price": 13000
+    },
+    {
+      "id": "palmito-choclo",
+      "categoryId": "pizzas-veggie-camaron",
+      "name": "Palmito choclo",
+      "description": "Choclo, pimentón, palmito, cilantro, mozzarella y salsa de tomate.",
+      "price": 13000
+    },
+    {
+      "id": "sabrosa",
+      "categoryId": "pizzas-veggie-camaron",
+      "name": "Sabrosa",
+      "description": "Tomate, choclo, champiñón, aceitunas, mozzarella y salsa de tomate.",
+      "price": 13000
+    },
+    {
+      "id": "taylor",
+      "categoryId": "pizzas-veggie-camaron",
+      "name": "Taylor",
+      "description": "Choclo, tocino, camarón ecuatoriano, queso crema, mozzarella y salsa de tomate.",
+      "price": 13000
+    },
+    {
+      "id": "de-la-huerta",
+      "categoryId": "pizzas-veggie-camaron",
+      "name": "De la huerta",
+      "description": "Tomate, cebolla en aros, champiñón, alcachofa, mozzarella y salsa de tomate.",
+      "price": 13000
+    },
+    {
+      "id": "mix-pil-pil",
+      "categoryId": "pizzas-veggie-camaron",
+      "name": "Mix pil pil",
+      "description": "Camarón ecuatoriano, champiñón, ají cacho de cabra, queso crema, ciboulette, mozzarella y salsa de tomate.",
+      "price": 13000
+    },
+    {
+      "id": "al-pesto",
+      "categoryId": "pizzas-veggie-camaron",
+      "name": "Al pesto",
+      "description": "Champiñón, alcachofa, salsa pesto, rúcula, mozzarella y salsa de tomate.",
+      "price": 13000
+    },
+    {
+      "id": "camaron-serrano",
+      "categoryId": "pizzas-veggie-camaron",
+      "name": "Camarón serrano",
+      "description": "Champiñón, jamón serrano, camarón ecuatoriano, mozzarella y salsa de tomate.",
+      "price": 13000
+    },
+    {
+      "id": "griega",
+      "categoryId": "pizzas-veggie-camaron",
+      "name": "Griega",
+      "description": "Cebolla caramelizada, champiñón, aceituna, queso crema, mozzarella y salsa de tomate.",
+      "price": 13000
+    },
+    {
+      "id": "lasana-bolonesa",
+      "categoryId": "lasanas",
+      "name": "Lasaña boloñesa bechamel",
+      "description": "Boloñesa de carne, salsa bechamel y queso mozzarella.",
+      "price": 12900
+    },
+    {
+      "id": "lasana-espinaca-pollo",
+      "categoryId": "lasanas",
+      "name": "Lasaña espinacas y pollo",
+      "description": "Mozzarella fundida en crema, espinaca, pollo y salsa bechamel.",
+      "price": 12900
+    },
+    {
+      "id": "lasana-verde",
+      "categoryId": "lasanas",
+      "name": "Lasaña verde",
+      "description": "Espinaca, champiñones frescos, queso mozzarella, crema y salsa bechamel.",
+      "price": 12900
+    },
+    {
+      "id": "lasana-alfredo",
+      "categoryId": "lasanas",
+      "name": "Lasaña alfredo",
+      "description": "Crema blanca, jamón, pollo, queso mozzarella y salsa bechamel.",
+      "price": 12900
+    },
+    {
+      "id": "lasana-carne",
+      "categoryId": "lasanas",
+      "name": "Lasaña de carne",
+      "description": "Salsa boloñesa de carne y queso mozzarella.",
+      "price": 12900
+    },
+    {
+      "id": "gringa-coleslaw",
+      "categoryId": "hamburguesas",
+      "name": "Gringa coleslaw",
+      "description": "Pepinillo, queso cheddar y ensalada coleslaw.",
+      "price": 9000
+    },
+    {
+      "id": "burger-a-lo-pobre",
+      "categoryId": "hamburguesas",
+      "name": "A lo pobre",
+      "description": "Queso cheddar, cebolla frita y huevo frito.",
+      "price": 9000
+    },
+    {
+      "id": "chacarera",
+      "categoryId": "hamburguesas",
+      "name": "Chacarera",
+      "description": "Tomate, porotos verdes, mayonesa y ají cristal.",
+      "price": 9000
+    },
+    {
+      "id": "four-cheese",
+      "categoryId": "hamburguesas",
+      "name": "Four cheese burger",
+      "description": "Mozzarella, queso crema, cheddar y queso azul.",
+      "price": 9000
+    },
+    {
+      "id": "burger-americana",
+      "categoryId": "hamburguesas",
+      "name": "Americana",
+      "description": "Pepinillo, queso cheddar y tocino.",
+      "price": 9000
+    },
+    {
+      "id": "burger-italiana",
+      "categoryId": "hamburguesas",
+      "name": "Italiana",
+      "description": "Palta, tomate y mayo.",
+      "price": 9000
+    },
+    {
+      "id": "burger-clasica",
+      "categoryId": "hamburguesas",
+      "name": "Clásica",
+      "description": "Pepinillo, tocino, queso cheddar, tomate y lechuga.",
+      "price": 9000
+    },
+    {
+      "id": "costillas-bbq",
+      "categoryId": "platos",
+      "name": "Costillas BBQ",
+      "description": "Porción de costillas con BBQ y papas fritas.",
+      "price": 12000
+    },
+    {
+      "id": "alitas-bbq",
+      "categoryId": "platos",
+      "name": "Alitas BBQ",
+      "description": "10 alitas con BBQ y papas fritas.",
+      "price": 10000
+    },
+    {
+      "id": "chorrillana-mixta",
+      "categoryId": "platos",
+      "name": "Chorrillana mixta",
+      "description": "Filete de res, pollo, papas fritas artesanales, cebolla frita y huevo frito.",
+      "price": 12000,
+      "tags": [
+        "Para 2"
+      ]
+    },
+    {
+      "id": "chupe-jaiba-camaron",
+      "categoryId": "platos",
+      "name": "Chupe de jaiba y camarón",
+      "price": 13000
+    },
+    {
+      "id": "lomo-a-lo-pobre",
+      "categoryId": "platos",
+      "name": "Lomo a lo pobre",
+      "price": 18000
+    },
+    {
+      "id": "ostiones-parmesana",
+      "categoryId": "platos",
+      "name": "Ostiones a la parmesana",
+      "price": 15000
+    },
+    {
+      "id": "camarones-panko",
+      "categoryId": "platos",
+      "name": "Camarones al panko",
+      "price": 12000
+    },
+    {
+      "id": "pollo-plancha-pobre",
+      "categoryId": "platos",
+      "name": "Pollo a la plancha a lo pobre",
+      "price": 15000
+    },
+    {
+      "id": "alitas-bbq-papas",
+      "categoryId": "platos",
+      "name": "Alitas BBQ con papas fritas",
+      "price": 12000
+    },
+    {
+      "id": "bebida-lata",
+      "categoryId": "bebidas",
+      "name": "Bebida en lata",
+      "price": 1500
+    },
+    {
+      "id": "bebida-15",
+      "categoryId": "bebidas",
+      "name": "Bebida 1,5 L",
+      "price": 3000
+    },
+    {
+      "id": "jugo-mango",
+      "categoryId": "jugos",
+      "name": "Mango",
+      "variants": [
+        {
+          "id": "jugo-mango-500",
+          "label": "500 cc",
+          "price": 3500
+        },
+        {
+          "id": "jugo-mango-1l",
+          "label": "1 litro",
+          "price": 7000
+        }
+      ]
+    },
+    {
+      "id": "jugo-pina",
+      "categoryId": "jugos",
+      "name": "Piña",
+      "variants": [
+        {
+          "id": "jugo-pina-500",
+          "label": "500 cc",
+          "price": 3500
+        },
+        {
+          "id": "jugo-pina-1l",
+          "label": "1 litro",
+          "price": 7000
+        }
+      ]
+    },
+    {
+      "id": "jugo-frutilla",
+      "categoryId": "jugos",
+      "name": "Frutilla",
+      "variants": [
+        {
+          "id": "jugo-frutilla-500",
+          "label": "500 cc",
+          "price": 3500
+        },
+        {
+          "id": "jugo-frutilla-1l",
+          "label": "1 litro",
+          "price": 7000
+        }
+      ]
+    },
+    {
+      "id": "jugo-frambuesa",
+      "categoryId": "jugos",
+      "name": "Frambuesa",
+      "variants": [
+        {
+          "id": "jugo-frambuesa-500",
+          "label": "500 cc",
+          "price": 3500
+        },
+        {
+          "id": "jugo-frambuesa-1l",
+          "label": "1 litro",
+          "price": 7000
+        }
+      ]
+    },
+    {
+      "id": "jugo-mix-berries",
+      "categoryId": "jugos",
+      "name": "Mix berries",
+      "variants": [
+        {
+          "id": "jugo-mix-berries-500",
+          "label": "500 cc",
+          "price": 3500
+        },
+        {
+          "id": "jugo-mix-berries-1l",
+          "label": "1 litro",
+          "price": 7000
+        }
+      ]
+    },
+    {
+      "id": "jugo-mix-caribena",
+      "categoryId": "jugos",
+      "name": "Mix caribeña",
+      "variants": [
+        {
+          "id": "jugo-mix-caribena-500",
+          "label": "500 cc",
+          "price": 3500
+        },
+        {
+          "id": "jugo-mix-caribena-1l",
+          "label": "1 litro",
+          "price": 7000
+        }
+      ]
+    },
+    {
+      "id": "jugo-mix-tropical",
+      "categoryId": "jugos",
+      "name": "Mix tropical",
+      "variants": [
+        {
+          "id": "jugo-mix-tropical-500",
+          "label": "500 cc",
+          "price": 3500
+        },
+        {
+          "id": "jugo-mix-tropical-1l",
+          "label": "1 litro",
+          "price": 7000
+        }
+      ]
+    },
+    {
+      "id": "leche-platano",
+      "categoryId": "jugos",
+      "name": "Leche con plátano",
+      "variants": [
+        {
+          "id": "leche-platano-500",
+          "label": "500 cc",
+          "price": 3500
+        },
+        {
+          "id": "leche-platano-1l",
+          "label": "1 litro",
+          "price": 7000
+        }
+      ]
+    }
+  ],
+  "buildPizza": {
+    "productId": "arma-tu-pizza",
+    "name": "Arma tu pizza",
+    "description": "Salsa de tomates frescos, mozzarella, nuestra masa y orégano.",
+    "basePrice": 10900,
+    "promoPrice": 13000,
+    "includedInPromo": 3
+  }
+}
