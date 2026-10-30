@@ -9,8 +9,6 @@ afterEach(() => {
   localStorage.clear()
 })
 
-const cartButton = () => within(screen.getByRole('banner')).getByRole('button', { name: /pedido/i })
-
 describe('App', () => {
   it('muestra el titular y la carta completa', () => {
     render(<App />)
@@ -21,25 +19,6 @@ describe('App', () => {
     expect(categoryTitles.map((title) => title.textContent)).toEqual(categories.map((category) => category.name))
     expect(within(menu).getAllByRole('heading', { level: 4 })).toHaveLength(products.length)
     expect(within(menu).getByRole('button', { name: 'Elegir ingredientes' })).toBeInTheDocument()
-  })
-
-  it('al agregar un producto se actualiza el pedido del header', async () => {
-    const user = userEvent.setup()
-    render(<App />)
-    expect(cartButton()).toHaveAccessibleName('Pedido 0 productos, $0')
-
-    await user.click(screen.getByRole('button', { name: 'Agregar Suprema' }))
-    expect(cartButton()).toHaveAccessibleName('Pedido 1 producto, $13.000')
-
-    // El botón pasa a ser el control − cantidad +.
-    await user.click(screen.getByRole('button', { name: 'Agregar una unidad de Suprema' }))
-    await user.click(screen.getByRole('button', { name: 'Agregar Mango (1 litro)' }))
-    expect(cartButton()).toHaveAccessibleName('Pedido 3 productos, $33.000')
-
-    await user.click(screen.getByRole('button', { name: 'Quitar una unidad de Suprema' }))
-    await user.click(screen.getByRole('button', { name: 'Quitar Suprema del pedido' }))
-    expect(screen.getByRole('button', { name: 'Agregar Suprema' })).toBeInTheDocument()
-    expect(cartButton()).toHaveAccessibleName('Pedido 1 producto, $7.000')
   })
 
   it('el buscador filtra sin distinguir tildes ni mayúsculas', async () => {

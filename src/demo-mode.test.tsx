@@ -4,6 +4,11 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import App from './App'
 import { addAndOpenCart, fillCheckout } from './test/order-helpers'
 
+vi.mock('./data/menu', async (importOriginal) => {
+  const { smallMenu } = await import('./test/small-menu')
+  return smallMenu(await importOriginal<typeof import('./data/menu')>())
+})
+
 // Igual que con VITE_DEMO=true: todo este archivo corre en modo demo.
 vi.mock('./config/business', async (importOriginal) => {
   const original = await importOriginal<typeof import('./config/business')>()
