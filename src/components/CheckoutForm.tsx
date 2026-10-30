@@ -31,7 +31,7 @@ const fieldIds: Record<CheckoutField, string> = {
 }
 
 const inputClass =
-  'mt-1.5 h-12 w-full rounded-xl border border-linea bg-white px-4 aria-invalid:border-2 aria-invalid:border-rojo'
+  'mt-1.5 h-12 w-full rounded-xl border border-campo bg-white px-4 aria-invalid:border-2 aria-invalid:border-rojo'
 
 function FieldError({ field, message }: { field: CheckoutField; message?: string }) {
   if (!message) return null
@@ -48,8 +48,8 @@ const describedBy = (field: CheckoutField, message?: string) =>
 
 function Choice({ children, ...input }: { children: ReactNode } & InputHTMLAttributes<HTMLInputElement>) {
   return (
-    <label className="flex min-h-12 cursor-pointer items-center gap-3 rounded-xl border border-linea px-4 py-2 transition-colors hover:border-carbon has-checked:border-carbon has-checked:bg-carbon has-checked:text-white has-focus-visible:outline-3 has-focus-visible:outline-offset-2 has-focus-visible:outline-queso">
-      <input type="radio" className="size-5 shrink-0 accent-rojo focus-visible:outline-none" {...input} />
+    <label className="flex min-h-12 cursor-pointer items-center gap-3 rounded-xl border border-linea px-4 py-2 transition-colors hover:border-carbon has-checked:border-carbon has-checked:bg-carbon has-checked:text-white">
+      <input type="radio" className="size-5 shrink-0 accent-rojo" {...input} />
       <span>{children}</span>
     </label>
   )
@@ -135,7 +135,7 @@ export function CheckoutForm({ form, onChange, onSent }: CheckoutFormProps) {
             onChange={(event) => set('phone', event.target.value)}
             autoComplete="tel"
             placeholder="9 1234 5678"
-            className={`${inputClass} placeholder:text-tinta/70`}
+            className={`${inputClass} placeholder:text-tinta`}
             {...describedBy('phone', errors.phone)}
           />
           <FieldError field="phone" message={errors.phone} />
@@ -234,7 +234,7 @@ export function CheckoutForm({ form, onChange, onSent }: CheckoutFormProps) {
             maxLength={COMMENT_MAX_LENGTH}
             rows={3}
             placeholder="Por ejemplo: sin cebolla, timbre malo"
-            className={`${inputClass} h-auto py-3 placeholder:text-tinta/70`}
+            className={`${inputClass} h-auto py-3 placeholder:text-tinta`}
             {...describedBy('comment', errors.comment)}
           />
           <p className="mt-1 text-right text-sm text-tinta tabular-nums">

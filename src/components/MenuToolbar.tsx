@@ -45,14 +45,14 @@ export function MenuToolbar({ query, onQueryChange, categories, activeId }: Menu
             onChange={(event) => onQueryChange(event.target.value)}
             placeholder="Busca una pizza o ingrediente"
             autoComplete="off"
-            className="h-11 w-full rounded-xl border border-linea bg-fondo pr-3 pl-11 placeholder:text-tinta"
+            className="h-11 w-full rounded-xl border border-campo bg-fondo pr-3 pl-11 placeholder:text-tinta"
           />
         </div>
 
         <nav
           ref={chipsRef}
           aria-label="Categorías de la carta"
-          className="relative -mx-4 min-w-0 overflow-x-auto px-4 [scrollbar-width:thin] md:mx-0 md:px-0"
+          className="relative -mx-4 min-w-0 scroll-px-4 overflow-x-auto px-4 [scrollbar-width:thin] md:mx-0 md:px-0"
         >
           <ul className="flex w-max gap-2 pt-0.5 pb-2">
             {categories.map((category) => {
@@ -63,6 +63,8 @@ export function MenuToolbar({ query, onQueryChange, categories, activeId }: Menu
                     href={`#${category.id}`}
                     data-chip={category.id}
                     aria-current={active ? 'location' : undefined}
+                    // Chrome deja a medio ver el chip que recibe foco con Tab si ya asomaba por el borde.
+                    onFocus={(event) => event.currentTarget.scrollIntoView({ block: 'nearest', inline: 'nearest' })}
                     className={`inline-flex h-9 items-center rounded-full border px-4 text-sm font-semibold whitespace-nowrap transition-colors ${
                       active
                         ? 'border-carbon bg-carbon text-white'
