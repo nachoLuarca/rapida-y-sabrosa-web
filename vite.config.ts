@@ -31,7 +31,14 @@ export default defineConfig(({ mode }) => {
         { extends: true, test: { name: 'logica', environment: 'node', include: ['src/**/*.test.ts'] } },
         {
           extends: true,
-          test: { name: 'ui', environment: 'jsdom', include: ['src/**/*.test.tsx'], setupFiles: ['./src/test/setup.ts'] },
+          test: {
+            name: 'ui',
+            environment: 'jsdom',
+            include: ['src/**/*.test.tsx'],
+            setupFiles: ['./src/test/setup.ts'],
+            // Son CPU pura en jsdom: en un notebook a batería los más pesados rozan los 5 s por defecto.
+            testTimeout: 15_000,
+          },
         },
       ],
     },

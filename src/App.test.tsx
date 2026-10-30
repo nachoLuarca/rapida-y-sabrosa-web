@@ -1,5 +1,5 @@
 import { render, screen, within } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
+import userEvent, { type UserEvent } from '@testing-library/user-event'
 import { afterEach, describe, expect, it } from 'vitest'
 import App from './App'
 import { categories, products } from './data/menu'
@@ -8,6 +8,12 @@ import { matchesSearch } from './domain/search'
 afterEach(() => {
   localStorage.clear()
 })
+
+/** Pega el texto de una vez: con la carta completa, cada tecla vuelve a dibujar los 87 productos. */
+async function search(user: UserEvent, text: string) {
+  await user.click(screen.getByRole('searchbox', { name: 'Buscar en la carta' }))
+  await user.paste(text)
+}
 
 describe('App', () => {
   it('muestra el titular y la carta completa', () => {
@@ -26,7 +32,7 @@ describe('App', () => {
     render(<App />)
     const expected = products.filter((product) => matchesSearch('champiñón', product.name, product.description))
 
-    await user.type(screen.getByRole('searchbox', { name: 'Buscar en la carta' }), 'CHAMPINON')
+    await search(user, 'CHAMPINON')
 
     const menu = screen.getByRole('region', { name: 'La carta' })
     expect(within(menu).getByRole('status')).toHaveTextContent(`${expected.length} resultados para “CHAMPINON”`)
@@ -38,15 +44,14 @@ describe('App', () => {
   it('el buscador también busca en el nombre de la categoría', async () => {
     const user = userEvent.setup()
     render(<App />)
-    const search = screen.getByRole('searchbox', { name: 'Buscar en la carta' })
     const menu = screen.getByRole('region', { name: 'La carta' })
     const juices = products.filter((product) => product.categoryId === 'jugos').map((product) => product.name)
 
-    await user.type(search, 'jugo')
+    await search(user, 'jugo')
     expect(within(menu).getAllByRole('heading', { level: 4 }).map((h) => h.textContent)).toEqual(juices)
     expect(within(menu).getByRole('status')).toHaveTextContent(`${juices.length} resultados para “jugo”`)
 
-    await user.type(search, ' mango')
+    await search(user, ' mango')
     expect(within(menu).getAllByRole('heading', { level: 4 }).map((h) => h.textContent)).toEqual(['Mango'])
     expect(within(menu).getByRole('status')).toHaveTextContent('1 resultado para “jugo mango”')
   })
@@ -54,7 +59,7 @@ describe('App', () => {
   it('sin resultados lo dice y permite volver a la carta completa', async () => {
     const user = userEvent.setup()
     render(<App />)
-    await user.type(screen.getByRole('searchbox', { name: 'Buscar en la carta' }), 'sushi')
+    await search(user, 'sushi')
 
     expect(screen.getByRole('status')).toHaveTextContent('No encontramos nada con “sushi”.')
     expect(screen.queryAllByRole('heading', { level: 4 })).toHaveLength(0)
