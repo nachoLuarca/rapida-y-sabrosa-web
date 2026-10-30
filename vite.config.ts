@@ -28,6 +28,9 @@ export default defineConfig(({ mode }) => {
       environment: 'jsdom',
       setupFiles: ['./src/test/setup.ts'],
       css: false,
+      // Con un worker por núcleo (16 en Windows) algunas corridas se quedaban colgadas ~140 s;
+      // con 2 son estables y además más rápidas.
+      maxWorkers: 2,
     },
   }
 })
