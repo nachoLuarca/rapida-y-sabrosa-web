@@ -1,11 +1,33 @@
+import { useEffect, useRef, useState, type MouseEvent } from 'react'
+import { BuildPizzaModal } from './components/BuildPizzaModal'
+import { CartPanel } from './components/CartPanel'
 import { DeliverySection } from './components/DeliverySection'
+import { FloatingCartBar } from './components/FloatingCartBar'
 import { Footer } from './components/Footer'
 import { Header } from './components/Header'
 import { Hero } from './components/Hero'
 import { Menu } from './components/Menu'
 import { CartProvider } from './store/CartProvider'
 
+type Overlay = 'cart' | 'build-pizza' | null
+
 export default function App() {
+  const [overlay, setOverlay] = useState<Overlay>(null)
+  // Botón que abrió el modal: al cerrar, el foco vuelve ahí.
+  const openerRef = useRef<HTMLElement | null>(null)
+  const previousOverlay = useRef<Overlay>(null)
+
+  useEffect(() => {
+    if (previousOverlay.current !== null && overlay === null) openerRef.current?.focus()
+    previousOverlay.current = overlay
+  }, [overlay])
+
+  const openWith = (next: Exclude<Overlay, null>) => (event: MouseEvent<HTMLElement>) => {
+    openerRef.current = event.currentTarget
+    setOverlay(next)
+  }
+  const close = () => setOverlay(null)
+
   return (
     <CartProvider>
       <a
@@ -14,13 +36,17 @@ export default function App() {
       >
         Saltar a la carta
       </a>
-      <Header />
+      <Header onOpenCart={openWith('cart')} />
       <main>
-        <Hero />
-        <Menu />
+        <Hero onBuildPizza={openWith('build-pizza')} />
+        <Menu onChooseIngredients={openWith('build-pizza')} />
         <DeliverySection />
       </main>
       <Footer />
+      <FloatingCartBar onOpenCart={openWith('cart')} />
+
+      <BuildPizzaModal open={overlay === 'build-pizza'} onClose={close} onAdded={() => setOverlay('cart')} />
+      <CartPanel open={overlay === 'cart'} onClose={close} />
     </CartProvider>
   )
 }

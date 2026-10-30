@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState, type MouseEvent } from 'react'
 import { buildPizza, categories, products } from '../data/menu'
 import { matchesSearch } from '../domain/search'
 import { useActiveSection } from '../hooks/use-active-section'
@@ -7,7 +7,7 @@ import { CategorySection } from './CategorySection'
 import { MenuToolbar } from './MenuToolbar'
 
 interface MenuProps {
-  onChooseIngredients?: () => void
+  onChooseIngredients: (event: MouseEvent<HTMLElement>) => void
 }
 
 export function Menu({ onChooseIngredients }: MenuProps) {
