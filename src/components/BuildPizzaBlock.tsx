@@ -1,10 +1,11 @@
+import type { MouseEvent } from 'react'
 import { buildPizza } from '../data/menu'
 import { formatClp } from '../domain/format'
 import type { Category } from '../domain/types'
 
 interface BuildPizzaBlockProps {
   category: Category
-  onChooseIngredients?: () => void
+  onChooseIngredients: (event: MouseEvent<HTMLElement>) => void
 }
 
 export function BuildPizzaBlock({ category, onChooseIngredients }: BuildPizzaBlockProps) {

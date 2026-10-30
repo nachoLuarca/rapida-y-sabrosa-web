@@ -1,10 +1,15 @@
+import type { MouseEvent } from 'react'
 import { business } from '../config/business'
 import { zones } from '../data/zones'
 import { minDeliveryFee } from '../domain/delivery'
 import { formatClp } from '../domain/format'
 import { PizzaIllustration } from './PizzaIllustration'
 
-export function Hero() {
+interface HeroProps {
+  onBuildPizza: (event: MouseEvent<HTMLElement>) => void
+}
+
+export function Hero({ onBuildPizza }: HeroProps) {
   const minFee = minDeliveryFee(zones)
 
   return (
@@ -28,12 +33,13 @@ export function Hero() {
             >
               Ver la carta
             </a>
-            <a
-              href="#arma-tu-pizza"
+            <button
+              type="button"
+              onClick={onBuildPizza}
               className="inline-flex h-12 items-center rounded-full border-2 border-carbon px-6 font-semibold transition-colors hover:bg-carbon hover:text-white"
             >
               Arma tu pizza
-            </a>
+            </button>
           </div>
         </div>
         <PizzaIllustration className="mx-auto w-full max-w-[18rem] drop-shadow-[14px_18px_0_var(--color-queso)] motion-safe:animate-pizza-in sm:max-w-[22rem] lg:max-w-none" />
