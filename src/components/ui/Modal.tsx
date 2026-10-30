@@ -1,4 +1,4 @@
-import { useEffect, useRef, type ReactNode } from 'react'
+import { useEffect, useRef, type KeyboardEvent, type ReactNode } from 'react'
 
 interface ModalProps {
   open: boolean
@@ -8,6 +8,34 @@ interface ModalProps {
   /** 'drawer': panel desde la derecha (ancho completo en celular). 'center': modal centrado. */
   variant: 'drawer' | 'center'
   children: ReactNode
+}
+
+const focusableSelector =
+  'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+
+/**
+ * El <dialog> nativo deja salir el foco hacia la interfaz del navegador al pasar el último elemento;
+ * aquí Tab y Shift+Tab dan la vuelta dentro del modal.
+ */
+function trapFocus(event: KeyboardEvent<HTMLDialogElement>) {
+  if (event.key !== 'Tab') return
+  const focusables = [...event.currentTarget.querySelectorAll<HTMLElement>(focusableSelector)]
+  if (focusables.length === 0) return
+  const first = focusables[0]
+  const last = focusables[focusables.length - 1]
+  const active = document.activeElement
+  if (!active) return
+  // Incluye lo que está antes del primero (el título) o después del último (zonas con scroll).
+  const atStart = active === first || Boolean(first.compareDocumentPosition(active) & Node.DOCUMENT_POSITION_PRECEDING)
+  const atEnd = active === last || Boolean(last.compareDocumentPosition(active) & Node.DOCUMENT_POSITION_FOLLOWING)
+
+  if (event.shiftKey && atStart) {
+    event.preventDefault()
+    last.focus()
+  } else if (!event.shiftKey && atEnd) {
+    event.preventDefault()
+    first.focus()
+  }
 }
 
 const variants = {
@@ -39,6 +67,7 @@ export function Modal({ open, onClose, labelledBy, variant, children }: ModalPro
       onClose={() => {
         if (openRef.current) onClose()
       }}
+      onKeyDown={trapFocus}
       // Un clic en el fondo (fuera del contenido) llega al propio <dialog>.
       onClick={(event) => {
         if (event.target === event.currentTarget) onClose()
