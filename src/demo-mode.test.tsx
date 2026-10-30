@@ -44,12 +44,16 @@ describe('modo demo', () => {
     await user.click(within(sent).getByRole('button', { name: 'Copiar el mensaje otra vez' }))
     expect(openSpy).not.toHaveBeenCalled()
 
-    // Al recargar el mensaje ya no está: solo el aviso de que se envió.
+    // Al recargar el mensaje ya no está, y el texto no habla de WhatsApp porque en demo no se abre.
     cleanup()
     render(<App />)
     const reloaded = screen.getByRole('dialog', { name: 'Pedido listo' })
-    expect(within(reloaded).getByText('Tu pedido ya se envió.')).toBeInTheDocument()
+    expect(within(reloaded).getByText(/^Ya preparamos tu pedido/)).toBeInTheDocument()
+    expect(within(reloaded).queryByText(/Ya abrimos WhatsApp/)).not.toBeInTheDocument()
     expect(within(reloaded).getByText('Modo demo: el pedido no llega al local.')).toBeInTheDocument()
     expect(within(reloaded).queryByRole('button', { name: 'Copiar el mensaje otra vez' })).not.toBeInTheDocument()
+
+    await user.click(within(reloaded).getByRole('button', { name: 'Volver a mi pedido' }))
+    expect(screen.getByRole('dialog', { name: 'Tu pedido' })).toBeInTheDocument()
   })
 })

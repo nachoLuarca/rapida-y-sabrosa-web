@@ -21,7 +21,7 @@ interface CartPanelProps {
 }
 
 export function CartPanel({ open, onClose }: CartPanelProps) {
-  const { lines, sentOrder, clear, markSent } = useCart()
+  const { lines, sentOrder, clear, markSent, reopenOrder } = useCart()
   const [view, setView] = useState<Exclude<Step, 'sent'>>('cart')
   const [form, setForm] = useState<CheckoutFormData>(emptyCheckoutForm)
   const [wasOpen, setWasOpen] = useState(open)
@@ -96,7 +96,16 @@ export function CartPanel({ open, onClose }: CartPanelProps) {
           }}
         />
       )}
-      {step === 'sent' && sentOrder && <OrderSent sent={sentOrder.details} onNewOrder={startNewOrder} />}
+      {step === 'sent' && sentOrder && (
+        <OrderSent
+          sent={sentOrder.details}
+          onBackToOrder={() => {
+            reopenOrder()
+            goTo('cart')
+          }}
+          onNewOrder={startNewOrder}
+        />
+      )}
     </Modal>
   )
 }

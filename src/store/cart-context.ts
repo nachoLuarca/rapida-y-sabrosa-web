@@ -14,6 +14,8 @@ export interface CartContextValue {
   removeLine: (key: string) => void
   clear: () => void
   markSent: (details: SentDetails) => void
+  /** Borra la marca de enviado y conserva los productos. */
+  reopenOrder: () => void
 }
 
 export const CartContext = createContext<CartContextValue | null>(null)

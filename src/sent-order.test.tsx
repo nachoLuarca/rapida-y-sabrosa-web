@@ -62,14 +62,40 @@ describe('pedido ya enviado', () => {
     }
   })
 
-  it('al recargar antes de 2 horas muestra que ya se envió, sin el mensaje ni opciones para reenviarlo', async () => {
+  it('"Volver a mi pedido" borra la marca, conserva los productos y permite enviarlo de nuevo', async () => {
+    const user = userEvent.setup()
+    await sendOrder(user)
+    reload()
+    await user.click(screen.getByRole('button', { name: 'Volver a mi pedido' }))
+
+    const panel = screen.getByRole('dialog', { name: 'Tu pedido' })
+    expect(within(panel).getByText('Suprema')).toBeInTheDocument()
+    expect(within(panel).getByRole('heading', { name: 'Tu pedido' })).toHaveFocus()
+    expect(headerCartButton()).toHaveAccessibleName('Pedido 1 producto, $13.000')
+    expect(localStorage.getItem(SENT_ORDER_STORAGE_KEY)).toBeNull()
+    expect(localStorage.getItem(CART_STORAGE_KEY)).not.toBeNull()
+
+    reload()
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    await user.click(headerCartButton())
+    const checkout = await fillCheckout(user, pickup)
+    await user.click(within(checkout).getByRole('button', { name: 'Enviar pedido por WhatsApp' }))
+    expect(openSpy).toHaveBeenCalledTimes(2)
+    expect(screen.getByRole('dialog', { name: 'Pedido listo' })).toBeInTheDocument()
+  })
+
+  it('al recargar antes de 2 horas avisa que se abrió WhatsApp, sin el mensaje ni opciones para reenviarlo', async () => {
     const user = userEvent.setup()
     await sendOrder(user)
     vi.setSystemTime(Date.now() + SENT_ORDER_TTL_MS - 1000)
     reload()
 
     const panel = screen.getByRole('dialog', { name: 'Pedido listo' })
-    expect(within(panel).getByText('Tu pedido ya se envió.')).toBeInTheDocument()
+    expect(
+      within(panel).getByText(
+        'Ya abrimos WhatsApp con tu pedido. Si no alcanzaste a enviarlo, vuelve a tu pedido y envíalo de nuevo.',
+      ),
+    ).toBeInTheDocument()
     expect(within(panel).queryByText('Tu mensaje')).not.toBeInTheDocument()
     expect(within(panel).queryByText(/Ana/)).not.toBeInTheDocument()
     expect(within(panel).queryByRole('button', { name: 'Abrir WhatsApp otra vez' })).not.toBeInTheDocument()
@@ -90,6 +116,7 @@ describe('pedido ya enviado', () => {
     const panel = screen.getByRole('dialog', { name: 'Pedido listo' })
     expect(within(panel).getByText(/\*Retiro en local\*/)).toBeInTheDocument()
     expect(within(panel).getByRole('button', { name: 'Abrir WhatsApp otra vez' })).toBeInTheDocument()
+    expect(within(panel).queryByRole('button', { name: 'Volver a mi pedido' })).not.toBeInTheDocument()
   })
 
   it('al recargar después de 2 horas vacía el carrito y borra la marca', async () => {

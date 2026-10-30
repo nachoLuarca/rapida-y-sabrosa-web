@@ -143,8 +143,12 @@ dirección, comentario ni el mensaje. El mensaje vive solo en memoria y se pierd
 
 - Mientras la página siga abierta, "Pedido listo" muestra el mensaje y "Abrir WhatsApp otra vez".
 - Al cargar la página, si se envió hace menos de 2 horas y el carrito sigue igual, el panel se abre solo en
-  "Pedido listo", sin el mensaje ni "Abrir WhatsApp otra vez" (o "Copiar el mensaje otra vez" en modo demo): solo
-  el texto "Tu pedido ya se envió." y "Empezar un pedido nuevo".
+  "Pedido listo", sin el mensaje ni "Abrir WhatsApp otra vez" (o "Copiar el mensaje otra vez" en modo demo). Muestra
+  el texto "Ya abrimos WhatsApp con tu pedido. Si no alcanzaste a enviarlo, vuelve a tu pedido y envíalo de nuevo."
+  (en modo demo, "Ya preparamos tu pedido. Si quieres probar de nuevo, vuelve a tu pedido.", porque no se abre
+  WhatsApp) y los botones "Volver a mi pedido" y "Empezar un pedido nuevo".
+- "Volver a mi pedido" borra la marca y abre "Tu pedido" con los productos conservados. La web no puede saber si el
+  cliente apretó enviar en WhatsApp, así que esto cubre el caso en que no alcanzó a hacerlo.
 - Si pasaron 2 horas o más, se vacía el carrito y se borra la marca.
 - Cualquier cambio en el carrito después de enviar cuenta como pedido nuevo: se borra la marca y se conservan
   los productos. Si al cargar el carrito no calza con la huella, pasa lo mismo.

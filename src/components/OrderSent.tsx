@@ -7,6 +7,7 @@ import { copyToClipboard } from './ui/clipboard'
 interface OrderSentProps {
   /** null después de recargar: el mensaje no se guarda porque trae los datos del cliente. */
   sent: SentDetails | null
+  onBackToOrder: () => void
   onNewOrder: () => void
 }
 
@@ -14,7 +15,7 @@ const secondaryButton =
   'inline-flex h-12 w-full items-center justify-center rounded-full border-2 border-carbon px-6 font-semibold transition-colors hover:bg-carbon hover:text-white'
 
 /** Paso 3 del panel: confirmación con el mensaje enviado (o copiado, en modo demo). */
-export function OrderSent({ sent, onNewOrder }: OrderSentProps) {
+export function OrderSent({ sent, onBackToOrder, onNewOrder }: OrderSentProps) {
   const [copiedAgain, setCopiedAgain] = useState<boolean | null>(null)
 
   const newOrderButton = (
@@ -31,12 +32,21 @@ export function OrderSent({ sent, onNewOrder }: OrderSentProps) {
     return (
       <>
         <div className="min-h-0 flex-1 overflow-y-auto px-5 py-5">
-          <p>Tu pedido ya se envió.</p>
-          {business.isDemo && (
-            <p className="mt-4 rounded-xl bg-queso-claro p-4 font-bold">Modo demo: el pedido no llega al local.</p>
+          {business.isDemo ? (
+            <>
+              <p>Ya preparamos tu pedido. Si quieres probar de nuevo, vuelve a tu pedido.</p>
+              <p className="mt-4 rounded-xl bg-queso-claro p-4 font-bold">Modo demo: el pedido no llega al local.</p>
+            </>
+          ) : (
+            <p>Ya abrimos WhatsApp con tu pedido. Si no alcanzaste a enviarlo, vuelve a tu pedido y envíalo de nuevo.</p>
           )}
         </div>
-        <div className="shrink-0 border-t border-linea px-5 py-4">{newOrderButton}</div>
+        <div className="flex shrink-0 flex-col gap-3 border-t border-linea px-5 py-4">
+          <button type="button" onClick={onBackToOrder} className={secondaryButton}>
+            Volver a mi pedido
+          </button>
+          {newOrderButton}
+        </div>
       </>
     )
   }

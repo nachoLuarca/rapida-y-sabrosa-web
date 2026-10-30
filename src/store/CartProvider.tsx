@@ -43,6 +43,7 @@ export function CartProvider({ children, catalog = defaultCatalog }: CartProvide
       removeLine: (key) => change({ type: 'remove', key }),
       clear: () => change({ type: 'clear' }),
       markSent: (details) => setSentOrder({ sentAt: Date.now(), cart: cartFingerprint(lines), details }),
+      reopenOrder: () => setSentOrder(null),
     }
   }, [lines, sentOrder, catalog])
 
