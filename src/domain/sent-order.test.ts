@@ -1,11 +1,46 @@
 import { describe, expect, it } from 'vitest'
-import { isSentOrderExpired, parseSentOrder, SENT_ORDER_TTL_MS, serializeSentOrder, type SentOrder } from './sent-order'
+import { catalog } from '../data/catalog'
+import { createLine } from './cart'
+import {
+  cartFingerprint,
+  isSentMarkExpired,
+  parseSentMark,
+  SENT_ORDER_TTL_MS,
+  serializeSentMark,
+  type SentMark,
+  type SentOrder,
+} from './sent-order'
+import type { CartLine, LineSelection } from './types'
 
-const sent: SentOrder = { message: '*Nuevo pedido*', copied: false, sentAt: 1_000_000_000 }
+const mark: SentMark = { sentAt: 1_000_000_000, cart: 'suprema||*2' }
 
-describe('parseSentOrder', () => {
-  it('recupera lo guardado con serializeSentOrder', () => {
-    expect(parseSentOrder(serializeSentOrder(sent))).toEqual(sent)
+const line = (selection: LineSelection, quantity = 1) => createLine(catalog, selection, quantity) as CartLine
+
+describe('cartFingerprint', () => {
+  const suprema = line({ productId: 'suprema' })
+  const mango = line({ productId: 'jugo-mango', variantId: 'jugo-mango-1l' })
+
+  it('no depende del orden de las líneas', () => {
+    expect(cartFingerprint([suprema, mango])).toBe(cartFingerprint([mango, suprema]))
+  })
+
+  it('cambia con las cantidades y con los productos', () => {
+    const base = cartFingerprint([suprema])
+    expect(cartFingerprint([line({ productId: 'suprema' }, 2)])).not.toBe(base)
+    expect(cartFingerprint([suprema, mango])).not.toBe(base)
+  })
+})
+
+describe('serializeSentMark', () => {
+  it('deja fuera el mensaje aunque venga en el pedido', () => {
+    const sent: SentOrder = { ...mark, details: { message: 'Cliente: Ana', copied: true } }
+    expect(JSON.parse(serializeSentMark(sent))).toEqual(mark)
+  })
+})
+
+describe('parseSentMark', () => {
+  it('recupera lo guardado con serializeSentMark', () => {
+    expect(parseSentMark(serializeSentMark(mark))).toEqual(mark)
   })
 
   it.each([
@@ -14,26 +49,28 @@ describe('parseSentOrder', () => {
     ['JSON roto', '{roto'],
     ['null', 'null'],
     ['una lista', '[]'],
-    ['sin mensaje', JSON.stringify({ copied: false, sentAt: 1 })],
-    ['mensaje vacío', JSON.stringify({ message: '', copied: false, sentAt: 1 })],
-    ['copied que no es booleano', JSON.stringify({ message: 'a', copied: 'no', sentAt: 1 })],
-    ['fecha de texto', JSON.stringify({ message: 'a', copied: false, sentAt: 'ayer' })],
-    ['fecha negativa', JSON.stringify({ message: 'a', copied: false, sentAt: -1 })],
+    ['sin carrito', JSON.stringify({ sentAt: 1 })],
+    ['carrito vacío', JSON.stringify({ sentAt: 1, cart: '' })],
+    ['carrito que no es texto', JSON.stringify({ sentAt: 1, cart: 2 })],
+    ['fecha de texto', JSON.stringify({ sentAt: 'ayer', cart: 'a' })],
+    ['fecha negativa', JSON.stringify({ sentAt: -1, cart: 'a' })],
+    ['campos de más', JSON.stringify({ sentAt: 1, cart: 'a', nombre: 'Ana' })],
+    ['la marca vieja con el mensaje', JSON.stringify({ message: 'Cliente: Ana', copied: false, sentAt: 1 })],
   ])('devuelve null con %s', (_name, raw) => {
-    expect(parseSentOrder(raw)).toBeNull()
+    expect(parseSentMark(raw)).toBeNull()
   })
 })
 
-describe('isSentOrderExpired', () => {
+describe('isSentMarkExpired', () => {
   it('sigue vigente justo antes de las 2 horas', () => {
-    expect(isSentOrderExpired(sent, sent.sentAt + SENT_ORDER_TTL_MS - 1)).toBe(false)
+    expect(isSentMarkExpired(mark, mark.sentAt + SENT_ORDER_TTL_MS - 1)).toBe(false)
   })
 
   it('vence a las 2 horas', () => {
-    expect(isSentOrderExpired(sent, sent.sentAt + SENT_ORDER_TTL_MS)).toBe(true)
+    expect(isSentMarkExpired(mark, mark.sentAt + SENT_ORDER_TTL_MS)).toBe(true)
   })
 
   it('vence si la fecha guardada está muy en el futuro', () => {
-    expect(isSentOrderExpired(sent, sent.sentAt - SENT_ORDER_TTL_MS)).toBe(true)
+    expect(isSentMarkExpired(mark, mark.sentAt - SENT_ORDER_TTL_MS)).toBe(true)
   })
 })

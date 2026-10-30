@@ -1,9 +1,11 @@
 import { CART_STORAGE_KEY, parseStoredCart, serializeCart } from '../domain/cart'
 import {
-  isSentOrderExpired,
-  parseSentOrder,
+  cartFingerprint,
+  isSentMarkExpired,
+  parseSentMark,
   SENT_ORDER_STORAGE_KEY,
-  serializeSentOrder,
+  serializeSentMark,
+  type SentMark,
   type SentOrder,
 } from '../domain/sent-order'
 import type { CartLine, Catalog } from '../domain/types'
@@ -27,27 +29,32 @@ export function saveCart(lines: CartLine[]): void {
   }
 }
 
-function loadSentOrder(): SentOrder | null {
+function loadSentMark(): SentMark | null {
   try {
-    return parseSentOrder(window.localStorage.getItem(SENT_ORDER_STORAGE_KEY))
+    return parseSentMark(window.localStorage.getItem(SENT_ORDER_STORAGE_KEY))
   } catch {
     return null
   }
 }
 
 /** Guarda la marca de pedido enviado, o la borra con null. Si no se puede, vale mientras la página esté abierta. */
-export function saveSentOrder(sent: SentOrder | null): void {
+export function saveSentMark(mark: SentMark | null): void {
   try {
-    if (sent) window.localStorage.setItem(SENT_ORDER_STORAGE_KEY, serializeSentOrder(sent))
+    if (mark) window.localStorage.setItem(SENT_ORDER_STORAGE_KEY, serializeSentMark(mark))
     else window.localStorage.removeItem(SENT_ORDER_STORAGE_KEY)
   } catch {
     // Igual que con el pedido: se sigue sin guardar.
   }
 }
 
-/** Estado inicial. Si el pedido enviado ya venció, parte de cero; el provider borra lo guardado al persistirlo. */
+/**
+ * Estado inicial. Una marca vencida parte de cero; una que no calza con el carrito, o que no es válida,
+ * se ignora. En todos esos casos el provider borra lo que quedó guardado al persistir este estado.
+ */
 export function loadSession(catalog: Catalog, now: number): { lines: CartLine[]; sentOrder: SentOrder | null } {
-  const sentOrder = loadSentOrder()
-  if (sentOrder && isSentOrderExpired(sentOrder, now)) return { lines: [], sentOrder: null }
-  return { lines: loadCart(catalog), sentOrder }
+  const mark = loadSentMark()
+  if (mark && isSentMarkExpired(mark, now)) return { lines: [], sentOrder: null }
+  const lines = loadCart(catalog)
+  if (!mark || mark.cart !== cartFingerprint(lines)) return { lines, sentOrder: null }
+  return { lines, sentOrder: { ...mark, details: null } }
 }

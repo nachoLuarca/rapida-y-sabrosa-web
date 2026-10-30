@@ -1,4 +1,4 @@
-import { render, screen, within } from '@testing-library/react'
+import { cleanup, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import App from './App'
@@ -43,5 +43,13 @@ describe('modo demo', () => {
     expect(within(sent).queryByRole('button', { name: 'Abrir WhatsApp otra vez' })).not.toBeInTheDocument()
     await user.click(within(sent).getByRole('button', { name: 'Copiar el mensaje otra vez' }))
     expect(openSpy).not.toHaveBeenCalled()
+
+    // Al recargar el mensaje ya no está: solo el aviso de que se envió.
+    cleanup()
+    render(<App />)
+    const reloaded = screen.getByRole('dialog', { name: 'Pedido listo' })
+    expect(within(reloaded).getByText('Tu pedido ya se envió.')).toBeInTheDocument()
+    expect(within(reloaded).getByText('Modo demo: el pedido no llega al local.')).toBeInTheDocument()
+    expect(within(reloaded).queryByRole('button', { name: 'Copiar el mensaje otra vez' })).not.toBeInTheDocument()
   })
 })

@@ -137,13 +137,19 @@ visible "Modo demo: el pedido no llega al local". En la confirmación, "Abrir Wh
 ### Pedido ya enviado
 
 Para que el cliente no reenvíe el mismo pedido sin darse cuenta, al enviar se guarda en `localStorage`
-(clave versionada `rys.sent.v1`, junto al carrito) el mensaje y la hora de envío:
+(clave versionada `rys.sent.v1`, junto al carrito) una marca con la hora de envío y una huella del carrito
+(productos, variantes, ingredientes y cantidades). **La marca nunca guarda datos personales**: ni nombre, teléfono,
+dirección, comentario ni el mensaje. El mensaje vive solo en memoria y se pierde al recargar.
 
-- Al cargar la página, si se envió hace menos de 2 horas, el panel se abre solo en "Pedido listo".
+- Mientras la página siga abierta, "Pedido listo" muestra el mensaje y "Abrir WhatsApp otra vez".
+- Al cargar la página, si se envió hace menos de 2 horas y el carrito sigue igual, el panel se abre solo en
+  "Pedido listo", sin el mensaje ni "Abrir WhatsApp otra vez" (o "Copiar el mensaje otra vez" en modo demo): solo
+  el texto "Tu pedido ya se envió." y "Empezar un pedido nuevo".
 - Si pasaron 2 horas o más, se vacía el carrito y se borra la marca.
 - Cualquier cambio en el carrito después de enviar cuenta como pedido nuevo: se borra la marca y se conservan
-  los productos.
+  los productos. Si al cargar el carrito no calza con la huella, pasa lo mismo.
 - "Empezar un pedido nuevo" vacía el carrito y borra la marca.
+- Una marca con otros campos, como las antiguas que guardaban el mensaje, se borra al cargar y el carrito se conserva.
 - Si `localStorage` está bloqueado o la marca está corrupta, se ignora y la web sigue funcionando.
 
 ## Datos

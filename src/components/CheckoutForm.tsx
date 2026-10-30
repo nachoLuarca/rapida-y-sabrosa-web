@@ -11,14 +11,14 @@ import {
 } from '../domain/checkout'
 import { formatClp } from '../domain/format'
 import { buildOrderMessage, whatsappUrl } from '../domain/order-message'
-import type { SentOrder } from '../domain/sent-order'
+import type { SentDetails } from '../domain/sent-order'
 import { useCart } from '../store/use-cart'
 import { copyToClipboard } from './ui/clipboard'
 
 interface CheckoutFormProps {
   form: CheckoutFormData
   onChange: (form: CheckoutFormData) => void
-  onSent: (order: Omit<SentOrder, 'sentAt'>) => void
+  onSent: (details: SentDetails) => void
 }
 
 const fieldIds: Record<CheckoutField, string> = {

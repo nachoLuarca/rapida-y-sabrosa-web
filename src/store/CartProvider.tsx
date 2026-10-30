@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useReducer, useState, type ReactNode } from 'react'
 import { catalog as defaultCatalog } from '../data/catalog'
 import { cartReducer, cartTotals, createLine, type CartAction } from '../domain/cart'
+import { cartFingerprint } from '../domain/sent-order'
 import type { Catalog } from '../domain/types'
 import { CartContext, type CartContextValue } from './cart-context'
-import { loadSession, saveCart, saveSentOrder } from './storage'
+import { loadSession, saveCart, saveSentMark } from './storage'
 
 interface CartProviderProps {
   children: ReactNode
@@ -20,7 +21,7 @@ export function CartProvider({ children, catalog = defaultCatalog }: CartProvide
   }, [lines])
 
   useEffect(() => {
-    saveSentOrder(sentOrder)
+    saveSentMark(sentOrder)
   }, [sentOrder])
 
   const value = useMemo<CartContextValue>(() => {
@@ -41,7 +42,7 @@ export function CartProvider({ children, catalog = defaultCatalog }: CartProvide
       setQuantity: (key, quantity) => change({ type: 'setQuantity', key, quantity }),
       removeLine: (key) => change({ type: 'remove', key }),
       clear: () => change({ type: 'clear' }),
-      markSent: (order) => setSentOrder({ ...order, sentAt: Date.now() }),
+      markSent: (details) => setSentOrder({ sentAt: Date.now(), cart: cartFingerprint(lines), details }),
     }
   }, [lines, sentOrder, catalog])
 

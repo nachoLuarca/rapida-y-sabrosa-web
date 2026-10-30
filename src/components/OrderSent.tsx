@@ -1,11 +1,12 @@
 import { useState } from 'react'
 import { business } from '../config/business'
 import { whatsappUrl } from '../domain/order-message'
-import type { SentOrder } from '../domain/sent-order'
+import type { SentDetails } from '../domain/sent-order'
 import { copyToClipboard } from './ui/clipboard'
 
 interface OrderSentProps {
-  sent: SentOrder
+  /** null después de recargar: el mensaje no se guarda porque trae los datos del cliente. */
+  sent: SentDetails | null
   onNewOrder: () => void
 }
 
@@ -15,6 +16,30 @@ const secondaryButton =
 /** Paso 3 del panel: confirmación con el mensaje enviado (o copiado, en modo demo). */
 export function OrderSent({ sent, onNewOrder }: OrderSentProps) {
   const [copiedAgain, setCopiedAgain] = useState<boolean | null>(null)
+
+  const newOrderButton = (
+    <button
+      type="button"
+      onClick={onNewOrder}
+      className="inline-flex h-12 w-full items-center justify-center rounded-full bg-rojo px-6 font-semibold text-white transition-colors hover:bg-rojo-oscuro"
+    >
+      Empezar un pedido nuevo
+    </button>
+  )
+
+  if (!sent) {
+    return (
+      <>
+        <div className="min-h-0 flex-1 overflow-y-auto px-5 py-5">
+          <p>Tu pedido ya se envió.</p>
+          {business.isDemo && (
+            <p className="mt-4 rounded-xl bg-queso-claro p-4 font-bold">Modo demo: el pedido no llega al local.</p>
+          )}
+        </div>
+        <div className="shrink-0 border-t border-linea px-5 py-4">{newOrderButton}</div>
+      </>
+    )
+  }
 
   return (
     <>
@@ -57,13 +82,7 @@ export function OrderSent({ sent, onNewOrder }: OrderSentProps) {
             Abrir WhatsApp otra vez
           </button>
         )}
-        <button
-          type="button"
-          onClick={onNewOrder}
-          className="inline-flex h-12 w-full items-center justify-center rounded-full bg-rojo px-6 font-semibold text-white transition-colors hover:bg-rojo-oscuro"
-        >
-          Empezar un pedido nuevo
-        </button>
+        {newOrderButton}
       </div>
     </>
   )

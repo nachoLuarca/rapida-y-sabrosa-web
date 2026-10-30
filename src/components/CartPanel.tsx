@@ -90,13 +90,13 @@ export function CartPanel({ open, onClose }: CartPanelProps) {
         <CheckoutForm
           form={form}
           onChange={setForm}
-          onSent={(order) => {
-            markSent(order)
+          onSent={(details) => {
+            markSent(details)
             goTo('cart')
           }}
         />
       )}
-      {step === 'sent' && sentOrder && <OrderSent sent={sentOrder} onNewOrder={startNewOrder} />}
+      {step === 'sent' && sentOrder && <OrderSent sent={sentOrder.details} onNewOrder={startNewOrder} />}
     </Modal>
   )
 }

@@ -1,6 +1,6 @@
 import { createContext } from 'react'
 import type { CartTotals } from '../domain/cart'
-import type { SentOrder } from '../domain/sent-order'
+import type { SentDetails, SentOrder } from '../domain/sent-order'
 import type { CartLine, LineSelection } from '../domain/types'
 
 export interface CartContextValue {
@@ -13,7 +13,7 @@ export interface CartContextValue {
   setQuantity: (key: string, quantity: number) => void
   removeLine: (key: string) => void
   clear: () => void
-  markSent: (order: Omit<SentOrder, 'sentAt'>) => void
+  markSent: (details: SentDetails) => void
 }
 
 export const CartContext = createContext<CartContextValue | null>(null)
