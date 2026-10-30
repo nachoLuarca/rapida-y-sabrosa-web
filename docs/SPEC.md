@@ -131,7 +131,20 @@ Envío: `https://wa.me/<número>?text=<mensaje codificado>` en pestaña nueva. L
 confirmación con el mensaje, botón "Abrir WhatsApp otra vez" y "Empezar un pedido nuevo" (vacía el carrito).
 
 **Modo demo** (`VITE_DEMO=true`): no abre WhatsApp; copia el mensaje al portapapeles y lo muestra, con un aviso
-visible "Modo demo: el pedido no llega al local". Esto es para mostrar la web sin mandarle pedidos falsos al local.
+visible "Modo demo: el pedido no llega al local". En la confirmación, "Abrir WhatsApp otra vez" se reemplaza por
+"Copiar el mensaje otra vez". Esto es para mostrar la web sin mandarle pedidos falsos al local.
+
+### Pedido ya enviado
+
+Para que el cliente no reenvíe el mismo pedido sin darse cuenta, al enviar se guarda en `localStorage`
+(clave versionada `rys.sent.v1`, junto al carrito) el mensaje y la hora de envío:
+
+- Al cargar la página, si se envió hace menos de 2 horas, el panel se abre solo en "Pedido listo".
+- Si pasaron 2 horas o más, se vacía el carrito y se borra la marca.
+- Cualquier cambio en el carrito después de enviar cuenta como pedido nuevo: se borra la marca y se conservan
+  los productos.
+- "Empezar un pedido nuevo" vacía el carrito y borra la marca.
+- Si `localStorage` está bloqueado o la marca está corrupta, se ignora y la web sigue funcionando.
 
 ## Datos
 
