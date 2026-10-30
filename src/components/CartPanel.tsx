@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react'
 import { emptyCheckoutForm, type CheckoutForm as CheckoutFormData } from '../domain/checkout'
 import { useCart } from '../store/use-cart'
 import { CartContents } from './CartContents'
-import { CheckoutForm, type SentOrder } from './CheckoutForm'
+import { CheckoutForm } from './CheckoutForm'
 import { OrderSent } from './OrderSent'
 import { Modal } from './ui/Modal'
 
@@ -21,25 +21,27 @@ interface CartPanelProps {
 }
 
 export function CartPanel({ open, onClose }: CartPanelProps) {
-  const { lines, clear } = useCart()
-  const [step, setStep] = useState<Step>('cart')
+  const { lines, sentOrder, clear, markSent } = useCart()
+  const [view, setView] = useState<Exclude<Step, 'sent'>>('cart')
   const [form, setForm] = useState<CheckoutFormData>(emptyCheckoutForm)
-  const [sent, setSent] = useState<SentOrder | null>(null)
   const [wasOpen, setWasOpen] = useState(open)
   const titleRef = useRef<HTMLHeadingElement>(null)
   const stepChanged = useRef(false)
 
-  // Al abrir se parte del pedido, salvo que haya una confirmación pendiente. Los datos se conservan.
+  // Un pedido enviado se queda en la confirmación hasta que cambie el carrito o se empiece otro.
+  const step: Step = sentOrder ? 'sent' : view
+
+  // Al abrir se parte del pedido. Los datos se conservan.
   if (open !== wasOpen) {
     setWasOpen(open)
-    if (open && step === 'checkout') setStep('cart')
+    if (open && view === 'checkout') setView('cart')
   }
   // Sin productos no hay datos que pedir (por ejemplo, si se vació el pedido en otra pestaña).
-  if (step === 'checkout' && lines.length === 0) setStep('cart')
+  if (view === 'checkout' && lines.length === 0) setView('cart')
 
-  const goTo = (next: Step) => {
+  const goTo = (next: Exclude<Step, 'sent'>) => {
     stepChanged.current = true
-    setStep(next)
+    setView(next)
   }
 
   // Al cambiar de paso, el foco va al título para que se anuncie el paso nuevo.
@@ -52,8 +54,7 @@ export function CartPanel({ open, onClose }: CartPanelProps) {
   const startNewOrder = () => {
     clear()
     setForm(emptyCheckoutForm)
-    setSent(null)
-    setStep('cart')
+    setView('cart')
     onClose()
   }
 
@@ -90,12 +91,12 @@ export function CartPanel({ open, onClose }: CartPanelProps) {
           form={form}
           onChange={setForm}
           onSent={(order) => {
-            setSent(order)
-            goTo('sent')
+            markSent(order)
+            goTo('cart')
           }}
         />
       )}
-      {step === 'sent' && sent && <OrderSent sent={sent} onNewOrder={startNewOrder} />}
+      {step === 'sent' && sentOrder && <OrderSent sent={sentOrder} onNewOrder={startNewOrder} />}
     </Modal>
   )
 }

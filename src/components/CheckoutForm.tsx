@@ -11,19 +11,14 @@ import {
 } from '../domain/checkout'
 import { formatClp } from '../domain/format'
 import { buildOrderMessage, whatsappUrl } from '../domain/order-message'
+import type { SentOrder } from '../domain/sent-order'
 import { useCart } from '../store/use-cart'
 import { copyToClipboard } from './ui/clipboard'
-
-export interface SentOrder {
-  message: string
-  /** Solo en modo demo: si se pudo copiar el mensaje al portapapeles. */
-  copied: boolean
-}
 
 interface CheckoutFormProps {
   form: CheckoutFormData
   onChange: (form: CheckoutFormData) => void
-  onSent: (sent: SentOrder) => void
+  onSent: (order: Omit<SentOrder, 'sentAt'>) => void
 }
 
 const fieldIds: Record<CheckoutField, string> = {

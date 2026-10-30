@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { business } from '../config/business'
 import { whatsappUrl } from '../domain/order-message'
-import type { SentOrder } from './CheckoutForm'
+import type { SentOrder } from '../domain/sent-order'
 import { copyToClipboard } from './ui/clipboard'
 
 interface OrderSentProps {

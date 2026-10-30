@@ -8,11 +8,14 @@ import { Header } from './components/Header'
 import { Hero } from './components/Hero'
 import { Menu } from './components/Menu'
 import { CartProvider } from './store/CartProvider'
+import { useCart } from './store/use-cart'
 
 type Overlay = 'cart' | 'build-pizza' | null
 
-export default function App() {
-  const [overlay, setOverlay] = useState<Overlay>(null)
+function Page() {
+  const { sentOrder } = useCart()
+  // Al recargar con un pedido ya enviado se vuelve a la confirmación, para no reenviarlo sin querer.
+  const [overlay, setOverlay] = useState<Overlay>(sentOrder ? 'cart' : null)
   // Botón que abrió el modal: al cerrar, el foco vuelve ahí.
   const openerRef = useRef<HTMLElement | null>(null)
   const previousOverlay = useRef<Overlay>(null)
@@ -29,7 +32,7 @@ export default function App() {
   const close = () => setOverlay(null)
 
   return (
-    <CartProvider>
+    <>
       <a
         href="#carta"
         className="sr-only z-50 rounded-full bg-queso px-4 py-2 font-semibold text-carbon focus:not-sr-only focus:fixed focus:top-3 focus:left-3"
@@ -47,6 +50,14 @@ export default function App() {
 
       <BuildPizzaModal open={overlay === 'build-pizza'} onClose={close} onAdded={() => setOverlay('cart')} />
       <CartPanel open={overlay === 'cart'} onClose={close} />
+    </>
+  )
+}
+
+export default function App() {
+  return (
+    <CartProvider>
+      <Page />
     </CartProvider>
   )
 }
