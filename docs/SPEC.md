@@ -131,7 +131,30 @@ Envío: `https://wa.me/<número>?text=<mensaje codificado>` en pestaña nueva. L
 confirmación con el mensaje, botón "Abrir WhatsApp otra vez" y "Empezar un pedido nuevo" (vacía el carrito).
 
 **Modo demo** (`VITE_DEMO=true`): no abre WhatsApp; copia el mensaje al portapapeles y lo muestra, con un aviso
-visible "Modo demo: el pedido no llega al local". Esto es para mostrar la web sin mandarle pedidos falsos al local.
+visible "Modo demo: el pedido no llega al local". En la confirmación, "Abrir WhatsApp otra vez" se reemplaza por
+"Copiar el mensaje otra vez". Esto es para mostrar la web sin mandarle pedidos falsos al local.
+
+### Pedido ya enviado
+
+Para que el cliente no reenvíe el mismo pedido sin darse cuenta, al enviar se guarda en `localStorage`
+(clave versionada `rys.sent.v1`, junto al carrito) una marca con la hora de envío y una huella del carrito
+(productos, variantes, ingredientes y cantidades). **La marca nunca guarda datos personales**: ni nombre, teléfono,
+dirección, comentario ni el mensaje. El mensaje vive solo en memoria y se pierde al recargar.
+
+- Mientras la página siga abierta, "Pedido listo" muestra el mensaje y "Abrir WhatsApp otra vez".
+- Al cargar la página, si se envió hace menos de 2 horas y el carrito sigue igual, el panel se abre solo en
+  "Pedido listo", sin el mensaje ni "Abrir WhatsApp otra vez" (o "Copiar el mensaje otra vez" en modo demo). Muestra
+  el texto "Ya abrimos WhatsApp con tu pedido. Si no alcanzaste a enviarlo, vuelve a tu pedido y envíalo de nuevo."
+  (en modo demo, "Ya preparamos tu pedido. Si quieres probar de nuevo, vuelve a tu pedido.", porque no se abre
+  WhatsApp) y los botones "Volver a mi pedido" y "Empezar un pedido nuevo".
+- "Volver a mi pedido" borra la marca y abre "Tu pedido" con los productos conservados. La web no puede saber si el
+  cliente apretó enviar en WhatsApp, así que esto cubre el caso en que no alcanzó a hacerlo.
+- Si pasaron 2 horas o más, se vacía el carrito y se borra la marca.
+- Cualquier cambio en el carrito después de enviar cuenta como pedido nuevo: se borra la marca y se conservan
+  los productos. Si al cargar el carrito no calza con la huella, pasa lo mismo.
+- "Empezar un pedido nuevo" vacía el carrito y borra la marca.
+- Una marca con otros campos, como las antiguas que guardaban el mensaje, se borra al cargar y el carrito se conserva.
+- Si `localStorage` está bloqueado o la marca está corrupta, se ignora y la web sigue funcionando.
 
 ## Datos
 

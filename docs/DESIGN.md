@@ -13,14 +13,15 @@ tarjetas iguales. El único momento llamativo es el hero; todo lo demás es sobr
 |-------------------|-----------|-----|
 | `--color-rojo`        | `#d9141b` | marca, header, botones principales, precios destacados |
 | `--color-rojo-oscuro` | `#a00e13` | hover de botones rojos |
-| `--color-queso`       | `#ffc72c` | acentos, foco visible, CTA sobre fondo oscuro |
+| `--color-queso`       | `#ffc72c` | acentos, foco visible (junto a carbón), CTA sobre fondo oscuro |
 | `--color-queso-claro` | `#fff3cc` | avisos y etiquetas suaves |
 | `--color-carbon`      | `#1c1917` | texto principal, bloque "Arma tu pizza", estados seleccionados |
 | `--color-tinta`       | `#57534e` | texto secundario |
 | `--color-linea`       | `#e7e2de` | bordes y separadores |
 | `--color-fondo`       | `#f7f5f4` | superficies suaves (buscador, sección despacho) |
+| `--color-campo`       | `#8a837e` | borde de campos de texto (contraste 3:1) |
 
-Botón de WhatsApp: verde `#1f8f4e` (hover `#17703c`), solo en el botón de enviar.
+Botón de WhatsApp: verde `#1b8045` (hover `#17703c`), solo en el botón de enviar.
 
 Tipografía:
 - Display: **Barlow Condensed 900 itálica**, en mayúsculas, `line-height: 0.88`. Clase utilitaria `.display`.

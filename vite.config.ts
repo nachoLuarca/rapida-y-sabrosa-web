@@ -25,12 +25,22 @@ export default defineConfig(({ mode }) => {
     plugins: [react(), tailwindcss(), ...(isDemo ? [viteSingleFile(), inlineFavicon()] : [])],
     build: isDemo ? { outDir: 'dist-demo', copyPublicDir: false } : {},
     test: {
-      environment: 'jsdom',
-      setupFiles: ['./src/test/setup.ts'],
       css: false,
-      // Con un worker por núcleo (16 en Windows) algunas corridas se quedaban colgadas ~140 s;
-      // con 2 son estables y además más rápidas.
-      maxWorkers: 2,
+      projects: [
+        // Lógica pura: sin jsdom ni Testing Library, que son lo más caro de levantar.
+        { extends: true, test: { name: 'logica', environment: 'node', include: ['src/**/*.test.ts'] } },
+        {
+          extends: true,
+          test: {
+            name: 'ui',
+            environment: 'jsdom',
+            include: ['src/**/*.test.tsx'],
+            setupFiles: ['./src/test/setup.ts'],
+            // Son CPU pura en jsdom: en un notebook a batería los más pesados rozan los 5 s por defecto.
+            testTimeout: 15_000,
+          },
+        },
+      ],
     },
   }
 })

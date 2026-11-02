@@ -81,12 +81,12 @@ export function BuildPizzaModal({ open, onClose, onAdded }: BuildPizzaModalProps
           <ul className="mt-4 grid gap-2 sm:grid-cols-2">
             {ingredients.map((ingredient) => (
               <li key={ingredient.id}>
-                <label className="flex min-h-12 cursor-pointer items-center gap-3 rounded-xl border border-linea px-4 py-2 transition-colors hover:border-carbon has-checked:border-carbon has-checked:bg-carbon has-checked:text-white has-focus-visible:outline-3 has-focus-visible:outline-offset-2 has-focus-visible:outline-queso">
+                <label className="flex min-h-12 cursor-pointer items-center gap-3 rounded-xl border border-linea px-4 py-2 transition-colors hover:border-carbon has-checked:border-carbon has-checked:bg-carbon has-checked:text-white">
                   <input
                     type="checkbox"
                     checked={selectedIds.includes(ingredient.id)}
                     onChange={() => toggle(ingredient.id)}
-                    className="size-5 shrink-0 accent-rojo focus-visible:outline-none"
+                    className="size-5 shrink-0 accent-rojo"
                   />
                   <span className="flex-1">{ingredient.name}</span>{' '}
                   <span className="text-sm tabular-nums">{formatClp(ingredient.price)}</span>

@@ -22,7 +22,7 @@ export function Header({ onOpenCart }: HeaderProps) {
       <div className="mx-auto flex h-16 max-w-6xl items-center gap-6 px-4">
         <a href="#inicio" className="flex min-w-0 items-baseline gap-2 rounded-sm">
           <span className="display text-2xl whitespace-nowrap sm:text-3xl">{business.name}</span>
-          <span className="hidden text-sm font-semibold text-queso lg:inline">{business.branch}</span>
+          <span className="hidden text-sm font-semibold text-queso-claro lg:inline">{business.branch}</span>
         </a>
 
         <nav aria-label="Secciones" className="ml-auto hidden md:block">

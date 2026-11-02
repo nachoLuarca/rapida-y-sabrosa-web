@@ -10,9 +10,10 @@
   --color-tinta: #57534e;
   --color-linea: #e7e2de;
   --color-fondo: #f7f5f4;
+  --color-campo: #8a837e;
 
   /* Solo para el botón de enviar por WhatsApp */
-  --color-whatsapp: #1f8f4e;
+  --color-whatsapp: #1b8045;
   --color-whatsapp-oscuro: #17703c;
 
   --font-display: 'Barlow Condensed', 'Arial Narrow', sans-serif;
@@ -82,9 +83,19 @@
     @apply bg-white font-sans text-carbon antialiased;
   }
 
-  :focus-visible {
-    outline: 3px solid var(--color-queso);
+  /* Dos colores para que el foco se vea sobre cualquier fondo: el queso casi no se distingue sobre blanco */
+  :focus-visible,
+  label:has(> input:focus-visible) {
+    outline: 3px solid var(--color-carbon);
     outline-offset: 2px;
+    box-shadow: 0 0 0 2px var(--color-queso);
+  }
+
+  /* En las casillas y opciones el foco se marca en toda la etiqueta; los títulos lo reciben solo por programa */
+  label > input:focus-visible,
+  [tabindex='-1']:focus-visible {
+    outline: none;
+    box-shadow: none;
   }
 }
 

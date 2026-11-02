@@ -5,6 +5,11 @@ import App from './App'
 import { business } from './config/business'
 import { addAndOpenCart, fillCheckout, headerCartButton, sentMessage } from './test/order-helpers'
 
+vi.mock('./data/menu', async (importOriginal) => {
+  const { smallMenu } = await import('./test/small-menu')
+  return smallMenu(await importOriginal<typeof import('./data/menu')>())
+})
+
 let openSpy: MockInstance<typeof window.open>
 
 beforeEach(() => {
@@ -14,6 +19,27 @@ beforeEach(() => {
 afterEach(() => {
   localStorage.clear()
   vi.restoreAllMocks()
+})
+
+describe('carta', () => {
+  it('al agregar un producto se actualiza el pedido del header', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    expect(headerCartButton()).toHaveAccessibleName('Pedido 0 productos, $0')
+
+    await user.click(screen.getByRole('button', { name: 'Agregar Suprema' }))
+    expect(headerCartButton()).toHaveAccessibleName('Pedido 1 producto, $13.000')
+
+    // El botón pasa a ser el control − cantidad +.
+    await user.click(screen.getByRole('button', { name: 'Agregar una unidad de Suprema' }))
+    await user.click(screen.getByRole('button', { name: 'Agregar Mango (1 litro)' }))
+    expect(headerCartButton()).toHaveAccessibleName('Pedido 3 productos, $33.000')
+
+    await user.click(screen.getByRole('button', { name: 'Quitar una unidad de Suprema' }))
+    await user.click(screen.getByRole('button', { name: 'Quitar Suprema del pedido' }))
+    expect(screen.getByRole('button', { name: 'Agregar Suprema' })).toBeInTheDocument()
+    expect(headerCartButton()).toHaveAccessibleName('Pedido 1 producto, $7.000')
+  })
 })
 
 describe('panel del pedido', () => {
