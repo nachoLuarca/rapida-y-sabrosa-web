@@ -114,9 +114,11 @@ pedir: si mañana cambia un precio, el pedido de ayer no cambia.
 ### Seed
 
 `npm run db:seed` carga la carta desde `docs/data/*.json` y la configuración actual del local
-(`apps/api/src/db/seed-business.ts`, copia de `apps/web/src/config/business.ts`). Es idempotente (upsert por id):
-vuelve a dejar como en `docs/data` los nombres, precios, orden, disponibilidad, zonas activas y la pausa, aunque se
-hayan cambiado en el panel; lo que no viene de `docs/data` (p. ej. una zona creada en el panel) no se toca. Lo
+(`apps/api/src/db/seed-business.ts`, copia de `apps/web/src/config/business.ts`). Es idempotente y **solo inserta
+lo que falta** (por id): nunca pisa precios, disponibilidad ni ajustes que ya estén en la base, así que se puede
+correr sobre una base en uso. El reset completo a `docs/data` es el modo `'reset'` del mismo seed, que usará
+`npm run demo:reset`: deja como en `docs/data` nombres, precios, orden, disponibilidad, zonas activas y la pausa, y
+no toca lo que no viene de `docs/data` (p. ej. una zona creada en el panel). Lo
 pendiente de confirmar sigue en `null` o con los precios provisorios marcados. La categoría `build_pizza` es la que
 tiene el id de `buildPizza.productId`, la misma regla que usa la web. En modo demo crea además dos usuarios del
 panel (ver Autenticación).

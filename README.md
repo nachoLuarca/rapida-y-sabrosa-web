@@ -69,7 +69,7 @@ curl -i http://localhost:3000/api/menu
 | `npm run db:up`      | Levanta PostgreSQL en Docker y espera a que esté listo |
 | `npm run db:down`    | Baja el contenedor. Los datos quedan en el volumen `rapida-y-sabrosa_postgres-data` |
 | `npm run db:migrate` | Aplica las migraciones pendientes a la base de `DATABASE_URL` |
-| `npm run db:seed`    | Carga la carta de `docs/data` y los datos del local (ver abajo) |
+| `npm run db:seed`    | Inserta lo que falte de la carta de `docs/data` y los datos del local, sin pisar nada (ver abajo) |
 
 Para correr un script en un solo workspace, agrega `--workspace`:
 
@@ -109,7 +109,8 @@ del local mientras corren.
 
 Los datos nunca van dentro de un componente. Después de cambiarlos, corre `npm test` y publica de nuevo. Mientras la
 web no use la API, la carta vive en dos lugares: el bundle de la web y la base (que se carga desde `docs/data` con
-`npm run db:seed`). Después de cambiar `docs/data`, vuelve a correr `npm run db:seed`.
+`npm run db:seed`). Ojo: `db:seed` solo agrega lo que falta, así que un cambio de precio en `docs/data` no llega a
+una base ya sembrada. Para eso, por ahora, empieza de cero con `docker compose down -v` (ver Base de datos).
 
 ### Precios y productos
 
