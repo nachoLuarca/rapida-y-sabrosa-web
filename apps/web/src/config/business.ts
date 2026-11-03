@@ -1,10 +1,30 @@
-import type { PaymentMethod } from '@rys/domain'
-// Datos del local. Lo que el local podría cambiar se edita aquí, nunca dentro de un componente.
-// Lo marcado como `null` está pendiente de confirmar con el local (ver docs/SPEC.md); no se inventa.
+import { describeOpeningHours, type OpeningHours, type OpeningHoursLine, type PaymentMethod } from '@rys/domain'
+import businessJson from '../../../../docs/data/business.json'
+// Datos del local. Vienen de docs/data/business.json, la misma fuente que usa el seed de la API: si cambia algo
+// del local, se cambia ahí, nunca dentro de un componente. Lo que está en `null` está pendiente de confirmar con
+// el local (ver docs/SPEC.md); no se inventa. Un test valida el formato del archivo.
 
+/** Forma de docs/data/business.json. */
+export interface BusinessData {
+  name: string
+  branch: string
+  city: string
+  /** Número público del local: solo dígitos con código país (56 + 9 dígitos). */
+  whatsappNumber: string
+  instagram: { handle: string; url: string }
+  /** Dirección para retiro. */
+  pickupAddress: string | null
+  /** Rangos "HH:MM" de cada día (los siete días); `null` = sin horario definido, la web no lo muestra. */
+  openingHours: OpeningHours | null
+  timezone: string
+  /** Se paga al recibir o al retirar. */
+  paymentMethods: PaymentMethod[]
+}
+
+export const businessData = businessJson as BusinessData
 
 /** Número público del local, usado si VITE_WHATSAPP_NUMBER falta o no es válido. */
-const DEFAULT_WHATSAPP_NUMBER = '56974314602'
+const DEFAULT_WHATSAPP_NUMBER = businessData.whatsappNumber
 
 /** Acepta solo dígitos con código país chileno: 56 + 9 dígitos. */
 export function parseWhatsappNumber(value: string | undefined): string {
@@ -16,27 +36,17 @@ export function parseDemoFlag(value: string | undefined): boolean {
   return value?.trim().toLowerCase() === 'true'
 }
 
-export interface OpeningHours {
-  /** Texto tal como se muestra, p. ej. "Lunes a domingo". */
-  days: string
-  /** Texto tal como se muestra, p. ej. "18:00 a 23:30". */
-  hours: string
-}
-
 export const business = {
-  name: 'Rápida y Sabrosa',
-  branch: 'Espacio 308',
-  city: 'Isla de Maipo',
+  name: businessData.name,
+  branch: businessData.branch,
+  city: businessData.city,
   whatsappNumber: parseWhatsappNumber(import.meta.env.VITE_WHATSAPP_NUMBER),
-  instagram: {
-    handle: 'espacio_308',
-    url: 'https://www.instagram.com/espacio_308/',
-  },
-  /** Pendiente de confirmar con el local. */
-  openingHours: null as OpeningHours[] | null,
-  /** Dirección para retiro. Pendiente de confirmar con el local. */
-  pickupAddress: null as string | null,
-  /** Se paga al recibir o al retirar. */
-  paymentMethods: ['Efectivo', 'Transferencia', 'Tarjeta'] as PaymentMethod[],
+  instagram: businessData.instagram,
+  /** Horario agrupado por días para mostrar, o `null` si no está definido. */
+  openingHours: businessData.openingHours
+    ? describeOpeningHours(businessData.openingHours)
+    : (null as OpeningHoursLine[] | null),
+  pickupAddress: businessData.pickupAddress,
+  paymentMethods: businessData.paymentMethods,
   isDemo: parseDemoFlag(import.meta.env.VITE_DEMO),
 } as const

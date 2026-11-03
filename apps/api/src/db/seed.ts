@@ -1,13 +1,13 @@
 import { readFileSync } from 'node:fs'
-import { priceSchema, slugSchema, whatsappNumberSchema } from '@rys/contracts'
+import { openingHoursSchema, priceSchema, slugSchema, whatsappNumberSchema } from '@rys/contracts'
 import { getTableColumns, sql, type SQL } from 'drizzle-orm'
 import type { AnyPgColumn, PgTable } from 'drizzle-orm/pg-core'
 import { z } from 'zod'
 import type { Db } from './client.ts'
 import { categories, deliveryZones, ingredients, products, productVariants, settings } from './schema/index.ts'
-import { businessSeed } from './seed-business.ts'
 
-// Seed (docs/BACKEND-SPEC.md → Seed): carga la carta de docs/data/*.json y los datos del local. Tiene dos modos:
+// Seed (docs/BACKEND-SPEC.md → Seed): carga de docs/data/*.json la carta y los datos del local (business.json,
+// la misma fuente que lee la web). Tiene dos modos:
 // - 'missing' (npm run db:seed): solo inserta lo que falta, por id. Nunca pisa lo que el local cambió en la base
 //   (precios, disponibilidad, ajustes). Correrlo de nuevo no cambia nada.
 // - 'reset' (para demo:reset, Fase 10): deja todo lo que viene de docs/data igual a docs/data, incluidos precios,
@@ -47,20 +47,31 @@ const menuFileSchema = z.object({
 const zonesFileSchema = z.array(z.object({ id: slugSchema, name: z.string(), fee: priceSchema }))
 const ingredientsFileSchema = z.array(z.object({ id: slugSchema, name: z.string(), price: priceSchema }))
 
-const businessSchema = z.object({
+const isTimezone = (timezone: string) => {
+  try {
+    new Intl.DateTimeFormat('es-CL', { timeZone: timezone })
+    return true
+  } catch {
+    return false
+  }
+}
+
+/** docs/data/business.json: los datos del local, la misma fuente que lee la web. La API usa estos campos. */
+const businessFileSchema = z.object({
   name: z.string().min(1),
   whatsappNumber: whatsappNumberSchema,
-  pickupAddress: z.string().nullable(),
-  openingHours: z.null(),
-  timezone: z.string(),
-  ordersPaused: z.boolean(),
+  /** Pendiente de confirmar con el local: null y la web la omite. */
+  pickupAddress: z.string().trim().min(1).nullable(),
+  /** null = sin horario definido. Si viene, trae los siete días con rangos HH:MM. */
+  openingHours: openingHoursSchema.nullable(),
+  timezone: z.string().refine(isTimezone, { error: 'Zona horaria desconocida.' }),
 })
 
 export interface SeedData {
   menu: z.infer<typeof menuFileSchema>
   zones: z.infer<typeof zonesFileSchema>
   ingredients: z.infer<typeof ingredientsFileSchema>
-  business: z.infer<typeof businessSchema>
+  business: z.infer<typeof businessFileSchema>
 }
 
 function readJson<T>(dir: URL, file: string, schema: z.ZodType<T>): T {
@@ -70,13 +81,13 @@ function readJson<T>(dir: URL, file: string, schema: z.ZodType<T>): T {
   return result.data
 }
 
-/** Lee y valida docs/data/*.json y los datos del local. */
+/** Lee y valida docs/data/*.json: la carta, las zonas, los ingredientes y los datos del local. */
 export function loadSeedData(dataDir: URL = DOCS_DATA_DIR): SeedData {
   return {
     menu: readJson(dataDir, 'menu.json', menuFileSchema),
     zones: readJson(dataDir, 'zones.json', zonesFileSchema),
     ingredients: readJson(dataDir, 'ingredients.json', ingredientsFileSchema),
-    business: businessSchema.parse(businessSeed),
+    business: readJson(dataDir, 'business.json', businessFileSchema),
   }
 }
 
@@ -163,7 +174,8 @@ export async function seedDatabase(db: Db, data: SeedData, mode: SeedMode = 'mis
     pickupAddress: business.pickupAddress,
     openingHours: business.openingHours,
     timezone: business.timezone,
-    ordersPaused: business.ordersPaused,
+    // La pausa no es un dato del local sino un estado: parte en false y la maneja el panel.
+    ordersPaused: false,
     buildPizzaBasePrice: menu.buildPizza.basePrice,
     buildPizzaPromoPrice: menu.buildPizza.promoPrice,
     buildPizzaPromoIncluded: menu.buildPizza.includedInPromo,

@@ -86,7 +86,8 @@ Reglas:
 
 - `src/domain/cart-storage.ts` y `src/domain/sent-order.ts`: formato y validación de lo que se guarda en
   `localStorage`. Son funciones puras, pero solo tienen sentido en el navegador.
-- `src/config/business.ts`: datos del local y lectura de las variables `VITE_*`.
+- `src/config/business.ts`: lee los datos del local de `docs/data/business.json` (la misma fuente que el seed de la
+  API) y las variables `VITE_*`.
 - `src/data/`: la carta, las zonas y los ingredientes, hasta que la web pida la carta a la API (Fase 7).
 - Componentes, contexto del carrito y hooks.
 

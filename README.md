@@ -87,7 +87,7 @@ API. Solo escucha en `127.0.0.1:5432`, no en la red local.
 - **Migraciones:** el esquema está en `apps/api/src/db/schema/`. Si lo cambias, genera la migración con
   `npm run db:generate --workspace apps/api` y commitéala (queda en `apps/api/src/db/migrations/`).
 - **Seed:** `npm run db:seed` inserta lo que falte de la carta, las zonas, los ingredientes y los ajustes de
-  `docs/data` y `apps/api/src/db/seed-business.ts`. **Nunca pisa lo que ya está en la base** (precios, agotados,
+  `docs/data` (incluido `business.json`). **Nunca pisa lo que ya está en la base** (precios, agotados,
   ajustes): se puede correr las veces que quieras. Si cambias un precio en `docs/data`, el seed no lo actualiza en
   una base que ya tiene ese producto; volver todo a `docs/data` será `npm run demo:reset` (Fase 10).
 - **Tests:** cada archivo de tests de la API vacía `rys_test` y vuelve a cargar el seed. Nunca apuntes
@@ -129,26 +129,31 @@ El sector del checkout y la sección Despacho se actualizan solos.
 En `apps/web/src/data/ingredients.ts` y `docs/data/ingredients.json`. Los precios de hoy son provisorios: falta
 confirmarlos con el local.
 
-### Horario y dirección de retiro
+### Datos del local: nombre, WhatsApp, horario, dirección de retiro y formas de pago
 
-En `apps/web/src/config/business.ts`. Hoy están en `null` porque falta confirmarlos, y la web los omite. Para
-mostrarlos:
+Están en `docs/data/business.json`, la única fuente: la web lo lee en `apps/web/src/config/business.ts` y la API
+en su seed. Un test de cada lado revisa el formato.
 
-```ts
-openingHours: [{ days: 'Lunes a domingo', hours: '18:00 a 23:30' }],
-pickupAddress: 'Calle y número',
+- `whatsappNumber`: número real del local, solo dígitos con código país (`56` más 9 dígitos). En la web,
+  `VITE_WHATSAPP_NUMBER` puede reemplazarlo (ver Archivos de entorno).
+- `pickupAddress` y `openingHours`: hoy están en `null` porque falta confirmarlos, y la web los omite. El horario
+  lleva los siete días, cada uno con sus rangos `"HH:MM"`; un día con `[]` está cerrado y un rango cuyo fin es menor
+  que el inicio cruza la medianoche. Por ejemplo:
+
+```json
+"pickupAddress": "Calle y número",
+"openingHours": {
+  "mon": [],
+  "tue": [["19:00", "23:30"]], "wed": [["19:00", "23:30"]], "thu": [["19:00", "23:30"]],
+  "fri": [["19:00", "01:00"]], "sat": [["19:00", "01:00"]],
+  "sun": [["13:00", "22:00"]]
+}
 ```
 
-Esos valores son solo un ejemplo del formato.
+Esos valores son solo un ejemplo del formato. La web lo muestra agrupado: "Martes a jueves: 19:00 a 23:30".
 
-### Número de WhatsApp
-
-El número real del local está en `DEFAULT_WHATSAPP_NUMBER`, en `apps/web/src/config/business.ts`. Se escribe solo
-con dígitos y código país: `56` más 9 dígitos. Si cambia el número del local, se cambia ahí.
-
-La API toma el nombre, el número, la dirección de retiro y el horario de `apps/api/src/db/seed-business.ts`, que es
-una copia de `business.ts` (una app no puede importar otra). **Si cambias uno, cambia el otro** y corre
-`npm run db:seed`.
+En la base, los datos del local quedan en la tabla `settings`, que `db:seed` solo crea si no existe: un cambio en
+`business.json` no llega a una base ya sembrada (ver Base de datos).
 
 ## Archivos de entorno
 
@@ -171,11 +176,11 @@ Van en `apps/web/`, que es donde Vite los busca. En la raíz del repositorio no 
 | `apps/web/.env.example`           | Sí     | Plantilla que documenta las variables. La web no la lee. |
 | `apps/web/.env.demo`              | Sí     | Activa el modo demo en `npm run build:demo`. |
 | `apps/web/.env.local`             | No     | Para probar en tu computador con tu número, o en modo demo, sin mandarle pedidos al local. |
-| `apps/web/src/config/business.ts` | Sí     | No es de entorno, pero tiene el número real, que se usa si no hay otro configurado. |
+| `docs/data/business.json`         | Sí     | No es de entorno, pero tiene el número real, que se usa si no hay otro configurado. |
 
 Las variables son:
 
-- `VITE_WHATSAPP_NUMBER`: número que recibe los pedidos. Si falta o no es válido, se usa el de `business.ts`.
+- `VITE_WHATSAPP_NUMBER`: número que recibe los pedidos. Si falta o no es válido, se usa el de `docs/data/business.json`.
 - `VITE_DEMO`: `true` para que el pedido no se envíe. Solo se muestra y se copia al portapapeles.
 
 Para probar sin molestar al local, crea `apps/web/.env.local` copiando `apps/web/.env.example` y deja una de estas

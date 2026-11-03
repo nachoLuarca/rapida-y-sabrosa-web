@@ -1,3 +1,8 @@
+import { copyFileSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+import { pathToFileURL } from 'node:url'
+import type { OpeningHoursDto } from '@rys/contracts'
 import { eq, sql } from 'drizzle-orm'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { categories, deliveryZones, ingredients, products, productVariants, settings } from '../src/db/schema/index.ts'
@@ -119,5 +124,47 @@ describe('seed en modo reset (para demo:reset)', () => {
   it('en una base vacía carga lo mismo que el modo missing', async () => {
     expect(await seedDatabase(ctx.db, data, 'reset')).toEqual(FULL)
     expect(await counts()).toEqual(FULL)
+  })
+})
+
+describe('datos del local (docs/data/business.json)', () => {
+  const businessJson = JSON.parse(readFileSync(new URL('../../../docs/data/business.json', import.meta.url), 'utf8'))
+
+  it('el seed los toma de business.json, la misma fuente que la web', async () => {
+    expect(data.business).toEqual({
+      name: businessJson.name,
+      whatsappNumber: businessJson.whatsappNumber,
+      pickupAddress: businessJson.pickupAddress,
+      openingHours: businessJson.openingHours,
+      timezone: businessJson.timezone,
+    })
+    await seedDatabase(ctx.db, data)
+    expect(await currentSettings()).toMatchObject({
+      businessName: 'Rápida y Sabrosa',
+      whatsappNumber: '56974314602',
+      timezone: 'America/Santiago',
+      ordersPaused: false,
+    })
+  })
+
+  it('guarda el horario y la dirección cuando el local los confirme', async () => {
+    const week: OpeningHoursDto = { mon: [], tue: [['19:00', '23:30']], wed: [], thu: [], fri: [], sat: [], sun: [] }
+    const confirmed = { ...data, business: { ...data.business, pickupAddress: 'Calle del local 308', openingHours: week } }
+    await seedDatabase(ctx.db, confirmed)
+    expect(await currentSettings()).toMatchObject({ pickupAddress: 'Calle del local 308', openingHours: week })
+  })
+
+  it('rechaza un business.json con formato inválido, diciendo qué archivo es', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'rys-seed-'))
+    try {
+      for (const file of ['menu.json', 'zones.json', 'ingredients.json']) {
+        copyFileSync(new URL(`../../../docs/data/${file}`, import.meta.url), join(dir, file))
+      }
+      const broken = { ...businessJson, whatsappNumber: '+56 9 7431 4602', openingHours: { mon: [['9:00', '12:00']] } }
+      writeFileSync(join(dir, 'business.json'), JSON.stringify(broken))
+      expect(() => loadSeedData(pathToFileURL(`${dir}/`))).toThrow(/docs\/data\/business\.json no tiene el formato esperado/)
+    } finally {
+      rmSync(dir, { recursive: true, force: true })
+    }
   })
 })
