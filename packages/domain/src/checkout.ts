@@ -3,6 +3,21 @@ import type { OrderDetails, PaymentMethod, Zone } from './types.ts'
 
 export const COMMENT_MAX_LENGTH = 300
 
+/** Mensajes de error del checkout. La API usa los mismos (vía @rys/contracts) para los errores por campo. */
+export const CHECKOUT_MESSAGES = {
+  customerName: 'Ingresa tu nombre, con al menos 2 letras.',
+  phoneMissing: 'Ingresa tu celular, por ejemplo 9 1234 5678.',
+  phoneInvalid: 'Ingresa un celular chileno, por ejemplo 9 1234 5678.',
+  zoneId: 'Elige tu sector para calcular el despacho.',
+  address: 'Ingresa tu dirección con calle y número.',
+  payment: 'Elige cómo vas a pagar.',
+  comment: `El comentario puede tener hasta ${COMMENT_MAX_LENGTH} caracteres.`,
+} as const
+
+/** Largo mínimo del nombre y de la dirección, después de quitar los espacios de los extremos. */
+export const CUSTOMER_NAME_MIN_LENGTH = 2
+export const ADDRESS_MIN_LENGTH = 5
+
 /** Lo que escribe el cliente en el checkout, tal cual viene del formulario. */
 export interface CheckoutForm {
   customerName: string
@@ -40,28 +55,23 @@ export function validateCheckout(form: CheckoutForm, zones: Zone[], paymentMetho
   const address = form.address.trim()
   const comment = form.comment.trim()
 
-  if (customerName.length < 2) errors.customerName = 'Ingresa tu nombre, con al menos 2 letras.'
+  if (customerName.length < CUSTOMER_NAME_MIN_LENGTH) errors.customerName = CHECKOUT_MESSAGES.customerName
 
   const phone = normalizeChileanMobile(form.phone)
   if (!phone) {
-    errors.phone =
-      form.phone.trim() === ''
-        ? 'Ingresa tu celular, por ejemplo 9 1234 5678.'
-        : 'Ingresa un celular chileno, por ejemplo 9 1234 5678.'
+    errors.phone = form.phone.trim() === '' ? CHECKOUT_MESSAGES.phoneMissing : CHECKOUT_MESSAGES.phoneInvalid
   }
 
   const zone = zones.find((z) => z.id === form.zoneId)
   if (form.fulfillment === 'delivery') {
-    if (!zone) errors.zoneId = 'Elige tu sector para calcular el despacho.'
-    if (address.length < 5) errors.address = 'Ingresa tu dirección con calle y número.'
+    if (!zone) errors.zoneId = CHECKOUT_MESSAGES.zoneId
+    if (address.length < ADDRESS_MIN_LENGTH) errors.address = CHECKOUT_MESSAGES.address
   }
 
   const payment = paymentMethods.find((method) => method === form.payment)
-  if (!payment) errors.payment = 'Elige cómo vas a pagar.'
+  if (!payment) errors.payment = CHECKOUT_MESSAGES.payment
 
-  if (comment.length > COMMENT_MAX_LENGTH) {
-    errors.comment = `El comentario puede tener hasta ${COMMENT_MAX_LENGTH} caracteres.`
-  }
+  if (comment.length > COMMENT_MAX_LENGTH) errors.comment = CHECKOUT_MESSAGES.comment
 
   if (!phone || !payment || Object.keys(errors).length > 0) return { ok: false, errors }
 

@@ -48,7 +48,9 @@ export function Header({ onOpenCart }: HeaderProps) {
             {totals.itemCount}
           </span>{' '}
           <span className="sr-only">{totals.itemCount === 1 ? 'producto,' : 'productos,'}</span>{' '}
-          <span className="tabular-nums">{formatClp(totals.subtotal)}</span>
+          {/* En celular el subtotal ya está en la barra flotante: aquí ocuparía el espacio del nombre del local.
+              Sigue en el nombre accesible del botón. */}
+          <span className="sr-only tabular-nums md:not-sr-only">{formatClp(totals.subtotal)}</span>
         </button>
       </div>
     </header>

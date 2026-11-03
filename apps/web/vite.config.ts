@@ -24,8 +24,16 @@ export default defineConfig(({ mode }) => {
   return {
     plugins: [react(), tailwindcss(), ...(isDemo ? [viteSingleFile(), inlineFavicon()] : [])],
     build: isDemo ? { outDir: 'dist-demo', copyPublicDir: false } : {},
+    // En desarrollo /api va a la API: la web y la API comparten origen y no hace falta CORS. La web todavía
+    // no la usa (eso llega en la Fase 7). API_PROXY_TARGET permite apuntar a otro puerto.
+    server: {
+      proxy: { '/api': { target: process.env.API_PROXY_TARGET ?? 'http://localhost:3000' } },
+    },
     test: {
       css: false,
+      // Los tests no dependen de ningún .env local: siempre corren en modo normal y con el número del local.
+      // Los del modo demo lo activan explícitamente (ver src/demo-mode.test.tsx).
+      env: { VITE_DEMO: 'false', VITE_WHATSAPP_NUMBER: '56974314602' },
       projects: [
         // Lógica pura: sin jsdom ni Testing Library, que son lo más caro de levantar.
         { extends: true, test: { name: 'logica', environment: 'node', include: ['src/**/*.test.ts'] } },

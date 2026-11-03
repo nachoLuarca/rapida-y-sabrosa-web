@@ -13,6 +13,29 @@ jobs:
     runs-on: ubuntu-latest
     # Un test colgado no debe dejar el job pegado.
     timeout-minutes: 10
+
+    # PostgreSQL para los tests de integración de la API. Se crea directo la base rys_test: los servicios
+    # arrancan antes del checkout, así que el script de docker/postgres/init no está disponible aquí.
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: rys
+          POSTGRES_PASSWORD: rys
+          POSTGRES_DB: rys_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -h 127.0.0.1 -U rys -d rys_test"
+          --health-interval 2s
+          --health-timeout 3s
+          --health-retries 30
+
+    env:
+      # db:migrate usa DATABASE_URL; los tests, DATABASE_URL_TEST. En CI las dos son la base de tests.
+      DATABASE_URL: postgres://rys:rys@localhost:5432/rys_test
+      DATABASE_URL_TEST: postgres://rys:rys@localhost:5432/rys_test
+
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
@@ -24,6 +47,7 @@ jobs:
       - run: npm ci
       - run: npm run lint
       - run: npm run typecheck
+      - run: npm run db:migrate
       - run: npm test
       - run: npm run build
       - run: npm run build:demo

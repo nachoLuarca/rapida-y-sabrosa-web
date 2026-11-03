@@ -1,0 +1,14 @@
+{
+  "name": "Rápida y Sabrosa",
+  "branch": "Espacio 308",
+  "city": "Isla de Maipo",
+  "whatsappNumber": "56974314602",
+  "instagram": {
+    "handle": "espacio_308",
+    "url": "https://www.instagram.com/espacio_308/"
+  },
+  "pickupAddress": null,
+  "openingHours": null,
+  "timezone": "America/Santiago",
+  "paymentMethods": ["Efectivo", "Transferencia", "Tarjeta"]
+}
