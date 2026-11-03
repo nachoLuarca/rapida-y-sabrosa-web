@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { parseDemoFlag, parseWhatsappNumber } from './business'
+import { business, parseDemoFlag, parseWhatsappNumber } from './business'
 
 describe('parseWhatsappNumber', () => {
   it('acepta un número chileno con código país', () => {
@@ -22,5 +22,13 @@ describe('parseDemoFlag', () => {
     expect(parseDemoFlag('false')).toBe(false)
     expect(parseDemoFlag('1')).toBe(false)
     expect(parseDemoFlag(undefined)).toBe(false)
+  })
+})
+
+describe('entorno de los tests', () => {
+  // vite.config.ts fija las variables: un .env local con VITE_DEMO=true no debe cambiar el resultado.
+  it('corre en modo normal y con el número del local, sin importar los .env locales', () => {
+    expect(business.isDemo).toBe(false)
+    expect(business.whatsappNumber).toBe('56974314602')
   })
 })

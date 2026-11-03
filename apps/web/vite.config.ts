@@ -26,6 +26,9 @@ export default defineConfig(({ mode }) => {
     build: isDemo ? { outDir: 'dist-demo', copyPublicDir: false } : {},
     test: {
       css: false,
+      // Los tests no dependen de ningún .env local: siempre corren en modo normal y con el número del local.
+      // Los del modo demo lo activan explícitamente (ver src/demo-mode.test.tsx).
+      env: { VITE_DEMO: 'false', VITE_WHATSAPP_NUMBER: '56974314602' },
       projects: [
         // Lógica pura: sin jsdom ni Testing Library, que son lo más caro de levantar.
         { extends: true, test: { name: 'logica', environment: 'node', include: ['src/**/*.test.ts'] } },
