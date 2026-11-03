@@ -52,7 +52,8 @@ routes/ → controllers/ → services/ → repositories/ → db/ (Drizzle)
 
 ### packages/contracts
 
-Igual que `@rys/domain`, sin paso de build: exporta `src/index.ts`. Depende solo de Zod. La API valida con
+Igual que `@rys/domain`, sin paso de build: exporta `src/index.ts`. Depende solo de Zod y de `@rys/domain` (de ahí
+toma los mensajes del checkout, los estados del pedido y el normalizador del celular). La API valida con
 estos esquemas lo que entra y lo que sale; la web y el panel los usan para tipar sus llamadas.
 
 ### packages/domain
@@ -66,6 +67,8 @@ Paquete interno, sin paso de build: su `package.json` exporta `src/index.ts` y q
 - Agrupación de zonas por costo de despacho (`delivery.ts`).
 - Formato CLP y normalización del celular chileno (`format.ts`).
 - Totales con despacho, mensaje del pedido y enlace de WhatsApp (`order-message.ts`).
+- Horario del local en America/Santiago: `isOpenAt`, `nextOpening` y `orderingStatus` (`opening-hours.ts`).
+- Estados del pedido y su tabla de transiciones (`order-status.ts`).
 - Búsqueda sin tildes (`search.ts`).
 - Tipos del dominio (`types.ts`).
 
@@ -84,14 +87,15 @@ Reglas:
 - `src/domain/cart-storage.ts` y `src/domain/sent-order.ts`: formato y validación de lo que se guarda en
   `localStorage`. Son funciones puras, pero solo tienen sentido en el navegador.
 - `src/config/business.ts`: datos del local y lectura de las variables `VITE_*`.
-- `src/data/`: la carta, las zonas y los ingredientes, hasta que pasen a la base.
+- `src/data/`: la carta, las zonas y los ingredientes, hasta que la web pida la carta a la API (Fase 7).
 - Componentes, contexto del carrito y hooks.
 
 ### Dependencias permitidas
 
 - Las apps pueden importar paquetes de `packages/`. Un paquete nunca importa una app.
 - Las apps no se importan entre sí: lo que necesiten dos apps va a un paquete.
-- `packages/domain` no tiene dependencias de producción. `packages/contracts` depende solo de Zod.
+- `packages/domain` no tiene dependencias de producción. `packages/contracts` depende solo de Zod y de
+  `@rys/domain`.
 
 ## Decisiones
 

@@ -20,6 +20,6 @@
     "db:seed": "npm run db:seed --workspace apps/api"
   },
   "engines": {
-    "node": ">=22"
+    "node": ">=24"
   }
 }

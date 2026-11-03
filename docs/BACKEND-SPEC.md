@@ -69,7 +69,10 @@ services/      reglas de negocio; no conocen req/res ni SQL
 repositories/  único lugar que habla con la base (Drizzle)
 middlewares/   validate(schema), requireSession, requireRole, rate limits, checkOrigin, errorHandler
 errors/        AppError con código, status y detalles
-events/        bus de eventos en memoria para SSE
+events/        bus de eventos en memoria para SSE (Fase 7)
+http/          utilidades HTTP sin reglas de negocio (ETag)
+scripts/       comandos de consola: migrate.ts y seed.ts (npm run db:migrate / db:seed)
+logger.ts      pino y pino-http con el id de request
 container.ts   arma repositorios y servicios (inyección por constructor, sin framework de DI)
 app.ts         createApp(deps): monta todo; los tests lo usan sin levantar el puerto
 server.ts      lee env, crea el container y escucha
@@ -86,7 +89,7 @@ texto** (los mismos de `docs/data/*.json`), ids de pedidos y usuarios como `uuid
 | Tabla | Campos principales |
 |---|---|
 | `categories` | `id` slug, `name`, `description` null, `kind` (`regular` \| `build_pizza`), `sort_order` |
-| `products` | `id` slug, `category_id`, `name`, `description` null, `price` null (null si tiene variantes), `tags` text[], `image_url` null, `available` bool, `sort_order` |
+| `products` | `id` slug, `category_id`, `name`, `description` null, `price` null (null si tiene variantes), `tags` text[], `image_url` null, `available` bool, `sort_order`. Arma tu pizza también es una fila (`arma-tu-pizza`, en la categoría `build_pizza`, `price` null): así se puede marcar agotada; su precio sale de `settings` |
 | `product_variants` | `id`, `product_id`, `label` ("500 cc"), `price`, `sort_order` |
 | `ingredients` | `id` slug, `name`, `price`, `available` bool, `sort_order` |
 | `delivery_zones` | `id` slug, `name`, `fee`, `active` bool, `sort_order` |
@@ -110,9 +113,13 @@ pedir: si mañana cambia un precio, el pedido de ayer no cambia.
 
 ### Seed
 
-`npm run db:seed` carga la carta desde `docs/data/*.json` y la configuración actual del local. Es
-idempotente (upsert). Lo pendiente de confirmar sigue en `null` o con los precios provisorios marcados.
-En modo demo crea además dos usuarios del panel (ver Autenticación).
+`npm run db:seed` carga la carta desde `docs/data/*.json` y la configuración actual del local
+(`apps/api/src/db/seed-business.ts`, copia de `apps/web/src/config/business.ts`). Es idempotente (upsert por id):
+vuelve a dejar como en `docs/data` los nombres, precios, orden, disponibilidad, zonas activas y la pausa, aunque se
+hayan cambiado en el panel; lo que no viene de `docs/data` (p. ej. una zona creada en el panel) no se toca. Lo
+pendiente de confirmar sigue en `null` o con los precios provisorios marcados. La categoría `build_pizza` es la que
+tiene el id de `buildPizza.productId`, la misma regla que usa la web. En modo demo crea además dos usuarios del
+panel (ver Autenticación).
 
 ## Estados del pedido
 
@@ -147,7 +154,7 @@ Todas las respuestas son JSON. Errores con un formato único:
 
 | Status | Códigos |
 |---|---|
-| 400 | `VALIDATION_ERROR` (con `details` por campo, mismos mensajes que el checkout de la web) |
+| 400 | `VALIDATION_ERROR` (con `details` por campo, mismos mensajes que el checkout de la web; también body que no es JSON o de más de 32 kB, con `details._`) |
 | 401 | `UNAUTHENTICATED`, `INVALID_CREDENTIALS` |
 | 403 | `FORBIDDEN`, `INVALID_ORIGIN` |
 | 404 | `NOT_FOUND` |
@@ -168,6 +175,27 @@ Todas las respuestas son JSON. Errores con un formato único:
 `available: false`, no se ocultan), ingredientes, zonas activas, configuración de Arma tu pizza y
 `business: { name, whatsappNumber, pickupAddress, openingHours, isOpen, nextOpening, ordersPaused }`. El
 `ETag` cambia cuando cambia cualquier dato del catálogo o de los ajustes.
+
+Forma exacta (esquema `menuResponseSchema` de `@rys/contracts`; la respuesta se valida con él antes de salir):
+
+```
+{
+  categories: [{ id, name, description|null, kind: "regular"|"build_pizza", products: [{ id, name, description|null,
+                 price|null, variants: [{ id, label, price }], tags: [], imageUrl|null, available }] }],
+  ingredients: [{ id, name, price, available }],
+  zones: [{ id, name, fee }],
+  buildPizza: { productId, name, description|null, basePrice, promoPrice, includedInPromo, available },
+  business: { name, whatsappNumber, pickupAddress|null, openingHours|null, isOpen, nextOpening|null, ordersPaused }
+}
+```
+
+- Un producto trae `price` o `variants`, nunca ambos. La categoría `build_pizza` viene con `products: []`: lo suyo
+  va en `buildPizza`.
+- `openingHours` trae los siete días (`mon` … `sun`), cada uno con sus rangos `["HH:MM","HH:MM"]`.
+- `nextOpening` es un instante ISO 8601 en UTC (`2026-11-03T22:00:00.000Z`); la web lo muestra en hora de Santiago.
+  Es `null` si el local está abierto o no tiene horario.
+- El `ETag` es el SHA-256 del body: también cambia cuando el local abre o cierra, porque cambian `isOpen` y
+  `nextOpening`.
 
 **`POST /api/orders`**
 
