@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest'
-import { isOpenAt, isValidTime, nextOpening, orderingStatus, type OpeningHours } from './opening-hours.ts'
+import {
+  describeOpeningHours,
+  isOpenAt,
+  isValidTime,
+  nextOpening,
+  orderingStatus,
+  type OpeningHours,
+} from './opening-hours.ts'
 
 // Fechas fijas en UTC. En noviembre Chile continental está en UTC-3 (horario de verano) y en julio en UTC-4.
 // Cambios de 2026: el sábado 4 de abril a las 24:00 el reloj vuelve a las 23:00 (esa hora se repite) y el
@@ -189,5 +196,50 @@ describe('orderingStatus', () => {
     expect(orderingStatus({ openingHours: hours, ordersPaused: true }, tuesday1930).blockedBy).toBe('ORDERS_PAUSED')
     expect(orderingStatus({ openingHours: hours, ordersPaused: true }, tuesday1600).blockedBy).toBe('ORDERS_PAUSED')
     expect(orderingStatus({ openingHours: null, ordersPaused: true }, tuesday1600).blockedBy).toBe('ORDERS_PAUSED')
+  })
+})
+
+describe('describeOpeningHours', () => {
+  it('agrupa los días seguidos con los mismos rangos y omite los cerrados', () => {
+    expect(describeOpeningHours(hours)).toEqual([
+      { days: 'Martes', hours: '12:00 a 15:30 y 19:00 a 23:30' },
+      { days: 'Miércoles y jueves', hours: '19:00 a 23:30' },
+      { days: 'Viernes y sábado', hours: '19:00 a 01:00' },
+      { days: 'Domingo', hours: '13:00 a 22:00' },
+    ])
+  })
+
+  it('usa "a" para tres o más días y junta la semana completa', () => {
+    const week: OpeningHours = Object.fromEntries(
+      ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'].map((day) => [day, [['18:00', '23:30']]]),
+    )
+    expect(describeOpeningHours(week)).toEqual([{ days: 'Lunes a domingo', hours: '18:00 a 23:30' }])
+    expect(describeOpeningHours({ ...week, thu: [] })).toEqual([
+      { days: 'Lunes a miércoles', hours: '18:00 a 23:30' },
+      { days: 'Viernes a domingo', hours: '18:00 a 23:30' },
+    ])
+  })
+
+  it('no junta días con los mismos rangos si hay un día cerrado entre ellos', () => {
+    expect(describeOpeningHours({ mon: [['12:00', '15:00']], wed: [['12:00', '15:00']] })).toEqual([
+      { days: 'Lunes', hours: '12:00 a 15:00' },
+      { days: 'Miércoles', hours: '12:00 a 15:00' },
+    ])
+  })
+
+  it('ordena los rangos de cada día y lista tres o más con comas', () => {
+    expect(
+      describeOpeningHours({
+        sat: [
+          ['19:00', '23:00'],
+          ['08:00', '11:00'],
+          ['12:00', '15:00'],
+        ],
+      }),
+    ).toEqual([{ days: 'Sábado', hours: '08:00 a 11:00, 12:00 a 15:00 y 19:00 a 23:00' }])
+  })
+
+  it('sin ningún día abierto no muestra nada', () => {
+    expect(describeOpeningHours({})).toEqual([])
   })
 })

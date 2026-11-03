@@ -207,3 +207,52 @@ export function orderingStatus(
     blockedBy: settings.ordersPaused ? 'ORDERS_PAUSED' : isOpen ? null : 'STORE_CLOSED',
   }
 }
+
+const DAY_NAMES: Record<DayKey, string> = {
+  mon: 'Lunes',
+  tue: 'Martes',
+  wed: 'Miércoles',
+  thu: 'Jueves',
+  fri: 'Viernes',
+  sat: 'Sábado',
+  sun: 'Domingo',
+}
+
+const listFormat = new Intl.ListFormat('es', { type: 'conjunction' })
+
+export interface OpeningHoursLine {
+  /** "Martes a jueves", "Viernes y sábado", "Domingo". */
+  days: string
+  /** "12:00 a 15:30 y 19:00 a 23:30". */
+  hours: string
+}
+
+/**
+ * Horario para mostrar: agrupa los días seguidos (de lunes a domingo) que tienen los mismos rangos y omite los
+ * días cerrados. Un rango que cruza la medianoche se muestra tal cual: "19:00 a 01:00".
+ */
+export function describeOpeningHours(openingHours: OpeningHours): OpeningHoursLine[] {
+  const lines: { from: DayKey; to: DayKey; count: number; hours: string }[] = []
+  // Texto del día anterior: '' si estuvo cerrado, así un día cerrado corta el grupo.
+  let previousHours = ''
+
+  for (const day of DAY_KEYS) {
+    const ranges = [...(openingHours[day] ?? [])].sort(([a], [b]) => toMinutes(a) - toMinutes(b))
+    const hours = listFormat.format(ranges.map(([start, end]) => `${start} a ${end}`))
+    const last = lines.at(-1)
+    if (hours !== '' && hours === previousHours && last) {
+      last.to = day
+      last.count += 1
+    } else if (hours !== '') {
+      lines.push({ from: day, to: day, count: 1, hours })
+    }
+    previousHours = hours
+  }
+
+  return lines.map(({ from, to, count, hours }) => {
+    const first = DAY_NAMES[from]
+    const lastName = DAY_NAMES[to].toLowerCase()
+    const days = count === 1 ? first : count === 2 ? `${first} y ${lastName}` : `${first} a ${lastName}`
+    return { days, hours }
+  })
+}
