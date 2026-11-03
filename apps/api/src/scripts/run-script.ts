@@ -1,13 +1,5 @@
 import { EnvError, loadEnvFile, parseEnv, type Env } from '../config/env.ts'
-import { createDatabase, describeDatabaseUrl, type Database } from '../db/client.ts'
-
-/** Mensaje para cuando PostgreSQL no responde: qué pasó y qué hacer, sin stack trace. */
-export function databaseUnreachableMessage(url: string): string {
-  return [
-    `No se pudo conectar a PostgreSQL en ${describeDatabaseUrl(url)}.`,
-    'Levanta la base desde la raíz del repositorio con `npm run db:up` (necesita Docker corriendo) y vuelve a intentar.',
-  ].join('\n')
-}
+import { createDatabase, databaseUnreachableMessage, type Database } from '../db/client.ts'
 
 /**
  * Corre un comando de consola de la API (migrar, sembrar…): carga apps/api/.env, valida el entorno, abre la

@@ -5,12 +5,11 @@ import type { Server } from 'node:http'
 import { createApp } from './app.ts'
 import { EnvError, loadEnvFile, parseEnv, type Env } from './config/env.ts'
 import { createContainer } from './container.ts'
-import { checkDatabase, createDatabase, describeDatabaseUrl } from './db/client.ts'
+import { checkDatabase, createDatabase, databaseUnreachableMessage, describeDatabaseUrl } from './db/client.ts'
 import { createLogger } from './logger.ts'
-import { databaseUnreachableMessage } from './scripts/run-script.ts'
 
 function fail(message: string): never {
-  console.error(`\n[api] ${message.replaceAll('\n', '\n[api] ')}\n`)
+  console.error(`\n${message}\n`)
   process.exit(1)
 }
 

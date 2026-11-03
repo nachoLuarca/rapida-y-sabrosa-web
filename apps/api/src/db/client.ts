@@ -60,6 +60,14 @@ export async function checkDatabase(database: Database): Promise<DatabaseState> 
   return rows.length === 0 ? 'not-seeded' : 'ok'
 }
 
+/** Mensaje para cuando PostgreSQL no responde: qué pasó y qué hacer, sin stack trace. */
+export function databaseUnreachableMessage(url: string): string {
+  return [
+    `No se pudo conectar a PostgreSQL en ${describeDatabaseUrl(url)}.`,
+    'Levanta la base desde la raíz del repositorio con `npm run db:up` (necesita Docker corriendo) y vuelve a intentar.',
+  ].join('\n')
+}
+
 /** "postgres://rys:***@localhost:5432/rys" → "localhost:5432/rys", sin credenciales, para los mensajes. */
 export function describeDatabaseUrl(url: string): string {
   try {

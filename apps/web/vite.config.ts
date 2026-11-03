@@ -24,6 +24,11 @@ export default defineConfig(({ mode }) => {
   return {
     plugins: [react(), tailwindcss(), ...(isDemo ? [viteSingleFile(), inlineFavicon()] : [])],
     build: isDemo ? { outDir: 'dist-demo', copyPublicDir: false } : {},
+    // En desarrollo /api va a la API: la web y la API comparten origen y no hace falta CORS. La web todavía
+    // no la usa (eso llega en la Fase 7). API_PROXY_TARGET permite apuntar a otro puerto.
+    server: {
+      proxy: { '/api': { target: process.env.API_PROXY_TARGET ?? 'http://localhost:3000' } },
+    },
     test: {
       css: false,
       // Los tests no dependen de ningún .env local: siempre corren en modo normal y con el número del local.
