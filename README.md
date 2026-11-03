@@ -86,9 +86,10 @@ API. Solo escucha en `127.0.0.1:5432`, no en la red local.
 
 - **Migraciones:** el esquema está en `apps/api/src/db/schema/`. Si lo cambias, genera la migración con
   `npm run db:generate --workspace apps/api` y commitéala (queda en `apps/api/src/db/migrations/`).
-- **Seed:** `npm run db:seed` deja la carta, las zonas, los ingredientes y los ajustes como en `docs/data` y
-  `apps/api/src/db/seed-business.ts`. Se puede correr las veces que quieras sin duplicar nada, pero **pisa** lo que
-  se haya cambiado en la base (precios, agotados, pausa). Lo que no viene de `docs/data` no se toca.
+- **Seed:** `npm run db:seed` inserta lo que falte de la carta, las zonas, los ingredientes y los ajustes de
+  `docs/data` y `apps/api/src/db/seed-business.ts`. **Nunca pisa lo que ya está en la base** (precios, agotados,
+  ajustes): se puede correr las veces que quieras. Si cambias un precio en `docs/data`, el seed no lo actualiza en
+  una base que ya tiene ese producto; volver todo a `docs/data` será `npm run demo:reset` (Fase 10).
 - **Tests:** cada archivo de tests de la API vacía `rys_test` y vuelve a cargar el seed. Nunca apuntes
   `DATABASE_URL_TEST` a una base con datos que importen (los tests se niegan si el nombre no termina en `_test`).
 - Para empezar de cero: `docker compose down -v` borra el contenedor y el volumen con los datos.

@@ -1,55 +1,123 @@
 import { eq, sql } from 'drizzle-orm'
-import { describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it } from 'vitest'
 import { categories, deliveryZones, ingredients, products, productVariants, settings } from '../src/db/schema/index.ts'
 import { loadSeedData, seedDatabase } from '../src/db/seed.ts'
-import { useTestDatabase } from './test-database.ts'
+import { truncateAll, useTestDatabase } from './test-database.ts'
 
 const ctx = useTestDatabase()
+const data = loadSeedData()
+
+const FULL = { categories: 9, products: 88, variants: 16, ingredients: 27, zones: 13, settings: 1 }
+const NOTHING = { categories: 0, products: 0, variants: 0, ingredients: 0, zones: 0, settings: 0 }
 
 async function counts() {
-  const count = async (table: Parameters<typeof ctx.db.$count>[0]) => ctx.db.$count(table)
   return {
-    categories: await count(categories),
-    products: await count(products),
-    variants: await count(productVariants),
-    ingredients: await count(ingredients),
-    zones: await count(deliveryZones),
-    settings: await count(settings),
+    categories: await ctx.db.$count(categories),
+    products: await ctx.db.$count(products),
+    variants: await ctx.db.$count(productVariants),
+    ingredients: await ctx.db.$count(ingredients),
+    zones: await ctx.db.$count(deliveryZones),
+    settings: await ctx.db.$count(settings),
   }
 }
 
-describe('seed', () => {
-  it('carga la carta de docs/data, con Arma tu pizza como producto y una sola fila de ajustes', async () => {
-    expect(await counts()).toEqual({ categories: 9, products: 88, variants: 16, ingredients: 27, zones: 13, settings: 1 })
-    const [buildPizza] = await ctx.db.select().from(products).where(eq(products.id, 'arma-tu-pizza'))
-    expect(buildPizza).toMatchObject({ categoryId: 'arma-tu-pizza', price: null, available: true })
+/** Lo que el local podría haber cambiado desde el panel. */
+async function simulatePanelChanges() {
+  await ctx.db.update(products).set({ price: 99_000, available: false }).where(eq(products.id, 'suprema'))
+  await ctx.db.update(productVariants).set({ price: 8000 }).where(eq(productVariants.id, 'jugo-mango-1l'))
+  await ctx.db.update(ingredients).set({ available: false }).where(eq(ingredients.id, 'tocino'))
+  await ctx.db.update(deliveryZones).set({ active: false, fee: 2500 }).where(eq(deliveryZones.id, 'islita'))
+  await ctx.db
+    .update(settings)
+    .set({ ordersPaused: true, pickupAddress: 'Calle del local 308', buildPizzaPromoPrice: 14000 })
+  await ctx.db.insert(deliveryZones).values({ id: 'zona-nueva', name: 'Zona nueva', fee: 4000, sortOrder: 99 })
+}
+
+const productById = async (id: string) => (await ctx.db.select().from(products).where(eq(products.id, id)))[0]
+const variantById = async (id: string) =>
+  (await ctx.db.select().from(productVariants).where(eq(productVariants.id, id)))[0]
+const ingredientById = async (id: string) => (await ctx.db.select().from(ingredients).where(eq(ingredients.id, id)))[0]
+const zoneById = async (id: string) => (await ctx.db.select().from(deliveryZones).where(eq(deliveryZones.id, id)))[0]
+const currentSettings = async () => (await ctx.db.select().from(settings))[0]
+
+// Cada test parte de una base vacía.
+beforeEach(() => truncateAll(ctx.database))
+
+describe('seed en modo missing (npm run db:seed)', () => {
+  it('en una base vacía carga la carta completa, con Arma tu pizza como producto y una sola fila de ajustes', async () => {
+    expect(await seedDatabase(ctx.db, data)).toEqual(FULL)
+    expect(await counts()).toEqual(FULL)
+    expect(await productById('arma-tu-pizza')).toMatchObject({ categoryId: 'arma-tu-pizza', price: null, available: true })
   })
 
-  it('es idempotente: correrlo de nuevo no duplica nada', async () => {
-    const before = await counts()
-    const summary = await seedDatabase(ctx.db, loadSeedData())
-    expect(summary).toEqual({ categories: 9, products: 88, variants: 16, ingredients: 27, zones: 13 })
-    expect(await counts()).toEqual(before)
+  it('correrlo de nuevo no inserta ni duplica nada', async () => {
+    await seedDatabase(ctx.db, data)
+    expect(await seedDatabase(ctx.db, data)).toEqual(NOTHING)
+    expect(await counts()).toEqual(FULL)
+  })
+
+  it('no pisa precios, disponibilidad, zonas ni ajustes que ya existen', async () => {
+    await seedDatabase(ctx.db, data)
+    await simulatePanelChanges()
+
+    expect(await seedDatabase(ctx.db, data)).toEqual(NOTHING)
+
+    expect(await productById('suprema')).toMatchObject({ price: 99_000, available: false })
+    expect(await variantById('jugo-mango-1l')).toMatchObject({ price: 8000 })
+    expect(await ingredientById('tocino')).toMatchObject({ available: false })
+    expect(await zoneById('islita')).toMatchObject({ active: false, fee: 2500 })
+    expect(await currentSettings()).toMatchObject({
+      ordersPaused: true,
+      pickupAddress: 'Calle del local 308',
+      buildPizzaPromoPrice: 14000,
+    })
+  })
+
+  it('inserta lo que falta: un producto con sus variantes, una zona o los ajustes', async () => {
+    await seedDatabase(ctx.db, data)
+    await ctx.db.delete(products).where(eq(products.id, 'jugo-pina'))
+    await ctx.db.delete(deliveryZones).where(eq(deliveryZones.id, 'cmpc'))
+    await ctx.db.delete(settings)
+    await ctx.db.update(products).set({ price: 15_000 }).where(eq(products.id, 'suprema'))
+
+    expect(await seedDatabase(ctx.db, data)).toEqual({ ...NOTHING, products: 1, variants: 2, zones: 1, settings: 1 })
+    expect(await counts()).toEqual(FULL)
+    expect(await productById('suprema')).toMatchObject({ price: 15_000 })
   })
 
   it('deja lo pendiente de confirmar en null (de verdad null en la base, no un JSON "null")', async () => {
-    const [row] = await ctx.db.execute<{ pickup: string | null; hours_is_null: boolean }>(
+    await seedDatabase(ctx.db, data)
+    const result = await ctx.db.execute<{ pickup: string | null; hours_is_null: boolean }>(
       sql`select pickup_address as pickup, opening_hours is null as hours_is_null from settings`,
-    ).then((result) => result.rows)
-    expect(row).toEqual({ pickup: null, hours_is_null: true })
+    )
+    expect(result.rows).toEqual([{ pickup: null, hours_is_null: true }])
+  })
+})
+
+describe('seed en modo reset (para demo:reset)', () => {
+  it('vuelve a dejar todo lo de docs/data como en docs/data', async () => {
+    await seedDatabase(ctx.db, data)
+    await simulatePanelChanges()
+
+    expect(await seedDatabase(ctx.db, data, 'reset')).toEqual(FULL)
+
+    expect(await productById('suprema')).toMatchObject({ price: 13000, available: true })
+    expect(await variantById('jugo-mango-1l')).toMatchObject({ price: 7000 })
+    expect(await ingredientById('tocino')).toMatchObject({ available: true })
+    expect(await zoneById('islita')).toMatchObject({ active: true, fee: 2000 })
+    expect(await currentSettings()).toMatchObject({ ordersPaused: false, pickupAddress: null, buildPizzaPromoPrice: 13000 })
   })
 
-  it('vuelve a dejar precios y disponibilidad como en docs/data, sin tocar lo que no viene de ahí', async () => {
-    await ctx.db.update(products).set({ price: 99_000, available: false }).where(eq(products.id, 'suprema'))
-    await ctx.db.update(settings).set({ ordersPaused: true })
-    await ctx.db.insert(deliveryZones).values({ id: 'zona-nueva', name: 'Zona nueva', fee: 4000, sortOrder: 99 })
+  it('no toca lo que no viene de docs/data', async () => {
+    await seedDatabase(ctx.db, data)
+    await simulatePanelChanges()
+    await seedDatabase(ctx.db, data, 'reset')
+    expect(await zoneById('zona-nueva')).toMatchObject({ name: 'Zona nueva', fee: 4000 })
+    expect(await counts()).toEqual({ ...FULL, zones: FULL.zones + 1 })
+  })
 
-    await seedDatabase(ctx.db, loadSeedData())
-
-    const [suprema] = await ctx.db.select().from(products).where(eq(products.id, 'suprema'))
-    expect(suprema).toMatchObject({ price: 13000, available: true })
-    const [row] = await ctx.db.select().from(settings)
-    expect(row?.ordersPaused).toBe(false)
-    expect(await ctx.db.$count(deliveryZones, eq(deliveryZones.id, 'zona-nueva'))).toBe(1)
+  it('en una base vacía carga lo mismo que el modo missing', async () => {
+    expect(await seedDatabase(ctx.db, data, 'reset')).toEqual(FULL)
+    expect(await counts()).toEqual(FULL)
   })
 })

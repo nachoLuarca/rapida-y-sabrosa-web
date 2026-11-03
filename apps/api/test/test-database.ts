@@ -23,8 +23,9 @@ export async function truncateAll(database: Database): Promise<void> {
   await database.db.execute(sql.raw(`truncate table ${list} restart identity cascade`))
 }
 
+/** Deja la carta y los ajustes exactamente como en docs/data (el modo 'reset' del seed). */
 export async function reseed(database: Database): Promise<void> {
-  await seedDatabase(database.db, loadSeedData())
+  await seedDatabase(database.db, loadSeedData(), 'reset')
 }
 
 /**

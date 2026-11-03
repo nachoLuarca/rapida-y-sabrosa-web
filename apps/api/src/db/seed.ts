@@ -1,16 +1,18 @@
 import { readFileSync } from 'node:fs'
 import { priceSchema, slugSchema, whatsappNumberSchema } from '@rys/contracts'
 import { getTableColumns, sql, type SQL } from 'drizzle-orm'
-import type { PgTable } from 'drizzle-orm/pg-core'
+import type { AnyPgColumn, PgTable } from 'drizzle-orm/pg-core'
 import { z } from 'zod'
 import type { Db } from './client.ts'
 import { categories, deliveryZones, ingredients, products, productVariants, settings } from './schema/index.ts'
 import { businessSeed } from './seed-business.ts'
 
-// Seed (docs/BACKEND-SPEC.md → Seed): carga la carta de docs/data/*.json y los datos del local. Es idempotente
-// (upsert por id): correrlo de nuevo deja la carta igual a docs/data, incluidos precios, disponibilidad y la
-// pausa, aunque se hayan cambiado en el panel. Lo que no está en docs/data (p. ej. una zona creada en el
-// panel) no se toca.
+// Seed (docs/BACKEND-SPEC.md → Seed): carga la carta de docs/data/*.json y los datos del local. Tiene dos modos:
+// - 'missing' (npm run db:seed): solo inserta lo que falta, por id. Nunca pisa lo que el local cambió en la base
+//   (precios, disponibilidad, ajustes). Correrlo de nuevo no cambia nada.
+// - 'reset' (para demo:reset, Fase 10): deja todo lo que viene de docs/data igual a docs/data, incluidos precios,
+//   disponibilidad, zonas activas y la pausa. Lo que no viene de docs/data (p. ej. una zona creada en el panel)
+//   no se toca.
 
 const DOCS_DATA_DIR = new URL('../../../../docs/data/', import.meta.url)
 
@@ -87,15 +89,19 @@ function updateAllColumns(table: PgTable): Record<string, SQL> {
   )
 }
 
+export type SeedMode = 'missing' | 'reset'
+
+/** Filas que el seed insertó (en 'missing') o dejó como en docs/data (en 'reset'), por tabla. */
 export interface SeedSummary {
   categories: number
   products: number
   variants: number
   ingredients: number
   zones: number
+  settings: number
 }
 
-export async function seedDatabase(db: Db, data: SeedData): Promise<SeedSummary> {
+export async function seedDatabase(db: Db, data: SeedData, mode: SeedMode = 'missing'): Promise<SeedSummary> {
   const { menu, business } = data
   const buildPizzaCategory = menu.categories.find((category) => category.id === menu.buildPizza.productId)
   if (!buildPizzaCategory) {
@@ -150,53 +156,41 @@ export async function seedDatabase(db: Db, data: SeedData): Promise<SeedSummary>
   const ingredientRows = data.ingredients.map((ingredient, index) => ({ ...ingredient, available: true, sortOrder: index }))
   const zoneRows = data.zones.map((zone, index) => ({ ...zone, active: true, sortOrder: index }))
 
-  await db.transaction(async (tx) => {
-    await tx.insert(categories).values(categoryRows).onConflictDoUpdate({
-      target: categories.id,
-      set: updateAllColumns(categories),
-    })
-    await tx.insert(products).values(productRows).onConflictDoUpdate({
-      target: products.id,
-      set: updateAllColumns(products),
-    })
-    if (variantRows.length > 0) {
-      await tx.insert(productVariants).values(variantRows).onConflictDoUpdate({
-        target: productVariants.id,
-        set: updateAllColumns(productVariants),
-      })
-    }
-    await tx.insert(ingredients).values(ingredientRows).onConflictDoUpdate({
-      target: ingredients.id,
-      set: updateAllColumns(ingredients),
-    })
-    await tx.insert(deliveryZones).values(zoneRows).onConflictDoUpdate({
-      target: deliveryZones.id,
-      set: updateAllColumns(deliveryZones),
-    })
-    const settingsRow = {
-      id: 1,
-      businessName: business.name,
-      whatsappNumber: business.whatsappNumber,
-      pickupAddress: business.pickupAddress,
-      openingHours: business.openingHours,
-      timezone: business.timezone,
-      ordersPaused: business.ordersPaused,
-      buildPizzaBasePrice: menu.buildPizza.basePrice,
-      buildPizzaPromoPrice: menu.buildPizza.promoPrice,
-      buildPizzaPromoIncluded: menu.buildPizza.includedInPromo,
-      updatedAt: new Date(),
-    }
-    await tx.insert(settings).values(settingsRow).onConflictDoUpdate({
-      target: settings.id,
-      set: updateAllColumns(settings),
-    })
-  })
-
-  return {
-    categories: categoryRows.length,
-    products: productRows.length,
-    variants: variantRows.length,
-    ingredients: ingredientRows.length,
-    zones: zoneRows.length,
+  const settingsRow = {
+    id: 1,
+    businessName: business.name,
+    whatsappNumber: business.whatsappNumber,
+    pickupAddress: business.pickupAddress,
+    openingHours: business.openingHours,
+    timezone: business.timezone,
+    ordersPaused: business.ordersPaused,
+    buildPizzaBasePrice: menu.buildPizza.basePrice,
+    buildPizzaPromoPrice: menu.buildPizza.promoPrice,
+    buildPizzaPromoIncluded: menu.buildPizza.includedInPromo,
+    updatedAt: new Date(),
   }
+
+  return db.transaction(async (tx) => {
+    // Inserta las filas por id: en 'missing' ignora las que ya existen; en 'reset' las deja como en docs/data.
+    // Devuelve cuántas filas insertó o actualizó.
+    async function upsert<T extends PgTable>(table: T & { id: AnyPgColumn }, rows: T['$inferInsert'][]) {
+      if (rows.length === 0) return 0
+      const insert = tx.insert(table).values(rows)
+      const written =
+        mode === 'reset'
+          ? await insert.onConflictDoUpdate({ target: table.id, set: updateAllColumns(table) }).returning()
+          : await insert.onConflictDoNothing({ target: table.id }).returning()
+      return written.length
+    }
+
+    // El orden importa: las categorías antes que los productos y estos antes que sus variantes.
+    return {
+      categories: await upsert(categories, categoryRows),
+      products: await upsert(products, productRows),
+      variants: await upsert(productVariants, variantRows),
+      ingredients: await upsert(ingredients, ingredientRows),
+      zones: await upsert(deliveryZones, zoneRows),
+      settings: await upsert(settings, [settingsRow]),
+    }
+  })
 }
