@@ -19,6 +19,8 @@ jobs:
         with:
           node-version: 24
           cache: npm
+      # Todo corre desde la raíz del monorepo: un solo npm ci instala los workspaces, y lint, typecheck,
+      # test y build recorren apps/* y packages/*. build:demo es solo de apps/web.
       - run: npm ci
       - run: npm run lint
       - run: npm run typecheck
