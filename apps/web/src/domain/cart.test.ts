@@ -6,9 +6,7 @@ import {
   lineKey,
   lineTotal,
   MAX_LINE_QUANTITY,
-  parseStoredCart,
   quantityInCart,
-  serializeCart,
 } from './cart'
 import type { CartLine, Catalog, LineSelection } from './types'
 
@@ -167,46 +165,5 @@ describe('totales', () => {
     expect(quantityInCart(lines, 'jugo-mango', 'jugo-mango-1l')).toBe(3)
     expect(quantityInCart(lines, 'arma-tu-pizza')).toBe(3)
     expect(quantityInCart(lines, 'suprema')).toBe(0)
-  })
-})
-
-describe('parseStoredCart', () => {
-  it('recupera lo guardado con serializeCart', () => {
-    const lines = [
-      line({ productId: 'suprema' }, 2),
-      mango1l(),
-      line({ productId: 'arma-tu-pizza', ingredientIds: ['choclo', 'tocino'] }),
-    ]
-    expect(parseStoredCart(serializeCart(lines), catalog)).toEqual(lines)
-  })
-
-  it('devuelve un pedido vacío si no hay nada o no se puede leer', () => {
-    for (const raw of [null, '', 'no es json', '{"a":1}', '42', 'null']) {
-      expect(parseStoredCart(raw, catalog)).toEqual([])
-    }
-  })
-
-  it('descarta solo las líneas inválidas o que ya no están en la carta', () => {
-    const raw = JSON.stringify([
-      { productId: 'suprema', quantity: 1 },
-      { productId: 'eliminado', quantity: 1 },
-      { productId: 'suprema', quantity: 0 },
-      { productId: 'suprema', quantity: 1.5 },
-      { productId: 'suprema', quantity: '2' },
-      { productId: 42, quantity: 1 },
-      { productId: 'jugo-mango', variantId: 7, quantity: 1 },
-      { productId: 'arma-tu-pizza', ingredientIds: 'tocino', quantity: 1 },
-      null,
-      'texto',
-    ])
-    expect(parseStoredCart(raw, catalog)).toEqual([suprema()])
-  })
-
-  it('actualiza precios desde la carta, junta repetidos y respeta el máximo', () => {
-    const raw = JSON.stringify([
-      { productId: 'suprema', quantity: 30, unitPrice: 1 },
-      { productId: 'suprema', quantity: 30 },
-    ])
-    expect(parseStoredCart(raw, catalog)).toEqual([line({ productId: 'suprema' }, 50)])
   })
 })

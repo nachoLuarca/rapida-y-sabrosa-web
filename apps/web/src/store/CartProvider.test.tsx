@@ -1,7 +1,7 @@
 import { act, renderHook } from '@testing-library/react'
 import type { ReactNode } from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { CART_STORAGE_KEY } from '../domain/cart'
+import { CART_STORAGE_KEY } from '../domain/cart-storage'
 import { CartProvider } from './CartProvider'
 import { useCart } from './use-cart'
 

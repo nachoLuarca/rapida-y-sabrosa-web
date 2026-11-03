@@ -2,7 +2,7 @@ import { cleanup, render, screen, within } from '@testing-library/react'
 import userEvent, { type UserEvent } from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi, type MockInstance } from 'vitest'
 import App from './App'
-import { CART_STORAGE_KEY } from './domain/cart'
+import { CART_STORAGE_KEY } from './domain/cart-storage'
 import { SENT_ORDER_STORAGE_KEY, SENT_ORDER_TTL_MS } from './domain/sent-order'
 import { addAndOpenCart, fillCheckout, headerCartButton, type CheckoutData } from './test/order-helpers'
 

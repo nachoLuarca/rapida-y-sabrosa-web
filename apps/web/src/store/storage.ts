@@ -1,4 +1,4 @@
-import { CART_STORAGE_KEY, parseStoredCart, serializeCart } from '../domain/cart'
+import { CART_STORAGE_KEY, parseStoredCart, serializeCart } from '../domain/cart-storage'
 import {
   cartFingerprint,
   isSentMarkExpired,
