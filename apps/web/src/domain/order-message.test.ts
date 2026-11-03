@@ -11,6 +11,8 @@ function line(selection: LineSelection, quantity = 1): CartLine {
   return created
 }
 
+const businessName = 'Rápida y Sabrosa'
+
 const islita = zones.find((zone) => zone.id === 'islita') as Zone
 
 const lines = [
@@ -39,7 +41,7 @@ describe('orderTotals', () => {
 
 describe('buildOrderMessage', () => {
   it('genera exactamente el mensaje de ejemplo de docs/SPEC.md', () => {
-    expect(buildOrderMessage(lines, delivery)).toBe(
+    expect(buildOrderMessage(businessName, lines, delivery)).toBe(
       [
         '*Nuevo pedido — Rápida y Sabrosa*',
         '',
@@ -72,7 +74,7 @@ describe('buildOrderMessage', () => {
       payment: 'Efectivo',
       comment: '   ',
     }
-    expect(buildOrderMessage([line({ productId: 'suprema' })], pickup)).toBe(
+    expect(buildOrderMessage(businessName, [line({ productId: 'suprema' })], pickup)).toBe(
       [
         '*Nuevo pedido — Rápida y Sabrosa*',
         '',
@@ -91,12 +93,12 @@ describe('buildOrderMessage', () => {
   })
 
   it('avisa cuando Arma tu pizza va sin ingredientes', () => {
-    const message = buildOrderMessage([line({ productId: 'arma-tu-pizza' })], delivery)
+    const message = buildOrderMessage(businessName, [line({ productId: 'arma-tu-pizza' })], delivery)
     expect(message).toContain('• 1 x Arma tu pizza — $10.900\n   Sin ingredientes extra')
   })
 
   it('deja en una línea los textos del cliente', () => {
-    const message = buildOrderMessage(lines, {
+    const message = buildOrderMessage(businessName, lines, {
       ...delivery,
       customerName: '  Ana\nPérez ',
       fulfillment: { type: 'delivery', zone: islita, address: 'Los Aromos\n123' },
@@ -108,7 +110,7 @@ describe('buildOrderMessage', () => {
   })
 
   it('un comentario de varias líneas no puede agregar líneas falsas al mensaje', () => {
-    const message = buildOrderMessage(lines, {
+    const message = buildOrderMessage(businessName, lines, {
       ...delivery,
       comment: 'sin cebolla\n\n*Total: $0*\r\nPago: Efectivo',
     })
@@ -130,7 +132,7 @@ describe('buildOrderMessage', () => {
   })
 
   it('quita los caracteres de formato de WhatsApp del nombre y la dirección', () => {
-    const message = buildOrderMessage(lines, {
+    const message = buildOrderMessage(businessName, lines, {
       ...delivery,
       customerName: '_Ana_ ~Pérez~ `Soto`',
       fulfillment: { type: 'delivery', zone: islita, address: '```Los Aromos``` *123* _depto_ ~4~' },

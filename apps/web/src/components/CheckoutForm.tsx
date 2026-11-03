@@ -93,7 +93,7 @@ export function CheckoutForm({ form, onChange, onSent }: CheckoutFormProps) {
       setFocusRequest({ field: firstErrorField(result.errors) ?? 'customerName' })
       return
     }
-    const message = buildOrderMessage(lines, result.order)
+    const message = buildOrderMessage(business.name, lines, result.order)
     if (business.isDemo) {
       setSending(true)
       const copied = await copyToClipboard(message)

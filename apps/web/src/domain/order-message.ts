@@ -1,4 +1,3 @@
-import { business } from '../config/business'
 import { cartTotals, lineTotal } from './cart'
 import { formatChileanMobile, formatClp } from './format'
 import type { CartLine, Fulfillment, OrderDetails } from './types'
@@ -39,14 +38,14 @@ function lineText(line: CartLine): string[] {
   return text
 }
 
-/** Mensaje de WhatsApp con el formato de docs/SPEC.md (negritas con *). */
-export function buildOrderMessage(lines: CartLine[], order: OrderDetails): string {
+/** Mensaje de WhatsApp con el formato de docs/SPEC.md (negritas con *). `businessName` va en el título. */
+export function buildOrderMessage(businessName: string, lines: CartLine[], order: OrderDetails): string {
   const { fulfillment } = order
   const totals = orderTotals(lines, fulfillment)
   const comment = customerText(order.comment ?? '')
 
   const blocks: string[][] = [
-    [`*Nuevo pedido — ${business.name}*`],
+    [`*Nuevo pedido — ${businessName}*`],
     lines.flatMap(lineText),
     [
       `Subtotal: ${formatClp(totals.subtotal)}`,
