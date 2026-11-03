@@ -1,4 +1,4 @@
-import type { Category, Product } from '../domain/types'
+import type { Category, Product } from '@rys/domain'
 import { ProductRow } from './ProductRow'
 
 interface CategorySectionProps {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { groupZonesByFee, minDeliveryFee } from './delivery'
+import { groupZonesByFee, minDeliveryFee } from './delivery.ts'
 
 const zones = [
   { id: 'c', name: 'C', fee: 3000 },

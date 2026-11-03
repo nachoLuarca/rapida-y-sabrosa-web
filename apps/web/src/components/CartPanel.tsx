@@ -1,6 +1,6 @@
 import { X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
-import { emptyCheckoutForm, type CheckoutForm as CheckoutFormData } from '../domain/checkout'
+import { emptyCheckoutForm, type CheckoutForm as CheckoutFormData } from '@rys/domain'
 import { useCart } from '../store/use-cart'
 import { CartContents } from './CartContents'
 import { CheckoutForm } from './CheckoutForm'

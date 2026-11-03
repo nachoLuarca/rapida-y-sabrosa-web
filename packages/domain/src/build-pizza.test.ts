@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { quoteBuildPizza } from './build-pizza'
-import type { BuildPizzaConfig, Ingredient } from './types'
+import { quoteBuildPizza } from './build-pizza.ts'
+import type { BuildPizzaConfig, Ingredient } from './types.ts'
 
 const config: BuildPizzaConfig = {
   productId: 'arma-tu-pizza',

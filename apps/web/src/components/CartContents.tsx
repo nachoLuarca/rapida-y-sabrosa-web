@@ -1,6 +1,5 @@
 import { ShoppingBag } from 'lucide-react'
-import { lineTotal } from '../domain/cart'
-import { formatClp } from '../domain/format'
+import { formatClp, lineTotal } from '@rys/domain'
 import { useCart } from '../store/use-cart'
 import { QuantityControl } from './ui/QuantityControl'
 

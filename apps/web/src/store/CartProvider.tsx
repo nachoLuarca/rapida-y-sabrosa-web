@@ -1,8 +1,7 @@
 import { useEffect, useMemo, useReducer, useState, type ReactNode } from 'react'
+import { cartReducer, cartTotals, createLine, type CartAction, type Catalog } from '@rys/domain'
 import { catalog as defaultCatalog } from '../data/catalog'
-import { cartReducer, cartTotals, createLine, type CartAction } from '../domain/cart'
 import { cartFingerprint } from '../domain/sent-order'
-import type { Catalog } from '../domain/types'
 import { CartContext, type CartContextValue } from './cart-context'
 import { loadSession, saveCart, saveSentMark } from './storage'
 

@@ -1,3 +1,4 @@
+import type { CartLine, Catalog } from '@rys/domain'
 import { CART_STORAGE_KEY, parseStoredCart, serializeCart } from '../domain/cart-storage'
 import {
   cartFingerprint,
@@ -8,7 +9,6 @@ import {
   type SentMark,
   type SentOrder,
 } from '../domain/sent-order'
-import type { CartLine, Catalog } from '../domain/types'
 
 /** Lee el pedido guardado. Si localStorage no está disponible o falla, parte vacío. */
 export function loadCart(catalog: Catalog): CartLine[] {

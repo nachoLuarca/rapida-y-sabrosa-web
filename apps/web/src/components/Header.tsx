@@ -1,7 +1,7 @@
 import { ShoppingBag } from 'lucide-react'
 import type { MouseEvent } from 'react'
+import { formatClp } from '@rys/domain'
 import { business } from '../config/business'
-import { formatClp } from '../domain/format'
 import { useCart } from '../store/use-cart'
 
 const links = [

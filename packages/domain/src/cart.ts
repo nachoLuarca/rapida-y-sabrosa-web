@@ -1,5 +1,5 @@
-import { quoteBuildPizza } from './build-pizza'
-import type { CartLine, Catalog, Ingredient, LineSelection } from './types'
+import { quoteBuildPizza } from './build-pizza.ts'
+import type { CartLine, Catalog, Ingredient, LineSelection } from './types.ts'
 
 export const MAX_LINE_QUANTITY = 50
 

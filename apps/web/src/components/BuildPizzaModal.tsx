@@ -1,10 +1,8 @@
 import { X } from 'lucide-react'
 import { useState } from 'react'
+import { formatClp, quoteBuildPizza, type Ingredient } from '@rys/domain'
 import { ingredients } from '../data/ingredients'
 import { buildPizza } from '../data/menu'
-import { quoteBuildPizza } from '../domain/build-pizza'
-import { formatClp } from '../domain/format'
-import type { Ingredient } from '../domain/types'
 import { useCart } from '../store/use-cart'
 import { Modal } from './ui/Modal'
 

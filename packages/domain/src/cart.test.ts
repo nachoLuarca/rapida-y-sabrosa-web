@@ -7,8 +7,8 @@ import {
   lineTotal,
   MAX_LINE_QUANTITY,
   quantityInCart,
-} from './cart'
-import type { CartLine, Catalog, LineSelection } from './types'
+} from './cart.ts'
+import type { CartLine, Catalog, LineSelection } from './types.ts'
 
 const catalog: Catalog = {
   products: [

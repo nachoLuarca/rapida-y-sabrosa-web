@@ -1,5 +1,5 @@
 import { Minus, Plus } from 'lucide-react'
-import { MAX_LINE_QUANTITY } from '../../domain/cart'
+import { MAX_LINE_QUANTITY } from '@rys/domain'
 
 interface QuantityControlProps {
   quantity: number

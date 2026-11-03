@@ -1,6 +1,6 @@
 import { useState } from 'react'
+import { whatsappUrl } from '@rys/domain'
 import { business } from '../config/business'
-import { whatsappUrl } from '../domain/order-message'
 import type { SentDetails } from '../domain/sent-order'
 import { copyToClipboard } from './ui/clipboard'
 

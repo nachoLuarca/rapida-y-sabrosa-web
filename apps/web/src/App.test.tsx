@@ -1,9 +1,9 @@
 import { render, screen, within } from '@testing-library/react'
 import userEvent, { type UserEvent } from '@testing-library/user-event'
 import { afterEach, describe, expect, it } from 'vitest'
+import { matchesSearch } from '@rys/domain'
 import App from './App'
 import { categories, products } from './data/menu'
-import { matchesSearch } from './domain/search'
 
 afterEach(() => {
   localStorage.clear()

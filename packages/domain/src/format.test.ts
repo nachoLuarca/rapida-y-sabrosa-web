@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { formatChileanMobile, formatClp, normalizeChileanMobile } from './format'
+import { formatChileanMobile, formatClp, normalizeChileanMobile } from './format.ts'
 
 describe('formatClp', () => {
   it('usa punto de miles y signo peso, sin decimales', () => {

@@ -1,4 +1,4 @@
-import type { BuildPizzaConfig, Ingredient } from './types'
+import type { BuildPizzaConfig, Ingredient } from './types.ts'
 
 export interface BuildPizzaQuote {
   total: number

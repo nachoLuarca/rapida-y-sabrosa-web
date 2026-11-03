@@ -1,5 +1,4 @@
-import { cartReducer, createLine } from './cart'
-import type { CartLine, Catalog, LineSelection } from './types'
+import { cartReducer, createLine, type CartLine, type Catalog, type LineSelection } from '@rys/domain'
 
 /** Clave versionada: si cambia el formato guardado, se sube la versión y lo anterior se ignora. */
 export const CART_STORAGE_KEY = 'rys.cart.v1'

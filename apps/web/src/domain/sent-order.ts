@@ -1,4 +1,4 @@
-import type { CartLine } from './types'
+import type { CartLine } from '@rys/domain'
 
 /** Lo único que se guarda en localStorage: nunca datos del cliente. */
 export interface SentMark {

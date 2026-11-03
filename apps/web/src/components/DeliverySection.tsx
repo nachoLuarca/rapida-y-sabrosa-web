@@ -1,7 +1,6 @@
+import { formatClp, groupZonesByFee } from '@rys/domain'
 import { business } from '../config/business'
 import { zones } from '../data/zones'
-import { groupZonesByFee } from '../domain/delivery'
-import { formatClp } from '../domain/format'
 
 const listFormat = new Intl.ListFormat('es', { type: 'conjunction' })
 const disjunction = new Intl.ListFormat('es', { type: 'disjunction' })

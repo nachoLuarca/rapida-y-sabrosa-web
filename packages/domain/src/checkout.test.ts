@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { emptyCheckoutForm, firstErrorField, validateCheckout, type CheckoutForm } from './checkout'
-import type { PaymentMethod, Zone } from './types'
+import { emptyCheckoutForm, firstErrorField, validateCheckout, type CheckoutForm } from './checkout.ts'
+import type { PaymentMethod, Zone } from './types.ts'
 
 const zones: Zone[] = [
   { id: 'islita', name: 'Islita', fee: 2000 },

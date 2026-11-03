@@ -1,9 +1,8 @@
 import { describe, expect, it } from 'vitest'
-import { catalog } from '../data/catalog'
-import { zones } from '../data/zones'
-import { createLine } from './cart'
-import { buildOrderMessage, orderTotals, whatsappUrl } from './order-message'
-import type { CartLine, LineSelection, OrderDetails, Zone } from './types'
+import { createLine } from './cart.ts'
+import { buildOrderMessage, orderTotals, whatsappUrl } from './order-message.ts'
+import { catalog, zones } from './test/fixtures.ts'
+import type { CartLine, LineSelection, OrderDetails, Zone } from './types.ts'
 
 function line(selection: LineSelection, quantity = 1): CartLine {
   const created = createLine(catalog, selection, quantity)

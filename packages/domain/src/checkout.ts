@@ -1,5 +1,5 @@
-import { normalizeChileanMobile } from './format'
-import type { OrderDetails, PaymentMethod, Zone } from './types'
+import { normalizeChileanMobile } from './format.ts'
+import type { OrderDetails, PaymentMethod, Zone } from './types.ts'
 
 export const COMMENT_MAX_LENGTH = 300
 

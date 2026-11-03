@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { createLine } from './cart'
+import { createLine, type CartLine, type Catalog, type LineSelection } from '@rys/domain'
 import { parseStoredCart, serializeCart } from './cart-storage'
-import type { CartLine, Catalog, LineSelection } from './types'
 
 const catalog: Catalog = {
   products: [

@@ -1,6 +1,6 @@
+import type { Ingredient } from '@rys/domain'
 // Copia exacta de docs/data/ingredients.json. Si cambia la carta, actualiza ambos (un test lo verifica).
 // Precios provisorios: pendientes de confirmar con el local (docs/SPEC.md).
-import type { Ingredient } from '../domain/types'
 
 export const ingredients: Ingredient[] = [
   {

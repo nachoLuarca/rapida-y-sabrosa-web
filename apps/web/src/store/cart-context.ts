@@ -1,7 +1,6 @@
 import { createContext } from 'react'
-import type { CartTotals } from '../domain/cart'
+import type { CartLine, CartTotals, LineSelection } from '@rys/domain'
 import type { SentDetails, SentOrder } from '../domain/sent-order'
-import type { CartLine, LineSelection } from '../domain/types'
 
 export interface CartContextValue {
   lines: CartLine[]

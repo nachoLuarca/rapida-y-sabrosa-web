@@ -1,6 +1,6 @@
-import { cartTotals, lineTotal } from './cart'
-import { formatChileanMobile, formatClp } from './format'
-import type { CartLine, Fulfillment, OrderDetails } from './types'
+import { cartTotals, lineTotal } from './cart.ts'
+import { formatChileanMobile, formatClp } from './format.ts'
+import type { CartLine, Fulfillment, OrderDetails } from './types.ts'
 
 export interface OrderTotals {
   subtotal: number

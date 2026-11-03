@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type MouseEvent } from 'react'
+import { matchesSearch } from '@rys/domain'
 import { buildPizza, categories, products } from '../data/menu'
-import { matchesSearch } from '../domain/search'
 import { useActiveSection } from '../hooks/use-active-section'
 import { BuildPizzaBlock } from './BuildPizzaBlock'
 import { CategorySection } from './CategorySection'

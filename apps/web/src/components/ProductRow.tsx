@@ -1,6 +1,4 @@
-import { lineKey, quantityInCart } from '../domain/cart'
-import { formatClp } from '../domain/format'
-import type { Product, ProductVariant } from '../domain/types'
+import { formatClp, lineKey, quantityInCart, type Product, type ProductVariant } from '@rys/domain'
 import { useCart } from '../store/use-cart'
 import { AddButton } from './ui/AddButton'
 import { QuantityControl } from './ui/QuantityControl'

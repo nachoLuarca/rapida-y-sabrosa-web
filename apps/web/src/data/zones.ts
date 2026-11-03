@@ -1,5 +1,5 @@
+import type { Zone } from '@rys/domain'
 // Copia exacta de docs/data/zones.json. Si cambia la carta, actualiza ambos (un test lo verifica).
-import type { Zone } from '../domain/types'
 
 export const zones: Zone[] = [
   {

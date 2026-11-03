@@ -1,4 +1,4 @@
-import type { Catalog } from '../domain/types'
+import type { Catalog } from '@rys/domain'
 import { ingredients } from './ingredients'
 import { buildPizza, products } from './menu'
 

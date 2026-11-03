@@ -1,8 +1,7 @@
 import type { MouseEvent } from 'react'
+import { formatClp, minDeliveryFee } from '@rys/domain'
 import { business } from '../config/business'
 import { zones } from '../data/zones'
-import { minDeliveryFee } from '../domain/delivery'
-import { formatClp } from '../domain/format'
 import { PizzaIllustration } from './PizzaIllustration'
 
 interface HeroProps {

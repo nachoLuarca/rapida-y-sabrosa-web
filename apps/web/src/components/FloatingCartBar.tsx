@@ -1,5 +1,5 @@
 import type { MouseEvent } from 'react'
-import { formatClp } from '../domain/format'
+import { formatClp } from '@rys/domain'
 import { useCart } from '../store/use-cart'
 
 interface FloatingCartBarProps {

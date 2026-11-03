@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
+import { createLine, type CartLine, type LineSelection } from '@rys/domain'
 import { catalog } from '../data/catalog'
-import { createLine } from './cart'
 import {
   cartFingerprint,
   isSentMarkExpired,
@@ -10,7 +10,6 @@ import {
   type SentMark,
   type SentOrder,
 } from './sent-order'
-import type { CartLine, LineSelection } from './types'
 
 const mark: SentMark = { sentAt: 1_000_000_000, cart: 'suprema||*2' }
 

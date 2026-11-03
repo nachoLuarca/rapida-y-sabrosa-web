@@ -1,16 +1,17 @@
 import { useEffect, useState, type FormEvent, type InputHTMLAttributes, type ReactNode } from 'react'
-import { business } from '../config/business'
-import { zones } from '../data/zones'
-import { cartTotals } from '../domain/cart'
 import {
+  buildOrderMessage,
+  cartTotals,
   COMMENT_MAX_LENGTH,
   firstErrorField,
+  formatClp,
   validateCheckout,
+  whatsappUrl,
   type CheckoutField,
   type CheckoutForm as CheckoutFormData,
-} from '../domain/checkout'
-import { formatClp } from '../domain/format'
-import { buildOrderMessage, whatsappUrl } from '../domain/order-message'
+} from '@rys/domain'
+import { business } from '../config/business'
+import { zones } from '../data/zones'
 import type { SentDetails } from '../domain/sent-order'
 import { useCart } from '../store/use-cart'
 import { copyToClipboard } from './ui/clipboard'

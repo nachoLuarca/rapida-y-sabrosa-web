@@ -1,5 +1,5 @@
+import type { BuildPizzaConfig, Category, Product } from '@rys/domain'
 // Copia exacta de docs/data/menu.json. Si cambia la carta, actualiza ambos (un test lo verifica).
-import type { BuildPizzaConfig, Category, Product } from '../domain/types'
 
 export const categories: Category[] = [
   {

@@ -1,6 +1,6 @@
 import { Search } from 'lucide-react'
 import { useEffect, useRef } from 'react'
-import type { Category } from '../domain/types'
+import type { Category } from '@rys/domain'
 
 interface MenuToolbarProps {
   query: string

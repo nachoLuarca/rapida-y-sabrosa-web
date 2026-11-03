@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { matchesSearch, normalizeForSearch } from './search'
+import { matchesSearch, normalizeForSearch } from './search.ts'
 
 describe('normalizeForSearch', () => {
   it('quita tildes, eñes, mayúsculas y espacios repetidos', () => {

@@ -1,7 +1,6 @@
 import type { MouseEvent } from 'react'
+import { formatClp, type Category } from '@rys/domain'
 import { buildPizza } from '../data/menu'
-import { formatClp } from '../domain/format'
-import type { Category } from '../domain/types'
 
 interface BuildPizzaBlockProps {
   category: Category
