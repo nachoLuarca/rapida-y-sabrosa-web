@@ -1,0 +1,21 @@
+{
+  "name": "@rys/domain",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Reglas de negocio puras de Rápida y Sabrosa, compartidas por la web y la futura API.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "lint": "oxlint --deny-warnings",
+    "typecheck": "tsc -b",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@types/node": "^24.19.2",
+    "oxlint": "^1.90.0",
+    "typescript": "~7.0.2",
+    "vitest": "^5.0.5"
+  }
+}
