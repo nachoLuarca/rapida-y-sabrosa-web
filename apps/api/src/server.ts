@@ -33,7 +33,9 @@ if (state !== 'ok') {
 }
 
 const logger = createLogger(env.LOG_LEVEL)
-const app = createApp({ ...createContainer({ database }), logger })
+const { controllers } = createContainer({ database, demoMode: env.DEMO_MODE })
+// La documentación OpenAPI (/api/docs) solo se publica en desarrollo.
+const app = createApp({ controllers, logger, routes: { docs: env.NODE_ENV === 'development' } })
 
 const server: Server = app.listen(env.PORT)
 server.on('listening', () => {

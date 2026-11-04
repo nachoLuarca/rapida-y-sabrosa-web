@@ -1,12 +1,14 @@
 import { sql } from 'drizzle-orm'
 import { pino } from 'pino'
 import { afterAll, beforeAll, inject } from 'vitest'
-import { createApp } from '../src/app.ts'
+import { createApp, type AppDeps } from '../src/app.ts'
 import { createContainer, type ContainerOptions } from '../src/container.ts'
 import { createDatabase, type Database } from '../src/db/client.ts'
 import { loadSeedData, seedDatabase } from '../src/db/seed.ts'
 
 export const silentLogger = pino({ level: 'silent' })
+
+export type AppOptions = Omit<ContainerOptions, 'database'> & { routes?: AppDeps['routes'] }
 
 /** Una URL donde no hay ningún PostgreSQL: para probar qué pasa cuando la base no responde. */
 export const UNREACHABLE_DATABASE_URL = 'postgres://rys:rys@127.0.0.1:1/rys_test'
@@ -62,8 +64,14 @@ export function useTestDatabase() {
     get db() {
       return current().db
     },
-    app(options: Omit<ContainerOptions, 'database'> = {}) {
-      return createApp({ ...createContainer({ database: current(), ...options }), logger: silentLogger })
+    app(options: AppOptions = {}) {
+      return this.container(options).app
+    },
+    /** La API y su bus de eventos, para escuchar lo que publica. */
+    container({ routes, ...options }: AppOptions = {}) {
+      const container = createContainer({ database: current(), ...options })
+      const app = createApp({ controllers: container.controllers, logger: silentLogger, routes })
+      return { app, bus: container.bus }
     },
   }
 }

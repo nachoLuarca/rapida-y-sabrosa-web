@@ -2,16 +2,9 @@ import type { CategoryDto, MenuResponse, ProductDto } from '@rys/contracts'
 import { orderingStatus } from '@rys/domain'
 import type { CatalogRepository, ProductRow, VariantRow } from '../repositories/catalog-repository.ts'
 import type { SettingsRepository } from '../repositories/settings-repository.ts'
+import { MissingSeedError } from './missing-seed-error.ts'
 
 export type Clock = () => Date
-
-/** La base no tiene lo mínimo para armar la carta: falta correr las migraciones o el seed. */
-export class MissingSeedError extends Error {
-  constructor(what: string) {
-    super(`${what}. Corre \`npm run db:seed\` desde la raíz.`)
-    this.name = 'MissingSeedError'
-  }
-}
 
 /** Arma la carta de GET /api/menu. No conoce HTTP ni SQL. */
 export class CatalogService {
