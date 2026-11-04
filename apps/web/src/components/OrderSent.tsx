@@ -9,6 +9,8 @@ interface OrderSentProps {
   sent: SentDetails | null
   /** Código del pedido si se creó en la API (también después de recargar). */
   code: string | null
+  /** El pedido se creó en modo demo (también después de recargar: va en la marca). */
+  demo: boolean
   onBackToOrder: () => void
   onNewOrder: () => void
 }
@@ -41,15 +43,24 @@ function Message({ text }: { text: string }) {
  * Confirmación creada en la API: el pedido ya existe con su código. El cliente abre WhatsApp con su clic (así el
  * navegador no lo bloquea como popup). No se ofrece volver al pedido: reenviarlo crearía otro.
  */
-function ApiOrderSent({ sent, code, onNewOrder }: Omit<OrderSentProps, 'onBackToOrder'> & { code: string }) {
+function ApiOrderSent({ sent, code, demo, onNewOrder }: Omit<OrderSentProps, 'onBackToOrder'> & { code: string }) {
   if (!sent) {
     return (
       <>
         <div className="min-h-0 flex-1 overflow-y-auto px-5 py-5">
-          <p>
-            Tu pedido <strong>{code}</strong> ya quedó registrado en el local. Si tienes dudas, escríbele al local por
-            WhatsApp con ese código.
-          </p>
+          {demo ? (
+            <>
+              <p>
+                Tu pedido <strong>{code}</strong> quedó registrado.
+              </p>
+              <p className="mt-4 rounded-xl bg-queso-claro p-4 font-bold">Modo demo: el local no lo va a preparar.</p>
+            </>
+          ) : (
+            <p>
+              Tu pedido <strong>{code}</strong> ya quedó registrado en el local. Si tienes dudas, escríbele al local por
+              WhatsApp con ese código.
+            </p>
+          )}
         </div>
         <div className="flex shrink-0 flex-col gap-3 border-t border-linea px-5 py-4">
           <NewOrderButton onClick={onNewOrder} />
@@ -90,10 +101,10 @@ function ApiOrderSent({ sent, code, onNewOrder }: Omit<OrderSentProps, 'onBackTo
 }
 
 /** Paso 3 del panel: confirmación con el mensaje enviado (o copiado, en modo demo). */
-export function OrderSent({ sent, code, onBackToOrder, onNewOrder }: OrderSentProps) {
+export function OrderSent({ sent, code, demo, onBackToOrder, onNewOrder }: OrderSentProps) {
   const [copiedAgain, setCopiedAgain] = useState<boolean | null>(null)
 
-  if (code) return <ApiOrderSent sent={sent} code={code} onNewOrder={onNewOrder} />
+  if (code) return <ApiOrderSent sent={sent} code={code} demo={demo} onNewOrder={onNewOrder} />
 
   if (!sent) {
     return (

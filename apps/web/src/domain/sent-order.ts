@@ -7,6 +7,8 @@ export interface SentMark {
   cart: string
   /** Código del pedido en el sistema (RYS-0042), cuando se creó en la API. No es un dato personal. */
   code?: string
+  /** true si el pedido se creó en modo demo (la API lo dijo). Tampoco es un dato personal. */
+  demo?: true
 }
 
 /** Lo recién enviado. Trae los datos del cliente, así que vive solo en memoria. */
@@ -41,15 +43,15 @@ export function cartFingerprint(lines: CartLine[]): string {
     .join(';')
 }
 
-export function serializeSentMark({ sentAt, cart, code }: SentMark): string {
-  return JSON.stringify(code ? { sentAt, cart, code } : { sentAt, cart })
+export function serializeSentMark({ sentAt, cart, code, demo }: SentMark): string {
+  return JSON.stringify({ sentAt, cart, ...(code ? { code } : {}), ...(code && demo ? { demo: true } : {}) })
 }
 
 const ORDER_CODE = /^RYS-\d{4,}$/
 
 /**
  * Lee la marca guardada. Devuelve null si falta o no es válida. Nunca lanza errores.
- * Solo acepta sentAt, cart y, opcionalmente, code: una marca con otros campos es de la versión que guardaba el
+ * Solo acepta sentAt, cart y, opcionalmente, code y demo: una marca con otros campos es de la versión que guardaba el
  * mensaje con los datos del cliente.
  */
 export function parseSentMark(raw: string | null): SentMark | null {
@@ -61,13 +63,14 @@ export function parseSentMark(raw: string | null): SentMark | null {
     return null
   }
   if (typeof data !== 'object' || data === null || Array.isArray(data)) return null
-  if (Object.keys(data).some((key) => !['sentAt', 'cart', 'code'].includes(key))) return null
-  const { sentAt, cart, code } = data as Record<string, unknown>
+  if (Object.keys(data).some((key) => !['sentAt', 'cart', 'code', 'demo'].includes(key))) return null
+  const { sentAt, cart, code, demo } = data as Record<string, unknown>
   if (typeof sentAt !== 'number' || !Number.isFinite(sentAt) || sentAt <= 0) return null
   if (typeof cart !== 'string' || cart === '') return null
-  if (code === undefined) return { sentAt, cart }
+  if (code === undefined) return demo === undefined ? { sentAt, cart } : null
   if (typeof code !== 'string' || !ORDER_CODE.test(code)) return null
-  return { sentAt, cart, code }
+  if (demo === undefined) return { sentAt, cart, code }
+  return demo === true ? { sentAt, cart, code, demo } : null
 }
 
 /** Con Math.abs, una fecha guardada muy en el futuro (reloj cambiado) tampoco queda vigente para siempre. */

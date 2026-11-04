@@ -88,6 +88,7 @@ export function CartProvider({ children, catalog = defaultCatalog }: CartProvide
           sentAt: Date.now(),
           cart: cartFingerprint(lines),
           ...(details.code ? { code: details.code } : {}),
+          ...(details.code && details.demo ? { demo: true as const } : {}),
           details,
         }),
       reopenOrder: () => setSentOrder(null),
