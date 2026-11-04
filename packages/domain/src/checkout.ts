@@ -3,6 +3,22 @@ import type { OrderDetails, PaymentMethod, Zone } from './types.ts'
 
 export const COMMENT_MAX_LENGTH = 300
 
+/** Código de cada forma de pago en la API (`payment` de POST /api/orders). */
+export const PAYMENT_METHOD_CODES = {
+  Efectivo: 'cash',
+  Transferencia: 'transfer',
+  Tarjeta: 'card',
+} as const satisfies Record<PaymentMethod, string>
+
+export type PaymentMethodCode = (typeof PAYMENT_METHOD_CODES)[PaymentMethod]
+
+/** "cash" → "Efectivo". */
+export function paymentMethodFromCode(code: PaymentMethodCode): PaymentMethod {
+  const entry = Object.entries(PAYMENT_METHOD_CODES).find(([, value]) => value === code)
+  if (!entry) throw new RangeError(`Forma de pago desconocida: ${code}`)
+  return entry[0] as PaymentMethod
+}
+
 /** Mensajes de error del checkout. La API usa los mismos (vía @rys/contracts) para los errores por campo. */
 export const CHECKOUT_MESSAGES = {
   customerName: 'Ingresa tu nombre, con al menos 2 letras.',

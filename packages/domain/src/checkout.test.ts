@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest'
-import { emptyCheckoutForm, firstErrorField, validateCheckout, type CheckoutForm } from './checkout.ts'
+import {
+  emptyCheckoutForm,
+  firstErrorField,
+  PAYMENT_METHOD_CODES,
+  paymentMethodFromCode,
+  validateCheckout,
+  type CheckoutForm,
+} from './checkout.ts'
 import type { PaymentMethod, Zone } from './types.ts'
 
 const zones: Zone[] = [
@@ -82,5 +89,14 @@ describe('firstErrorField', () => {
     expect(firstErrorField({ payment: 'x', address: 'y' })).toBe('address')
     expect(firstErrorField({ comment: 'x', phone: 'y' })).toBe('phone')
     expect(firstErrorField({})).toBeNull()
+  })
+})
+
+describe('formas de pago', () => {
+  it('cada una tiene su código de la API y se puede volver del código a la etiqueta', () => {
+    expect(PAYMENT_METHOD_CODES).toEqual({ Efectivo: 'cash', Transferencia: 'transfer', Tarjeta: 'card' })
+    expect(paymentMethodFromCode('cash')).toBe('Efectivo')
+    expect(paymentMethodFromCode('transfer')).toBe('Transferencia')
+    expect(paymentMethodFromCode('card')).toBe('Tarjeta')
   })
 })

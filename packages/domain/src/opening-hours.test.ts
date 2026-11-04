@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  describeNextOpening,
   describeOpeningHours,
   isOpenAt,
   isValidTime,
@@ -241,5 +242,31 @@ describe('describeOpeningHours', () => {
 
   it('sin ningún día abierto no muestra nada', () => {
     expect(describeOpeningHours({})).toEqual([])
+  })
+})
+
+describe('describeNextOpening', () => {
+  // Martes 3 de noviembre de 2026, 16:00 en Santiago (UTC-3).
+  const now = at('2026-11-03T19:00:00Z')
+
+  it('dice hoy, mañana o el día de la semana, con la hora local', () => {
+    expect(describeNextOpening(at('2026-11-03T22:00:00Z'), now)).toBe('hoy a las 19:00')
+    expect(describeNextOpening(at('2026-11-04T15:00:00Z'), now)).toBe('mañana a las 12:00')
+    expect(describeNextOpening(at('2026-11-06T22:30:00Z'), now)).toBe('el viernes a las 19:30')
+    expect(describeNextOpening(at('2026-11-09T15:00:00Z'), now)).toBe('el lunes a las 12:00')
+  })
+
+  it('el mismo día de la semana siguiente lleva la fecha', () => {
+    expect(describeNextOpening(at('2026-11-10T15:00:00Z'), now)).toBe('el martes 10 de noviembre a las 12:00')
+  })
+
+  it('cuenta los días en hora de Santiago, no en UTC', () => {
+    // Martes 23:00 en Santiago (miércoles 02:00 UTC) → abre el miércoles 12:00: es "mañana".
+    expect(describeNextOpening(at('2026-11-04T15:00:00Z'), at('2026-11-04T02:00:00Z'))).toBe('mañana a las 12:00')
+  })
+
+  it('usa "a la" para la una', () => {
+    expect(describeNextOpening(at('2026-11-04T04:00:00Z'), now)).toBe('mañana a la 01:00')
+    expect(describeNextOpening(at('2026-11-04T03:30:00Z'), now)).toBe('mañana a las 00:30')
   })
 })
