@@ -10,7 +10,9 @@ const doc = buildOpenApiDocument() as {
 describe('buildOpenApiDocument', () => {
   it('describe las rutas públicas de la API en OpenAPI 3.1', () => {
     expect(doc.openapi).toBe('3.1.0')
-    expect(Object.keys(doc.paths)).toEqual(['/health', '/api/menu', '/api/orders'])
+    expect(Object.keys(doc.paths)).toEqual(
+      expect.arrayContaining(['/health', '/api/menu', '/api/orders', '/api/admin/session', '/api/admin/orders/{code}/status']),
+    )
     expect(Object.keys(doc.paths['/api/orders'].post.responses)).toEqual(
       expect.arrayContaining(['200', '201', '400', '409', '422', '429']),
     )
