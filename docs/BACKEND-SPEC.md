@@ -225,6 +225,27 @@ Forma exacta (esquema `menuResponseSchema` de `@rys/contracts`; la respuesta se 
   Sabrosa*`) y `whatsappUrl` es `null` en modo demo.
 - Rate limit: 10 pedidos por IP cada 10 minutos.
 
+Detalles decididos en la Fase 7:
+
+- `payment` va como código: `cash`, `transfer` o `card` (Efectivo, Transferencia y Tarjeta en el mensaje).
+- Una zona que no existe o está desactivada es un `VALIDATION_ERROR` en `zoneId` (paso 6), con el mismo mensaje que
+  el checkout de la web.
+- `details` de cada error: `STORE_CLOSED` y `ORDERS_PAUSED` → `{ nextOpening }` (ISO o `null`);
+  `PRODUCT_UNAVAILABLE` → `{ productIds, variantIds, ingredientIds }`; `PRICE_CHANGED` → `{ quote: { lines,
+  subtotal, deliveryFee, total } }`; `RATE_LIMITED` → `{ retryAfterSeconds }`. Los esquemas están en
+  `@rys/contracts`.
+- `request_hash` es el SHA-256 del body ya validado (textos recortados, celular normalizado) con las claves en orden:
+  el mismo pedido escrito con espacios de más o en otro orden es el mismo pedido.
+- Como la idempotencia (paso 3) va antes que la pausa y la disponibilidad, un reintento con la misma clave recibe el
+  mismo pedido aunque entretanto se haya pausado el local o cambiado la carta. La respuesta se arma desde los
+  snapshots guardados, así que el mensaje es idéntico.
+- Dos requests simultáneos con la misma clave: uno crea el pedido y el otro choca con la clave única y responde 200
+  con ese pedido. Un pedido que no llega a crearse puede dejar un número de la secuencia sin usar.
+- El rate limit cuenta todos los POST, también los inválidos. La API solo le cree el `X-Forwarded-For` a un proxy
+  local (`trust proxy: loopback`); el proxy de Vite lo agrega (`xfwd`), así cada celular de la demo tiene su
+  propio límite.
+- El mensaje del pedido (`buildOrderMessage`) lleva el código en el título; el resto es igual al de la v1.
+
 ### Panel (requieren sesión)
 
 | Método | Ruta | Rol | Descripción |
@@ -314,6 +335,25 @@ por SSE a los paneles conectados. Una sola instancia de la API, así que alcanza
    guarda solo para gestionar el pedido.
 8. En desarrollo, Vite hace proxy de `/api` hacia la API: la web y la API comparten origen y no hace falta
    CORS.
+
+Detalles decididos en la Fase 7:
+
+- `VITE_DATA_SOURCE` vale `static` por defecto (la web publicada no tiene API todavía); `npm run dev` usa `api`
+  con `apps/web/.env.development`. La elección se resuelve al compilar: en `static` el código de la API no entra al
+  bundle.
+- El `Idempotency-Key` se reusa mientras el body sea el mismo (se guarda en `sessionStorage` junto con una huella
+  del body, nunca los datos) y cambia si cambian los datos. Se genera con `crypto.getRandomValues`, porque
+  `crypto.randomUUID` no existe en HTTP por IP (la demo en el celular).
+- Ante `PRICE_CHANGED`, la web vuelve a pedir la carta (el carrito toma los precios nuevos) y lista lo que cambió
+  ("Suprema: $13.000 → $13.500 c/u", "Total nuevo"). Ante `PRODUCT_UNAVAILABLE` vuelve al paso del pedido, donde
+  las líneas agotadas tienen "Quitar". Ante `ORDERS_PAUSED`/`STORE_CLOSED` vuelve a pedir la carta y aparece el aviso.
+- La confirmación con la API no ofrece "Volver a mi pedido": reenviarlo crearía otro pedido. Al recargar se ve
+  "Tu pedido RYS-0042 ya quedó registrado en el local".
+- El aviso de local cerrado o pausado va bajo el header en toda la página; la carta se vuelve a pedir al volver a la
+  pestaña y cuando llega la hora de abrir.
+- Aviso de privacidad (modo api): "Usamos tu nombre, celular y dirección solo para preparar y entregar este pedido.
+  El local los guarda únicamente para gestionarlo." En modo static dice que los datos van solo en el mensaje de
+  WhatsApp.
 
 ## Panel (apps/admin)
 
