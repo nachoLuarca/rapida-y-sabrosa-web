@@ -1,10 +1,12 @@
 import { describe, expect, it } from 'vitest'
 import {
   ORDER_STATUSES,
+  ORDER_STATUS_ACTIONS,
   ORDER_STATUS_LABELS,
   canTransition,
   isFinalStatus,
   nextStatuses,
+  primaryNextStatus,
   validateTransition,
   type OrderStatus,
 } from './order-status.ts'
@@ -93,5 +95,23 @@ describe('validateTransition', () => {
       error: 'INVALID_TRANSITION',
       message: 'Un pedido "Entregado" no puede pasar a "Cancelado".',
     })
+  })
+})
+
+describe('primaryNextStatus', () => {
+  it('es la siguiente acción normal del tablero, sin contar cancelar', () => {
+    expect(primaryNextStatus('pending', 'delivery')).toBe('confirmed')
+    expect(primaryNextStatus('confirmed', 'pickup')).toBe('preparing')
+    expect(primaryNextStatus('preparing', 'delivery')).toBe('out_for_delivery')
+    expect(primaryNextStatus('preparing', 'pickup')).toBe('ready_for_pickup')
+    expect(primaryNextStatus('ready_for_pickup', 'pickup')).toBe('delivered')
+    expect(primaryNextStatus('delivered', 'pickup')).toBeNull()
+    expect(primaryNextStatus('cancelled', 'delivery')).toBeNull()
+  })
+
+  it('cada acción tiene su texto', () => {
+    expect(ORDER_STATUS_ACTIONS.confirmed).toBe('Confirmar')
+    expect(ORDER_STATUS_ACTIONS.preparing).toBe('A preparar')
+    expect(ORDER_STATUSES.every((status) => ORDER_STATUS_ACTIONS[status].length > 0)).toBe(true)
   })
 })

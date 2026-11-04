@@ -83,3 +83,19 @@ export function validateTransition(
   }
   return { ok: true, reason: trimmed === '' ? null : trimmed }
 }
+
+/** Texto del botón que lleva un pedido a ese estado: "Confirmar", "A preparar"… */
+export const ORDER_STATUS_ACTIONS: Record<OrderStatus, string> = {
+  pending: 'Volver a pendiente',
+  confirmed: 'Confirmar',
+  preparing: 'A preparar',
+  out_for_delivery: 'Despachar',
+  ready_for_pickup: 'Listo para retiro',
+  delivered: 'Entregado',
+  cancelled: 'Cancelar',
+}
+
+/** La siguiente acción normal del pedido (la que no es cancelar), o null si ya terminó. */
+export function primaryNextStatus(from: OrderStatus, fulfillment: FulfillmentType): OrderStatus | null {
+  return nextStatuses(from, fulfillment).find((status) => status !== 'cancelled') ?? null
+}

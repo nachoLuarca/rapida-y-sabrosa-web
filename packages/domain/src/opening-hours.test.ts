@@ -6,6 +6,7 @@ import {
   isValidTime,
   nextOpening,
   orderingStatus,
+  startOfLocalDay,
   type OpeningHours,
 } from './opening-hours.ts'
 
@@ -268,5 +269,20 @@ describe('describeNextOpening', () => {
   it('usa "a la" para la una', () => {
     expect(describeNextOpening(at('2026-11-04T04:00:00Z'), now)).toBe('mañana a la 01:00')
     expect(describeNextOpening(at('2026-11-04T03:30:00Z'), now)).toBe('mañana a las 00:30')
+  })
+})
+
+describe('startOfLocalDay', () => {
+  it('es la medianoche de Santiago del mismo día local', () => {
+    // Martes 3 de noviembre, 16:00 en Santiago (UTC-3) → martes 00:00 = 03:00 UTC.
+    expect(startOfLocalDay(at('2026-11-03T19:00:00Z'))).toEqual(at('2026-11-03T03:00:00Z'))
+    // Martes 23:30 en Santiago es miércoles en UTC, pero el día local sigue siendo martes.
+    expect(startOfLocalDay(at('2026-11-04T02:30:00Z'))).toEqual(at('2026-11-03T03:00:00Z'))
+    // En invierno (UTC-4).
+    expect(startOfLocalDay(at('2026-07-01T23:30:00Z'))).toEqual(at('2026-07-01T04:00:00Z'))
+  })
+
+  it('el día del salto de septiembre empieza a la 01:00 (la medianoche no existe)', () => {
+    expect(startOfLocalDay(at('2026-09-06T15:00:00Z'))).toEqual(at('2026-09-06T04:00:00Z'))
   })
 })
