@@ -1,0 +1,13 @@
+{
+  "name": "@rys/tokens",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Tokens de la marca Rápida y Sabrosa (docs/DESIGN.md) para Tailwind v4, compartidos por la web y el panel.",
+  "type": "module",
+  "exports": {
+    "./theme.css": "./theme.css"
+  },
+  "sideEffects": [
+    "*.css"
+  ]
+}
