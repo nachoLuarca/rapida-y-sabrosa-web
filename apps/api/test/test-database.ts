@@ -21,6 +21,11 @@ export async function truncateAll(database: Database): Promise<void> {
   if (tables.rows.length === 0) return
   const list = tables.rows.map((row) => `"${row.tablename}"`).join(', ')
   await database.db.execute(sql.raw(`truncate table ${list} restart identity cascade`))
+  // RESTART IDENTITY no toca las secuencias que no son de una columna, como la del código RYS-0001.
+  const sequences = await database.db.execute<{ name: string }>(
+    sql`select sequence_name as name from information_schema.sequences where sequence_schema = 'public'`,
+  )
+  for (const { name } of sequences.rows) await database.db.execute(sql.raw(`alter sequence "${name}" restart`))
 }
 
 /** Deja la carta y los ajustes exactamente como en docs/data (el modo 'reset' del seed). */

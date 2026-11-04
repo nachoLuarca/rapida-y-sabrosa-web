@@ -1,4 +1,5 @@
-// Tablas de la base. Pedidos llegan en la Fase 7; usuarios y sesiones, en la Fase 8.
+// Tablas de la base. Usuarios y sesiones llegan en la Fase 8.
 
 export * from './catalog.ts'
+export * from './orders.ts'
 export * from './settings.ts'
