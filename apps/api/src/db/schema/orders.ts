@@ -12,6 +12,7 @@ import {
   timestamp,
   uuid,
 } from 'drizzle-orm/pg-core'
+import { adminUsers } from './auth.ts'
 import { deliveryZones } from './catalog.ts'
 
 // Pedidos (docs/BACKEND-SPEC.md → Modelo de datos). Todo lo que viene de la carta se guarda como snapshot: si
@@ -105,8 +106,8 @@ export const orderStatusHistory = pgTable(
       .references(() => orders.id, { onDelete: 'cascade' }),
     fromStatus: orderStatus('from_status'),
     toStatus: orderStatus('to_status').notNull(),
-    /** Usuario del panel que hizo el cambio (Fase 8); null cuando lo crea el cliente. */
-    changedBy: uuid('changed_by'),
+    /** Usuario del panel que hizo el cambio; null cuando lo crea el cliente (o si el usuario se borró). */
+    changedBy: uuid('changed_by').references(() => adminUsers.id, { onDelete: 'set null' }),
     reason: text('reason'),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },

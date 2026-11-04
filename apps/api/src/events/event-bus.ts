@@ -16,6 +16,7 @@ export interface OrderEventPayload {
 
 export interface BusEvents {
   'order.created': OrderEventPayload
+  'order.updated': OrderEventPayload
 }
 
 export type BusEventName = keyof BusEvents

@@ -13,7 +13,8 @@
     "test:watch": "vitest",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx src/scripts/migrate.ts",
-    "db:seed": "tsx src/scripts/seed.ts"
+    "db:seed": "tsx src/scripts/seed.ts",
+    "user:create": "tsx src/scripts/user-create.ts"
   },
   "engines": {
     "node": ">=24"
@@ -30,6 +31,7 @@
     "vitest": "^5.1.0"
   },
   "dependencies": {
+    "@node-rs/argon2": "^2.2.2",
     "@rys/contracts": "*",
     "@rys/domain": "*",
     "drizzle-orm": "^0.45.4",
