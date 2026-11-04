@@ -22,6 +22,8 @@ interface ProductBase {
   tags?: string[]
   /** Ruta en public/, p. ej. "/img/suprema.webp". */
   image?: string
+  /** false si el local lo marcó agotado. Sin el campo, está disponible. */
+  available?: boolean
 }
 
 /** Un producto tiene un precio único o variantes con su propio precio, nunca ambos. */
@@ -36,12 +38,16 @@ export interface BuildPizzaConfig {
   basePrice: number
   promoPrice: number
   includedInPromo: number
+  /** false si el local marcó Arma tu pizza como agotada. Sin el campo, está disponible. */
+  available?: boolean
 }
 
 export interface Ingredient {
   id: string
   name: string
   price: number
+  /** false si el local lo marcó agotado. Sin el campo, está disponible. */
+  available?: boolean
 }
 
 export interface Zone {

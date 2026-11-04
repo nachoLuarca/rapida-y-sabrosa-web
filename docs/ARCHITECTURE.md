@@ -13,23 +13,23 @@ flowchart LR
   cliente([Cliente en el celular]) --> web[apps/web]
   local([Local]) --> admin[apps/admin<br/>prevista]
   web -- pedido --> wa([WhatsApp del local])
-  web -. "/api (Fase 7)" .-> api[apps/api<br/>Express 5]
+  web -- "/api (modo api)" --> api[apps/api<br/>Express 5]
   admin -. "/api (Fase 8)" .-> api
   api --> db[(PostgreSQL 17)]
   web --> domain[packages/domain]
   api --> domain
   admin -.-> domain
-  web -.-> contracts[packages/contracts]
+  web --> contracts[packages/contracts]
   api --> contracts
   admin -.-> contracts
 ```
 
 | Parte                | Estado   | Qué hace |
 |----------------------|----------|----------|
-| `apps/web`           | Existe   | Web pública: carta, carrito, Arma tu pizza y checkout que envía el pedido por WhatsApp. Vite + React. Todavía usa la carta del bundle; desde la Fase 7 la pide a la API (`VITE_DATA_SOURCE`). |
+| `apps/web`           | Existe   | Web pública: carta, carrito, Arma tu pizza y checkout. Vite + React. Con `VITE_DATA_SOURCE=static` usa la carta del bundle y manda el pedido directo a WhatsApp; con `api`, pide la carta a la API, crea el pedido ahí y el cliente lo envía por WhatsApp con su código. |
 | `packages/domain`    | Existe   | `@rys/domain`: reglas de negocio puras y sus tipos (precios, carrito, checkout, mensaje, horario, estados del pedido). Lo usan todas las apps. |
 | `packages/contracts` | Existe   | `@rys/contracts`: esquemas Zod de requests, responses y errores de la API, con sus tipos inferidos. |
-| `apps/api`           | Existe   | `@rys/api`: API en Express 5 sobre PostgreSQL con Drizzle. Hoy sirve `GET /health` y `GET /api/menu`; los pedidos llegan en la Fase 7 y el panel en la 8. |
+| `apps/api`           | Existe   | `@rys/api`: API en Express 5 sobre PostgreSQL con Drizzle: `GET /health`, `GET /api/menu` y `POST /api/orders` (OpenAPI en `/api/docs` en desarrollo). El panel llega en la Fase 8. |
 | `apps/admin`         | Prevista | `@rys/admin`: panel del local (pedidos en vivo, carta, zonas, horario y pausa) a través de la API. Fases 8 y 9. |
 | PostgreSQL           | Existe   | PostgreSQL 17 en Docker Compose (`docker-compose.yml` en la raíz), con las bases `rys` (desarrollo) y `rys_test` (tests). La carta de `docs/data` es su seed. |
 
@@ -52,7 +52,8 @@ routes/ → controllers/ → services/ → repositories/ → db/ (Drizzle)
 
 ### packages/contracts
 
-Igual que `@rys/domain`, sin paso de build: exporta `src/index.ts`. Depende solo de Zod y de `@rys/domain` (de ahí
+Igual que `@rys/domain`, sin paso de build: exporta `src/index.ts`. Declara `"sideEffects": false` para que Vite deje
+Zod fuera de la web estática, que no lo usa. Depende solo de Zod y de `@rys/domain` (de ahí
 toma los mensajes del checkout, los estados del pedido y el normalizador del celular). La API valida con
 estos esquemas lo que entra y lo que sale; la web y el panel los usan para tipar sus llamadas.
 
@@ -69,6 +70,8 @@ Paquete interno, sin paso de build: su `package.json` exporta `src/index.ts` y q
 - Totales con despacho, mensaje del pedido y enlace de WhatsApp (`order-message.ts`).
 - Horario del local en America/Santiago: `isOpenAt`, `nextOpening` y `orderingStatus` (`opening-hours.ts`).
 - Estados del pedido y su tabla de transiciones (`order-status.ts`).
+- Cotización del pedido completo y disponibilidad de cada línea (`order-quote.ts`): la usan la API para recalcular
+  y la web para marcar lo agotado.
 - Búsqueda sin tildes (`search.ts`).
 - Tipos del dominio (`types.ts`).
 
@@ -88,7 +91,12 @@ Reglas:
   `localStorage`. Son funciones puras, pero solo tienen sentido en el navegador.
 - `src/config/business.ts`: lee los datos del local de `docs/data/business.json` (la misma fuente que el seed de la
   API) y las variables `VITE_*`.
-- `src/data/`: la carta, las zonas y los ingredientes, hasta que la web pida la carta a la API (Fase 7).
+- `src/data/`: la carta, las zonas y los ingredientes del modo static (la web publicada y `build:demo`).
+- `src/data-source/`: de dónde sale la carta y a dónde va el pedido. `CatalogSource` y `OrderGateway`, cada uno con
+  una implementación `static` y otra `api`, elegidas con `VITE_DATA_SOURCE`. `MenuData` es la carta con la forma
+  de `@rys/domain` más el estado del local; `src/domain/menu-adapter.ts` la arma desde `GET /api/menu`.
+- `src/store/MenuProvider.tsx`: carga la carta (esqueleto, error con "Reintentar") y la vuelve a pedir al volver a la
+  pestaña y a la hora de abrir. `CartProvider` arma el pedido con esa carta y lo vuelve a valorizar si cambia.
 - Componentes, contexto del carrito y hooks.
 
 ### Dependencias permitidas

@@ -256,3 +256,50 @@ export function describeOpeningHours(openingHours: OpeningHours): OpeningHoursLi
     return { days, hours }
   })
 }
+
+const LOWERCASE_DAY_NAMES: Record<DayKey, string> = {
+  mon: 'lunes',
+  tue: 'martes',
+  wed: 'miércoles',
+  thu: 'jueves',
+  fri: 'viernes',
+  sat: 'sábado',
+  sun: 'domingo',
+}
+
+const MONTH_NAMES = [
+  'enero',
+  'febrero',
+  'marzo',
+  'abril',
+  'mayo',
+  'junio',
+  'julio',
+  'agosto',
+  'septiembre',
+  'octubre',
+  'noviembre',
+  'diciembre',
+]
+
+/**
+ * Cuándo abre, para "Abrimos hoy a las 19:00": "hoy a las 19:00", "mañana a las 12:00", "el martes a las
+ * 12:00" (dentro de la semana) o "el martes 10 de noviembre a las 12:00" (el mismo día de la semana siguiente).
+ */
+export function describeNextOpening(next: Date, now: Date, timezone: string = DEFAULT_TIMEZONE): string {
+  const opening = localTime(next, timezone)
+  const today = localTime(now, timezone)
+  const days = Math.round(
+    (Date.UTC(opening.year, opening.month - 1, opening.dayOfMonth) - Date.UTC(today.year, today.month - 1, today.dayOfMonth)) /
+      DAY,
+  )
+  const hour = `${String(Math.floor(opening.minutes / 60)).padStart(2, '0')}:${String(opening.minutes % 60).padStart(2, '0')}`
+  // "a la 01:00", pero "a las 19:00".
+  const at = `${opening.minutes < 120 && opening.minutes >= 60 ? 'a la' : 'a las'} ${hour}`
+
+  if (days <= 0) return `hoy ${at}`
+  if (days === 1) return `mañana ${at}`
+  const dayName = LOWERCASE_DAY_NAMES[opening.day]
+  if (days < 7) return `el ${dayName} ${at}`
+  return `el ${dayName} ${opening.dayOfMonth} de ${MONTH_NAMES[opening.month - 1]} ${at}`
+}

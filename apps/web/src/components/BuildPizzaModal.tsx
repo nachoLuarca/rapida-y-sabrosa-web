@@ -1,9 +1,8 @@
 import { X } from 'lucide-react'
 import { useState } from 'react'
 import { formatClp, quoteBuildPizza, type Ingredient } from '@rys/domain'
-import { ingredients } from '../data/ingredients'
-import { buildPizza } from '../data/menu'
 import { useCart } from '../store/use-cart'
+import { useMenu } from '../store/use-menu'
 import { Modal } from './ui/Modal'
 
 interface BuildPizzaModalProps {
@@ -15,6 +14,7 @@ interface BuildPizzaModalProps {
 
 export function BuildPizzaModal({ open, onClose, onAdded }: BuildPizzaModalProps) {
   const { addItem } = useCart()
+  const { menu } = useMenu()
   // En el orden en que se eligieron: así salen en el pedido y en el mensaje.
   const [selectedIds, setSelectedIds] = useState<string[]>([])
   const [wasOpen, setWasOpen] = useState(open)
@@ -25,16 +25,22 @@ export function BuildPizzaModal({ open, onClose, onAdded }: BuildPizzaModalProps
     if (open) setSelectedIds([])
   }
 
+  // Sin carta (todavía cargando) no hay nada que elegir: el botón que abre este modal está en la carta.
+  if (!menu) return null
+  const { buildPizza, ingredients } = menu
+  const soldOut = buildPizza.available === false
+
+  // Un ingrediente que se agotó mientras el modal estaba abierto deja de contar.
   const selected = selectedIds
     .map((id) => ingredients.find((ingredient) => ingredient.id === id))
-    .filter((ingredient): ingredient is Ingredient => ingredient !== undefined)
+    .filter((ingredient): ingredient is Ingredient => ingredient !== undefined && ingredient.available !== false)
   const quote = quoteBuildPizza(selected, buildPizza)
 
   const toggle = (id: string) =>
     setSelectedIds((current) => (current.includes(id) ? current.filter((x) => x !== id) : [...current, id]))
 
   const addToOrder = () => {
-    addItem({ productId: buildPizza.productId, ingredientIds: selectedIds })
+    addItem({ productId: buildPizza.productId, ingredientIds: selected.map((ingredient) => ingredient.id) })
     onAdded()
   }
 
@@ -77,20 +83,30 @@ export function BuildPizzaModal({ open, onClose, onAdded }: BuildPizzaModalProps
               : `Ya tienes los ${buildPizza.includedInPromo} incluidos; los siguientes se cobran a su valor.`}
           </p>
           <ul className="mt-4 grid gap-2 sm:grid-cols-2">
-            {ingredients.map((ingredient) => (
-              <li key={ingredient.id}>
-                <label className="flex min-h-12 cursor-pointer items-center gap-3 rounded-xl border border-linea px-4 py-2 transition-colors hover:border-carbon has-checked:border-carbon has-checked:bg-carbon has-checked:text-white">
-                  <input
-                    type="checkbox"
-                    checked={selectedIds.includes(ingredient.id)}
-                    onChange={() => toggle(ingredient.id)}
-                    className="size-5 shrink-0 accent-rojo"
-                  />
-                  <span className="flex-1">{ingredient.name}</span>{' '}
-                  <span className="text-sm tabular-nums">{formatClp(ingredient.price)}</span>
-                </label>
-              </li>
-            ))}
+            {ingredients.map((ingredient) => {
+              const unavailable = ingredient.available === false
+              return (
+                <li key={ingredient.id}>
+                  <label
+                    className={`flex min-h-12 items-center gap-3 rounded-xl border border-linea px-4 py-2 transition-colors ${
+                      unavailable
+                        ? 'cursor-not-allowed bg-fondo text-tinta'
+                        : 'cursor-pointer hover:border-carbon has-checked:border-carbon has-checked:bg-carbon has-checked:text-white'
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={!unavailable && selectedIds.includes(ingredient.id)}
+                      disabled={unavailable}
+                      onChange={() => toggle(ingredient.id)}
+                      className="size-5 shrink-0 accent-rojo"
+                    />
+                    <span className="flex-1">{ingredient.name}</span>{' '}
+                    <span className="text-sm tabular-nums">{unavailable ? 'Agotado' : formatClp(ingredient.price)}</span>
+                  </label>
+                </li>
+              )
+            })}
           </ul>
         </fieldset>
       </div>
@@ -103,13 +119,17 @@ export function BuildPizzaModal({ open, onClose, onAdded }: BuildPizzaModalProps
             {selected.length > 0 && ` (${selected.length} ${selected.length === 1 ? 'ingrediente' : 'ingredientes'})`}
           </span>
         </p>
-        <button
-          type="button"
-          onClick={addToOrder}
-          className="inline-flex h-12 items-center rounded-full bg-rojo px-6 font-semibold text-white transition-colors hover:bg-rojo-oscuro"
-        >
-          Agregar al pedido
-        </button>
+        {soldOut ? (
+          <p className="font-semibold">Arma tu pizza está agotada por ahora.</p>
+        ) : (
+          <button
+            type="button"
+            onClick={addToOrder}
+            className="inline-flex h-12 items-center rounded-full bg-rojo px-6 font-semibold text-white transition-colors hover:bg-rojo-oscuro"
+          >
+            Agregar al pedido
+          </button>
+        )}
       </div>
     </Modal>
   )

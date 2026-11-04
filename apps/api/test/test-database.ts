@@ -1,12 +1,14 @@
 import { sql } from 'drizzle-orm'
 import { pino } from 'pino'
 import { afterAll, beforeAll, inject } from 'vitest'
-import { createApp } from '../src/app.ts'
+import { createApp, type AppDeps } from '../src/app.ts'
 import { createContainer, type ContainerOptions } from '../src/container.ts'
 import { createDatabase, type Database } from '../src/db/client.ts'
 import { loadSeedData, seedDatabase } from '../src/db/seed.ts'
 
 export const silentLogger = pino({ level: 'silent' })
+
+export type AppOptions = Omit<ContainerOptions, 'database'> & { routes?: AppDeps['routes'] }
 
 /** Una URL donde no hay ningún PostgreSQL: para probar qué pasa cuando la base no responde. */
 export const UNREACHABLE_DATABASE_URL = 'postgres://rys:rys@127.0.0.1:1/rys_test'
@@ -21,6 +23,11 @@ export async function truncateAll(database: Database): Promise<void> {
   if (tables.rows.length === 0) return
   const list = tables.rows.map((row) => `"${row.tablename}"`).join(', ')
   await database.db.execute(sql.raw(`truncate table ${list} restart identity cascade`))
+  // RESTART IDENTITY no toca las secuencias que no son de una columna, como la del código RYS-0001.
+  const sequences = await database.db.execute<{ name: string }>(
+    sql`select sequence_name as name from information_schema.sequences where sequence_schema = 'public'`,
+  )
+  for (const { name } of sequences.rows) await database.db.execute(sql.raw(`alter sequence "${name}" restart`))
 }
 
 /** Deja la carta y los ajustes exactamente como en docs/data (el modo 'reset' del seed). */
@@ -57,8 +64,14 @@ export function useTestDatabase() {
     get db() {
       return current().db
     },
-    app(options: Omit<ContainerOptions, 'database'> = {}) {
-      return createApp({ ...createContainer({ database: current(), ...options }), logger: silentLogger })
+    app(options: AppOptions = {}) {
+      return this.container(options).app
+    },
+    /** La API y su bus de eventos, para escuchar lo que publica. */
+    container({ routes, ...options }: AppOptions = {}) {
+      const container = createContainer({ database: current(), ...options })
+      const app = createApp({ controllers: container.controllers, logger: silentLogger, routes })
+      return { app, bus: container.bus }
     },
   }
 }

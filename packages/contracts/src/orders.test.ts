@@ -1,7 +1,16 @@
-import { CHECKOUT_MESSAGES } from '@rys/domain'
+import { CHECKOUT_MESSAGES, PAYMENT_METHOD_CODES } from '@rys/domain'
 import { describe, expect, it } from 'vitest'
 import { validationDetails } from './errors.ts'
-import { idempotencyKeySchema, orderRequestSchema, orderResponseSchema, type OrderRequest } from './orders.ts'
+import {
+  idempotencyKeySchema,
+  orderRequestSchema,
+  orderResponseSchema,
+  PAYMENT_METHODS,
+  priceChangedDetailsSchema,
+  productUnavailableDetailsSchema,
+  storeBlockedDetailsSchema,
+  type OrderRequest,
+} from './orders.ts'
 
 const delivery: OrderRequest = {
   lines: [
@@ -162,5 +171,37 @@ describe('orderResponseSchema', () => {
     expect(orderResponseSchema.safeParse({ ...response, code: 'RYS-42' }).success).toBe(false)
     expect(orderResponseSchema.safeParse({ ...response, code: 'RYS-12345' }).success).toBe(true)
     expect(orderResponseSchema.safeParse({ ...response, status: 'lost' }).success).toBe(false)
+  })
+})
+
+describe('formas de pago', () => {
+  it('los códigos de la API son los mismos del dominio', () => {
+    expect([...PAYMENT_METHODS].sort()).toEqual(Object.values(PAYMENT_METHOD_CODES).sort())
+  })
+})
+
+describe('details de los errores del pedido', () => {
+  it('PRICE_CHANGED trae la cotización nueva y PRODUCT_UNAVAILABLE los ids afectados', () => {
+    const line = {
+      productId: 'suprema',
+      name: 'Suprema',
+      variantLabel: null,
+      ingredients: null,
+      unitPrice: 13500,
+      quantity: 1,
+      lineTotal: 13500,
+    }
+    expect(
+      priceChangedDetailsSchema.safeParse({ quote: { lines: [line], subtotal: 13500, deliveryFee: 0, total: 13500 } })
+        .success,
+    ).toBe(true)
+    expect(productUnavailableDetailsSchema.safeParse({ productIds: ['suprema'], variantIds: [], ingredientIds: [] }).success).toBe(true)
+    expect(productUnavailableDetailsSchema.safeParse({ productIds: ['suprema'] }).success).toBe(false)
+  })
+
+  it('STORE_CLOSED y ORDERS_PAUSED traen la próxima apertura o null', () => {
+    expect(storeBlockedDetailsSchema.safeParse({ nextOpening: '2026-11-03T22:00:00.000Z' }).success).toBe(true)
+    expect(storeBlockedDetailsSchema.safeParse({ nextOpening: null }).success).toBe(true)
+    expect(storeBlockedDetailsSchema.safeParse({ nextOpening: 'mañana' }).success).toBe(false)
   })
 })

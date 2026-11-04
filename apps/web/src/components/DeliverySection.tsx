@@ -1,12 +1,15 @@
-import { formatClp, groupZonesByFee } from '@rys/domain'
+import { describeOpeningHours, formatClp, groupZonesByFee } from '@rys/domain'
 import { business } from '../config/business'
-import { zones } from '../data/zones'
+import { useMenu } from '../store/use-menu'
 
 const listFormat = new Intl.ListFormat('es', { type: 'conjunction' })
 const disjunction = new Intl.ListFormat('es', { type: 'disjunction' })
 
 export function DeliverySection() {
-  const groups = groupZonesByFee(zones)
+  const { menu } = useMenu()
+  const groups = groupZonesByFee(menu?.zones ?? [])
+  const pickupAddress = menu?.pickupAddress ?? null
+  const openingHours = menu?.openingHours ? describeOpeningHours(menu.openingHours) : null
 
   return (
     <section id="despacho" aria-labelledby="despacho-titulo" className="bg-fondo">
@@ -19,7 +22,8 @@ export function DeliverySection() {
             Llevamos tu pedido a estos sectores de {business.city}. El costo se suma al total cuando eliges tu
             sector.
           </p>
-          <ul className="mt-8 divide-y divide-linea border-y border-linea">
+          {!menu && <p className="mt-8 text-tinta">Cargando los sectores…</p>}
+          <ul className="mt-8 divide-y divide-linea border-y border-linea empty:hidden">
             {groups.map((group) => (
               <li key={group.fee} className="grid gap-1 py-4 sm:grid-cols-[6rem_minmax(0,1fr)] sm:gap-6">
                 <span className="font-bold text-rojo tabular-nums">{formatClp(group.fee)}</span>
@@ -34,7 +38,7 @@ export function DeliverySection() {
             <h3 className="text-xl font-bold">Retiro en el local</h3>
             <p className="mt-2 text-tinta">
               Sin costo de despacho.
-              {business.pickupAddress && <> Te esperamos en {business.pickupAddress}.</>}
+              {pickupAddress && <> Te esperamos en {pickupAddress}.</>}
             </p>
           </div>
           <div>
@@ -43,11 +47,11 @@ export function DeliverySection() {
               {disjunction.format(business.paymentMethods)}. Pagas al recibir o al retirar.
             </p>
           </div>
-          {business.openingHours && (
+          {openingHours && openingHours.length > 0 && (
             <div>
               <h3 className="text-xl font-bold">Horario</h3>
               <ul className="mt-2 text-tinta">
-                {business.openingHours.map((slot) => (
+                {openingHours.map((slot) => (
                   <li key={slot.days}>
                     {slot.days}: {slot.hours}
                   </li>

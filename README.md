@@ -5,9 +5,12 @@
 Web de la pizzería **Rápida y Sabrosa (Espacio 308)** de Isla de Maipo. Muestra la carta, deja armar el pedido y lo
 envía por WhatsApp al local. No tiene pago online.
 
-La web publicada sigue siendo un sitio estático. En paralelo se construye una API con PostgreSQL y un panel para el
-local (`docs/BACKEND-SPEC.md`, por fases en `docs/PLAN-BACKEND.md`): hoy la API ya sirve la carta desde la base,
-pero la web todavía no la usa.
+La web tiene dos modos, según `VITE_DATA_SOURCE`:
+
+- **static** (el de la web publicada y de `build:demo`): la carta va en el bundle y el pedido sale directo a WhatsApp.
+- **api** (el de `npm run dev`): la carta viene de la API y el pedido se crea en la base con un código (`RYS-0042`);
+  después el cliente lo envía por WhatsApp. El panel del local llega en las fases siguientes
+  (`docs/BACKEND-SPEC.md`, por fases en `docs/PLAN-BACKEND.md`).
 
 ## Estructura del repositorio
 
@@ -16,7 +19,7 @@ Es un monorepo con npm workspaces:
 ```
 apps/
   web/                la web de pedidos (Vite + React): carta, carrito, Arma tu pizza y checkout
-  api/                @rys/api: API en Express 5 sobre PostgreSQL con Drizzle (GET /health, GET /api/menu)
+  api/                @rys/api: API en Express 5 sobre PostgreSQL con Drizzle (carta y pedidos)
 packages/
   domain/             @rys/domain: reglas de negocio puras y sus tipos, compartidas entre apps
   contracts/          @rys/contracts: esquemas Zod de requests y responses de la API
@@ -48,14 +51,28 @@ npm run dev
 ```
 
 `npm run dev` levanta la API en `http://localhost:3000` y la web en `http://localhost:5173`, con el prefijo `[api]` o
-`[web]` en cada línea. Ctrl+C cierra las dos. En la web, `/api` va a la API por el proxy de Vite (mismo origen, sin
-CORS). Si la base no está arriba, la API lo dice y se detiene; la web sigue funcionando igual, porque todavía usa la
-carta del bundle.
+`[web]` en cada línea. Ctrl+C cierra las dos. En desarrollo la web usa la API (`apps/web/.env.development`): `/api`
+va a la API por el proxy de Vite (mismo origen, sin CORS). Si la base no está arriba, la API lo dice y se detiene, y
+la web muestra "No pudimos cargar la carta" con un botón para reintentar. Para trabajar sin la API, pon
+`VITE_DATA_SOURCE=static` en `apps/web/.env.development.local`.
 
-Para ver la carta que sirve la API:
+Para ver la carta que sirve la API, y la documentación OpenAPI (solo en desarrollo):
 
 ```
 curl -i http://localhost:3000/api/menu
+curl http://localhost:3000/api/docs
+```
+
+### Un pedido de punta a punta
+
+1. Con `npm run dev` corriendo, abre `http://localhost:5173`, agrega productos y completa tus datos.
+2. "Enviar pedido" lo crea en la API: la confirmación muestra el código (`Pedido RYS-0001 creado`) y el botón
+   "Abrir WhatsApp", que abre el mensaje con ese código. Si no quieres que llegue al local, no lo envíes en WhatsApp,
+   o corre la API con `DEMO_MODE=true` (en `apps/api/.env`): el pedido se guarda igual, pero sin enlace de WhatsApp.
+3. Míralo en la base:
+
+```
+docker compose exec postgres psql -U rys -d rys -c "select o.code, o.status, o.fulfillment, o.total, l.product_name, l.quantity, l.line_total from orders o join order_lines l on l.order_id = o.id order by o.created_at desc, l.position limit 20;"
 ```
 
 | Comando              | Qué hace |
@@ -174,14 +191,18 @@ Van en `apps/web/`, que es donde Vite los busca. En la raíz del repositorio no 
 | Archivo                           | En git | Para qué sirve |
 |-----------------------------------|--------|----------------|
 | `apps/web/.env.example`           | Sí     | Plantilla que documenta las variables. La web no la lee. |
-| `apps/web/.env.demo`              | Sí     | Activa el modo demo en `npm run build:demo`. |
+| `apps/web/.env.demo`              | Sí     | Activa el modo demo en `npm run build:demo` (siempre con la carta del bundle). |
+| `apps/web/.env.development`       | Sí     | Lo lee `npm run dev`: la web usa la API (`VITE_DATA_SOURCE=api`). |
 | `apps/web/.env.local`             | No     | Para probar en tu computador con tu número, o en modo demo, sin mandarle pedidos al local. |
 | `docs/data/business.json`         | Sí     | No es de entorno, pero tiene el número real, que se usa si no hay otro configurado. |
 
 Las variables son:
 
 - `VITE_WHATSAPP_NUMBER`: número que recibe los pedidos. Si falta o no es válido, se usa el de `docs/data/business.json`.
-- `VITE_DEMO`: `true` para que el pedido no se envíe. Solo se muestra y se copia al portapapeles.
+- `VITE_DEMO`: `true` para que el pedido no se envíe. Solo se muestra y se copia al portapapeles (modo static).
+- `VITE_DATA_SOURCE`: `api` pide la carta a `GET /api/menu` y envía los pedidos a `POST /api/orders`; cualquier otro
+  valor (o vacío) usa la carta del bundle, como la web publicada. `npm run build` usa `static` salvo que lo cambies, y
+  `npm run build:demo` siempre usa `static`.
 
 Para probar sin molestar al local, crea `apps/web/.env.local` copiando `apps/web/.env.example` y deja una de estas
 dos opciones:

@@ -1,25 +1,28 @@
 import { useEffect, useState, type FormEvent, type InputHTMLAttributes, type ReactNode } from 'react'
 import {
-  buildOrderMessage,
   cartTotals,
   COMMENT_MAX_LENGTH,
   firstErrorField,
   formatClp,
   validateCheckout,
-  whatsappUrl,
+  type CheckoutErrors,
   type CheckoutField,
   type CheckoutForm as CheckoutFormData,
 } from '@rys/domain'
 import { business } from '../config/business'
-import { zones } from '../data/zones'
+import { priceChanges } from '../domain/price-changes'
 import type { SentDetails } from '../domain/sent-order'
+import { storeBlockMessage } from '../domain/store-messages'
 import { useCart } from '../store/use-cart'
+import { useMenu, useOrderGateway } from '../store/use-menu'
 import { copyToClipboard } from './ui/clipboard'
 
 interface CheckoutFormProps {
   form: CheckoutFormData
   onChange: (form: CheckoutFormData) => void
   onSent: (details: SentDetails) => void
+  /** La API dijo que algo se agotó: el panel vuelve al pedido, donde se marcan las líneas. */
+  onUnavailable: () => void
 }
 
 const fieldIds: Record<CheckoutField, string> = {
@@ -56,16 +59,29 @@ function Choice({ children, ...input }: { children: ReactNode } & InputHTMLAttri
   )
 }
 
-/** Paso 2 del panel: datos del cliente, totales y envío por WhatsApp. */
-export function CheckoutForm({ form, onChange, onSent }: CheckoutFormProps) {
-  const { lines } = useCart()
+/** Aviso sobre el envío: un error del servidor o los precios que cambiaron. */
+interface Notice {
+  title: string
+  items?: string[]
+}
+
+/** Paso 2 del panel: datos del cliente, totales y envío (a WhatsApp, o a la API y luego a WhatsApp). */
+export function CheckoutForm({ form, onChange, onSent, onUnavailable }: CheckoutFormProps) {
+  const { lines, unavailableKeys } = useCart()
+  const { menu, reload } = useMenu()
+  const gateway = useOrderGateway()
+  const zones = menu?.zones ?? []
   const [showErrors, setShowErrors] = useState(false)
+  const [serverErrors, setServerErrors] = useState<CheckoutErrors>({})
   const [focusRequest, setFocusRequest] = useState<{ field: CheckoutField } | null>(null)
   const [sending, setSending] = useState(false)
+  const [notice, setNotice] = useState<Notice | null>(null)
+  // Campo trampa: un humano no lo ve ni lo llena.
+  const [honeypot, setHoneypot] = useState('')
 
-  // Después del primer intento, los errores se actualizan mientras se corrige.
+  // Después del primer intento, los errores se actualizan mientras se corrige. Los del navegador mandan.
   const result = validateCheckout(form, zones, business.paymentMethods)
-  const errors = showErrors && !result.ok ? result.errors : {}
+  const errors: CheckoutErrors = { ...serverErrors, ...(showErrors && !result.ok ? result.errors : {}) }
 
   useEffect(() => {
     if (!focusRequest) return
@@ -78,33 +94,79 @@ export function CheckoutForm({ form, onChange, onSent }: CheckoutFormProps) {
     element?.focus()
   }, [focusRequest])
 
-  const set = <K extends keyof CheckoutFormData>(key: K, value: CheckoutFormData[K]) =>
+  const set = <K extends keyof CheckoutFormData>(key: K, value: CheckoutFormData[K]) => {
+    // Un error del servidor se va apenas se corrige el formulario; si sigue, lo vuelve a decir al enviar.
+    setServerErrors({})
     onChange({ ...form, [key]: value })
+  }
 
   const { subtotal } = cartTotals(lines)
   const zone = zones.find((z) => z.id === form.zoneId)
   const deliveryFee = form.fulfillment === 'delivery' ? (zone?.fee ?? null) : 0
   const total = subtotal + (deliveryFee ?? 0)
 
+  const blocked = menu ? storeBlockMessage(menu.store) : null
+  const soldOut = unavailableKeys.length > 0
+  const isApi = gateway.kind === 'api'
+
   const submit = async (event: FormEvent) => {
     event.preventDefault()
-    if (sending) return
+    if (sending || blocked || soldOut) return
     if (!result.ok) {
       setShowErrors(true)
       setFocusRequest({ field: firstErrorField(result.errors) ?? 'customerName' })
       return
     }
-    const message = buildOrderMessage(business.name, lines, result.order)
-    if (business.isDemo) {
-      setSending(true)
-      const copied = await copyToClipboard(message)
-      setSending(false)
-      onSent({ message, copied })
-    } else {
-      window.open(whatsappUrl(business.whatsappNumber, message), '_blank', 'noopener,noreferrer')
-      onSent({ message, copied: false })
+
+    setSending(true)
+    setNotice(null)
+    const before = lines
+    const beforeFee = deliveryFee ?? 0
+    const outcome = await gateway.submit({ lines, order: result.order, honeypot })
+
+    switch (outcome.kind) {
+      case 'created': {
+        const { order } = outcome
+        let copied = false
+        // En la carta estática WhatsApp se abre en este mismo clic. Con la API, el cliente lo abre desde la
+        // confirmación: así el navegador no lo bloquea como popup.
+        if (gateway.kind === 'static') {
+          if (order.demo) copied = await copyToClipboard(order.message)
+          else if (order.whatsappUrl) window.open(order.whatsappUrl, '_blank', 'noopener,noreferrer')
+        }
+        setSending(false)
+        onSent({ ...order, copied })
+        return
+      }
+      case 'validation': {
+        setServerErrors(outcome.errors)
+        setShowErrors(true)
+        const field = firstErrorField(outcome.errors)
+        if (field) setFocusRequest({ field })
+        setNotice({ title: outcome.message })
+        break
+      }
+      case 'price-changed':
+        await reload()
+        setNotice({ title: outcome.message, items: priceChanges(before, beforeFee, outcome.quote) })
+        break
+      case 'unavailable':
+        await reload()
+        setSending(false)
+        onUnavailable()
+        return
+      case 'blocked':
+        await reload()
+        setNotice({ title: outcome.message })
+        break
+      case 'failed':
+        setNotice({ title: outcome.message })
+        break
     }
+    setSending(false)
   }
+
+  const reason = soldOut ? 'Algo de tu pedido se agotó. Vuelve a tu pedido para quitarlo.' : blocked
 
   return (
     <form noValidate onSubmit={submit} className="flex min-h-0 flex-1 flex-col">
@@ -202,7 +264,7 @@ export function CheckoutForm({ form, onChange, onSent }: CheckoutFormProps) {
         ) : (
           <p className="rounded-xl bg-fondo p-4 text-sm">
             Retiras tu pedido en el local, sin costo de despacho.
-            {business.pickupAddress && <> Dirección: {business.pickupAddress}.</>}
+            {menu?.pickupAddress && <> Dirección: {menu.pickupAddress}.</>}
           </p>
         )}
 
@@ -243,6 +305,19 @@ export function CheckoutForm({ form, onChange, onSent }: CheckoutFormProps) {
           </p>
           <FieldError field="comment" message={errors.comment} />
         </div>
+
+        {/* Campo trampa para bots: fuera de la pantalla, sin foco con Tab y oculto a los lectores de pantalla. */}
+        <div aria-hidden="true" className="absolute -left-[9999px] h-px w-px overflow-hidden">
+          <label htmlFor="checkout-website">No completes este campo</label>
+          <input
+            id="checkout-website"
+            name="website"
+            tabIndex={-1}
+            autoComplete="off"
+            value={honeypot}
+            onChange={(event) => setHoneypot(event.target.value)}
+          />
+        </div>
       </div>
 
       <div className="shrink-0 border-t border-linea px-5 py-4">
@@ -262,18 +337,50 @@ export function CheckoutForm({ form, onChange, onSent }: CheckoutFormProps) {
             <dd className="tabular-nums">{formatClp(total)}</dd>
           </div>
         </dl>
-        {business.isDemo && (
+        {business.isDemo && !isApi && (
           <p className="mt-3 rounded-xl bg-queso-claro px-4 py-2 text-sm font-semibold">
             Modo demo: el pedido no llega al local.
           </p>
         )}
+        <div role="alert">
+          {notice && (
+            <div className="mt-3 rounded-xl bg-queso-claro px-4 py-2 text-sm">
+              <p className="font-semibold">{notice.title}</p>
+              {notice.items && (
+                <ul className="mt-1 list-disc pl-5">
+                  {notice.items.map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
+        </div>
+        {reason && (
+          <div id="checkout-bloqueado" className="mt-3 rounded-xl bg-queso-claro px-4 py-2 text-sm font-semibold">
+            <p>{reason}</p>
+            {soldOut && (
+              <button type="button" onClick={onUnavailable} className="mt-1 underline underline-offset-4">
+                Volver a mi pedido
+              </button>
+            )}
+          </div>
+        )}
         <button
           type="submit"
-          disabled={sending}
-          className="mt-3 inline-flex h-12 w-full items-center justify-center rounded-full bg-whatsapp px-6 font-semibold text-white transition-colors hover:bg-whatsapp-oscuro disabled:opacity-60"
+          disabled={sending || reason !== null}
+          aria-describedby={reason ? 'checkout-bloqueado' : 'checkout-privacidad'}
+          className={`mt-3 inline-flex h-12 w-full items-center justify-center rounded-full px-6 font-semibold text-white transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
+            isApi ? 'bg-rojo hover:bg-rojo-oscuro' : 'bg-whatsapp hover:bg-whatsapp-oscuro'
+          }`}
         >
-          Enviar pedido por WhatsApp
+          {sending ? 'Enviando…' : isApi ? 'Enviar pedido' : 'Enviar pedido por WhatsApp'}
         </button>
+        <p id="checkout-privacidad" className="mt-2 text-xs text-tinta">
+          {isApi
+            ? 'Usamos tu nombre, celular y dirección solo para preparar y entregar este pedido. El local los guarda únicamente para gestionarlo.'
+            : 'Tus datos van solo en el mensaje de WhatsApp al local, para preparar y entregar tu pedido.'}
+        </p>
       </div>
     </form>
   )

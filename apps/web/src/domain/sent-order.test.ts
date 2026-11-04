@@ -32,7 +32,10 @@ describe('cartFingerprint', () => {
 
 describe('serializeSentMark', () => {
   it('deja fuera el mensaje aunque venga en el pedido', () => {
-    const sent: SentOrder = { ...mark, details: { message: 'Cliente: Ana', copied: true } }
+    const sent: SentOrder = {
+      ...mark,
+      details: { message: 'Cliente: Ana', copied: true, code: null, whatsappUrl: null, demo: true },
+    }
     expect(JSON.parse(serializeSentMark(sent))).toEqual(mark)
   })
 })

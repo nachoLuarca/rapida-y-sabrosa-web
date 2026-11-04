@@ -38,14 +38,22 @@ function lineText(line: CartLine): string[] {
   return text
 }
 
-/** Mensaje de WhatsApp con el formato de docs/SPEC.md (negritas con *). `businessName` va en el título. */
-export function buildOrderMessage(businessName: string, lines: CartLine[], order: OrderDetails): string {
+/**
+ * Mensaje de WhatsApp con el formato de docs/SPEC.md (negritas con *). `businessName` va en el título y, si el
+ * pedido ya existe en el sistema, también su código: "*Nuevo pedido RYS-0042 — Rápida y Sabrosa*".
+ */
+export function buildOrderMessage(
+  businessName: string,
+  lines: CartLine[],
+  order: OrderDetails,
+  code?: string,
+): string {
   const { fulfillment } = order
   const totals = orderTotals(lines, fulfillment)
   const comment = customerText(order.comment ?? '')
 
   const blocks: string[][] = [
-    [`*Nuevo pedido — ${businessName}*`],
+    [code ? `*Nuevo pedido ${code} — ${businessName}*` : `*Nuevo pedido — ${businessName}*`],
     lines.flatMap(lineText),
     [
       `Subtotal: ${formatClp(totals.subtotal)}`,

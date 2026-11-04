@@ -65,6 +65,13 @@ describe('buildOrderMessage', () => {
     )
   })
 
+  it('con el código del pedido, lo pone en el título y deja todo lo demás igual', () => {
+    const withCode = buildOrderMessage(businessName, lines, delivery, 'RYS-0042')
+    const [title, ...rest] = withCode.split('\n')
+    expect(title).toBe('*Nuevo pedido RYS-0042 — Rápida y Sabrosa*')
+    expect(rest).toEqual(buildOrderMessage(businessName, lines, delivery).split('\n').slice(1))
+  })
+
   it('en retiro omite despacho y dirección; sin comentario omite ese bloque', () => {
     const pickup: OrderDetails = {
       customerName: 'Ana Pérez',

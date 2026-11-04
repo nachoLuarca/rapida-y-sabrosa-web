@@ -1,14 +1,15 @@
 import type { MouseEvent } from 'react'
-import { formatClp, type Category } from '@rys/domain'
-import { buildPizza } from '../data/menu'
+import { formatClp, type BuildPizzaConfig, type Category } from '@rys/domain'
 
 interface BuildPizzaBlockProps {
   category: Category
+  buildPizza: BuildPizzaConfig
   onChooseIngredients: (event: MouseEvent<HTMLElement>) => void
 }
 
-export function BuildPizzaBlock({ category, onChooseIngredients }: BuildPizzaBlockProps) {
+export function BuildPizzaBlock({ category, buildPizza, onChooseIngredients }: BuildPizzaBlockProps) {
   const titleId = `${category.id}-titulo`
+  const soldOut = buildPizza.available === false
 
   return (
     <section id={category.id} aria-labelledby={titleId} className="border-t border-linea py-10">
@@ -36,13 +37,19 @@ export function BuildPizzaBlock({ category, onChooseIngredients }: BuildPizzaBlo
             </div>
           </dl>
         </div>
-        <button
-          type="button"
-          onClick={onChooseIngredients}
-          className="inline-flex h-12 items-center justify-center rounded-full bg-queso px-6 font-bold text-carbon transition-colors hover:bg-white"
-        >
-          Elegir ingredientes
-        </button>
+        {soldOut ? (
+          <p className="rounded-full border border-white/40 px-6 py-3 text-center font-bold">
+            Agotada por ahora
+          </p>
+        ) : (
+          <button
+            type="button"
+            onClick={onChooseIngredients}
+            className="inline-flex h-12 items-center justify-center rounded-full bg-queso px-6 font-bold text-carbon transition-colors hover:bg-white"
+          >
+            Elegir ingredientes
+          </button>
+        )}
       </div>
     </section>
   )
