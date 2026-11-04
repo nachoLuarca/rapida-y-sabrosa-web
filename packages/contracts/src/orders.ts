@@ -129,7 +129,34 @@ export const orderResponseSchema = z.object({
   demo: z.boolean(),
 })
 
+/** Cotización nueva que acompaña a PRICE_CHANGED: los precios de hoy, para mostrarlos y pedir confirmar. */
+export const orderQuoteSchema = z.object({
+  lines: z.array(orderLineResponseSchema),
+  subtotal: z.number().int().min(0),
+  deliveryFee: z.number().int().min(0),
+  total: z.number().int().min(0),
+})
+
+/** `details` de 409 PRICE_CHANGED. */
+export const priceChangedDetailsSchema = z.object({ quote: orderQuoteSchema })
+
+/** `details` de 409 PRODUCT_UNAVAILABLE: qué productos, variantes o ingredientes no se pueden pedir. */
+export const productUnavailableDetailsSchema = z.object({
+  productIds: z.array(z.string()),
+  variantIds: z.array(z.string()),
+  ingredientIds: z.array(z.string()),
+})
+
+/** `details` de 409 STORE_CLOSED y ORDERS_PAUSED: cuándo vuelve a abrir, si se sabe. */
+export const storeBlockedDetailsSchema = z.object({
+  nextOpening: z.iso.datetime({ offset: true }).nullable(),
+})
+
 export type PaymentMethodCode = (typeof PAYMENT_METHODS)[number]
+export type OrderQuoteDto = z.infer<typeof orderQuoteSchema>
+export type PriceChangedDetails = z.infer<typeof priceChangedDetailsSchema>
+export type ProductUnavailableDetails = z.infer<typeof productUnavailableDetailsSchema>
+export type StoreBlockedDetails = z.infer<typeof storeBlockedDetailsSchema>
 export type FulfillmentTypeCode = (typeof FULFILLMENT_TYPES)[number]
 export type OrderLineRequest = z.input<typeof orderLineRequestSchema>
 /** Lo que envía el cliente. */
