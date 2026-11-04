@@ -1,6 +1,7 @@
 import { X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { emptyCheckoutForm, type CheckoutForm as CheckoutFormData } from '@rys/domain'
+import { sentOrderTitle } from '../domain/sent-order'
 import { useCart } from '../store/use-cart'
 import { CartContents } from './CartContents'
 import { CheckoutForm } from './CheckoutForm'
@@ -9,10 +10,9 @@ import { Modal } from './ui/Modal'
 
 type Step = 'cart' | 'checkout' | 'sent'
 
-const titles: Record<Step, string> = {
+const titles: Record<Exclude<Step, 'sent'>, string> = {
   cart: 'Tu pedido',
   checkout: 'Tus datos',
-  sent: 'Pedido listo',
 }
 
 interface CartPanelProps {
@@ -72,7 +72,9 @@ export function CartPanel({ open, onClose }: CartPanelProps) {
             </button>
           )}
           <h2 id="pedido-titulo" ref={titleRef} tabIndex={-1} className="display text-4xl">
-            {titles[step]}
+            {step === 'sent'
+              ? sentOrderTitle(sentOrder?.code ?? null, sentOrder?.details?.demo ?? false)
+              : titles[step]}
           </h2>
         </div>
         <button
@@ -94,11 +96,13 @@ export function CartPanel({ open, onClose }: CartPanelProps) {
             markSent(details)
             goTo('cart')
           }}
+          onUnavailable={() => goTo('cart')}
         />
       )}
       {step === 'sent' && sentOrder && (
         <OrderSent
           sent={sentOrder.details}
+          code={sentOrder.code ?? null}
           onBackToOrder={() => {
             reopenOrder()
             goTo('cart')

@@ -20,20 +20,25 @@ function inlineFavicon(): Plugin {
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => {
   const isDemo = mode === 'demo'
+  // La demo de un solo archivo funciona por file:// sin red: siempre con la carta del bundle, aunque el entorno
+  // diga otra cosa (las variables de process.env mandan sobre los archivos .env).
+  if (isDemo) process.env.VITE_DATA_SOURCE = 'static'
 
   return {
     plugins: [react(), tailwindcss(), ...(isDemo ? [viteSingleFile(), inlineFavicon()] : [])],
     build: isDemo ? { outDir: 'dist-demo', copyPublicDir: false } : {},
-    // En desarrollo /api va a la API: la web y la API comparten origen y no hace falta CORS. La web todavía
-    // no la usa (eso llega en la Fase 7). API_PROXY_TARGET permite apuntar a otro puerto.
+    // En desarrollo /api va a la API: la web y la API comparten origen y no hace falta CORS. xfwd agrega
+    // X-Forwarded-For, así la API (que solo le cree a un proxy local) ve la IP de cada celular para el rate limit.
+    // API_PROXY_TARGET permite apuntar a otro puerto.
     server: {
-      proxy: { '/api': { target: process.env.API_PROXY_TARGET ?? 'http://localhost:3000' } },
+      proxy: { '/api': { target: process.env.API_PROXY_TARGET ?? 'http://localhost:3000', xfwd: true } },
     },
     test: {
       css: false,
-      // Los tests no dependen de ningún .env local: siempre corren en modo normal y con el número del local.
-      // Los del modo demo lo activan explícitamente (ver src/demo-mode.test.tsx).
-      env: { VITE_DEMO: 'false', VITE_WHATSAPP_NUMBER: '56974314602' },
+      // Los tests no dependen de ningún .env local: siempre corren en modo normal, con el número del local y la
+      // carta del bundle. Los del modo demo lo activan explícitamente (ver src/demo-mode.test.tsx) y los de la
+      // API pasan sus fuentes de datos a <App> (ver src/test/api-fake.ts).
+      env: { VITE_DEMO: 'false', VITE_WHATSAPP_NUMBER: '56974314602', VITE_DATA_SOURCE: 'static' },
       projects: [
         // Lógica pura: sin jsdom ni Testing Library, que son lo más caro de levantar.
         { extends: true, test: { name: 'logica', environment: 'node', include: ['src/**/*.test.ts'] } },

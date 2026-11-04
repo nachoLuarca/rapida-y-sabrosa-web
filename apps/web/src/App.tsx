@@ -7,8 +7,12 @@ import { Footer } from './components/Footer'
 import { Header } from './components/Header'
 import { Hero } from './components/Hero'
 import { Menu } from './components/Menu'
+import { StoreNotice } from './components/StoreNotice'
+import { defaultDataSources, type DataSources } from './data-source'
 import { CartProvider } from './store/CartProvider'
+import { MenuProvider } from './store/MenuProvider'
 import { useCart } from './store/use-cart'
+import { useMenu } from './store/use-menu'
 
 type Overlay = 'cart' | 'build-pizza' | null
 
@@ -40,6 +44,7 @@ function Page() {
         Saltar a la carta
       </a>
       <Header onOpenCart={openWith('cart')} />
+      <StoreNotice />
       <main>
         <Hero onBuildPizza={openWith('build-pizza')} />
         <Menu onChooseIngredients={openWith('build-pizza')} />
@@ -54,10 +59,29 @@ function Page() {
   )
 }
 
-export default function App() {
+/**
+ * El pedido se arma con la carta que haya: la del bundle o la de la API (null mientras carga). Cuando llega la
+ * carta, el carrito se vuelve a montar (key) para leer el pedido guardado con ella.
+ */
+function CartWithMenu() {
+  const { menu } = useMenu()
   return (
-    <CartProvider>
+    <CartProvider key={menu ? 'con-carta' : 'cargando'} catalog={menu}>
       <Page />
     </CartProvider>
+  )
+}
+
+interface AppProps {
+  /** De dónde salen la carta y a dónde van los pedidos. Por defecto, según VITE_DATA_SOURCE. */
+  sources?: DataSources
+}
+
+export default function App({ sources }: AppProps) {
+  const [resolved] = useState(() => sources ?? defaultDataSources())
+  return (
+    <MenuProvider sources={resolved}>
+      <CartWithMenu />
+    </MenuProvider>
   )
 }

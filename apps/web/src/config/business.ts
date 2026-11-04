@@ -1,4 +1,4 @@
-import { describeOpeningHours, type OpeningHours, type OpeningHoursLine, type PaymentMethod } from '@rys/domain'
+import type { OpeningHours, PaymentMethod } from '@rys/domain'
 import businessJson from '../../../../docs/data/business.json'
 // Datos del local. Vienen de docs/data/business.json, la misma fuente que usa el seed de la API: si cambia algo
 // del local, se cambia ahí, nunca dentro de un componente. Lo que está en `null` está pendiente de confirmar con
@@ -42,11 +42,8 @@ export const business = {
   city: businessData.city,
   whatsappNumber: parseWhatsappNumber(import.meta.env.VITE_WHATSAPP_NUMBER),
   instagram: businessData.instagram,
-  /** Horario agrupado por días para mostrar, o `null` si no está definido. */
-  openingHours: businessData.openingHours
-    ? describeOpeningHours(businessData.openingHours)
-    : (null as OpeningHoursLine[] | null),
-  pickupAddress: businessData.pickupAddress,
+  // El horario y la dirección de retiro llegan con la carta (data-source/menu-data.ts): con la API los define
+  // el local desde el panel.
   paymentMethods: businessData.paymentMethods,
   isDemo: parseDemoFlag(import.meta.env.VITE_DEMO),
 } as const

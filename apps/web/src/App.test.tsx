@@ -61,7 +61,8 @@ describe('App', () => {
     render(<App />)
     await search(user, 'sushi')
 
-    expect(screen.getByRole('status')).toHaveTextContent('No encontramos nada con “sushi”.')
+    const menu = screen.getByRole('region', { name: 'La carta' })
+    expect(within(menu).getByRole('status')).toHaveTextContent('No encontramos nada con “sushi”.')
     expect(screen.queryAllByRole('heading', { level: 4 })).toHaveLength(0)
 
     await user.click(screen.getByRole('button', { name: 'Ver toda la carta' }))

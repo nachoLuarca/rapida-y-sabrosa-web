@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef, useState, type MouseEvent } from 'react'
 import { matchesSearch } from '@rys/domain'
-import { buildPizza, categories, products } from '../data/menu'
+import type { MenuData } from '../data-source/menu-data'
 import { useActiveSection } from '../hooks/use-active-section'
+import { useMenu } from '../store/use-menu'
 import { BuildPizzaBlock } from './BuildPizzaBlock'
 import { CategorySection } from './CategorySection'
 import { MenuToolbar } from './MenuToolbar'
@@ -10,8 +11,41 @@ interface MenuProps {
   onChooseIngredients: (event: MouseEvent<HTMLElement>) => void
 }
 
+const EMPTY_MENU: Pick<MenuData, 'categories' | 'products' | 'buildPizza'> = {
+  categories: [],
+  products: [],
+  buildPizza: { productId: '', name: '', description: '', basePrice: 0, promoPrice: 0, includedInPromo: 0 },
+}
+
+/** Mientras llega la carta de la API: filas grises con la forma de la carta. */
+function MenuSkeleton() {
+  return (
+    <div aria-hidden="true" className="animate-pulse motion-reduce:animate-none">
+      {[0, 1].map((section) => (
+        <div key={section} className="grid gap-6 border-t border-linea py-10 md:grid-cols-[16rem_minmax(0,1fr)] md:gap-10">
+          <div className="h-10 w-48 rounded-lg bg-fondo" />
+          <ul className="divide-y divide-linea">
+            {[0, 1, 2, 3].map((row) => (
+              <li key={row} className="flex items-center justify-between gap-4 py-5">
+                <div className="flex-1 space-y-2">
+                  <div className="h-5 w-40 rounded bg-fondo" />
+                  <div className="h-4 w-full max-w-sm rounded bg-fondo" />
+                </div>
+                <div className="h-10 w-28 rounded-full bg-fondo" />
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 export function Menu({ onChooseIngredients }: MenuProps) {
+  const { status, menu, reload } = useMenu()
+  const { categories, products, buildPizza } = menu ?? EMPTY_MENU
   const [query, setQuery] = useState('')
+  const [retrying, setRetrying] = useState(false)
   const searching = query.trim() !== ''
 
   const sections = useMemo(
@@ -34,7 +68,7 @@ export function Menu({ onChooseIngredients }: MenuProps) {
           }
         })
         .filter((section) => (section.isBuildPizza ? section.visible : section.products.length > 0)),
-    [query],
+    [query, categories, products, buildPizza],
   )
 
   const resultCount = sections.reduce((total, s) => total + (s.isBuildPizza ? 1 : s.products.length), 0)
@@ -65,9 +99,36 @@ export function Menu({ onChooseIngredients }: MenuProps) {
         activeId={activeId}
       />
 
-      <div ref={resultsRef} className="mx-auto max-w-6xl px-4">
+      <div ref={resultsRef} className="mx-auto max-w-6xl px-4" aria-busy={status === 'loading'}>
+        {status === 'loading' && (
+          <>
+            <p className="sr-only" role="status">
+              Cargando la carta…
+            </p>
+            <MenuSkeleton />
+          </>
+        )}
+        {status === 'error' && (
+          <div role="alert" className="mt-6 rounded-xl bg-fondo p-6">
+            <p className="font-semibold">No pudimos cargar la carta.</p>
+            <p className="mt-1 text-tinta">Revisa tu conexión e inténtalo de nuevo.</p>
+            <button
+              type="button"
+              disabled={retrying}
+              onClick={async () => {
+                setRetrying(true)
+                await reload()
+                setRetrying(false)
+              }}
+              className="mt-4 inline-flex h-10 items-center rounded-full bg-rojo px-5 font-semibold text-white transition-colors hover:bg-rojo-oscuro disabled:opacity-60"
+            >
+              {retrying ? 'Cargando…' : 'Reintentar'}
+            </button>
+          </div>
+        )}
         <div role="status" className={searching ? 'pt-6' : 'sr-only'}>
           {searching &&
+            status === 'ready' &&
             (resultCount > 0 ? (
               <p className="font-semibold">
                 {resultCount} {resultCount === 1 ? 'resultado' : 'resultados'} para “{query.trim()}”
@@ -92,6 +153,7 @@ export function Menu({ onChooseIngredients }: MenuProps) {
             <BuildPizzaBlock
               key={section.category.id}
               category={section.category}
+              buildPizza={buildPizza}
               onChooseIngredients={onChooseIngredients}
             />
           ) : (

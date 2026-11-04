@@ -1,7 +1,7 @@
 import type { MouseEvent } from 'react'
 import { formatClp, minDeliveryFee } from '@rys/domain'
 import { business } from '../config/business'
-import { zones } from '../data/zones'
+import { useMenu } from '../store/use-menu'
 import { PizzaIllustration } from './PizzaIllustration'
 
 interface HeroProps {
@@ -9,7 +9,8 @@ interface HeroProps {
 }
 
 export function Hero({ onBuildPizza }: HeroProps) {
-  const minFee = minDeliveryFee(zones)
+  const { menu } = useMenu()
+  const minFee = menu ? minDeliveryFee(menu.zones) : null
 
   return (
     <section id="inicio" aria-labelledby="hero-title" className="overflow-hidden">
@@ -21,9 +22,11 @@ export function Hero({ onBuildPizza }: HeroProps) {
           </h1>
           <p className="mt-6 max-w-md text-lg text-tinta">
             Pizzas de élite en {business.city}, hechas al momento.{' '}
-            {minFee === null
-              ? 'Retiro en el local.'
-              : `Despacho desde ${formatClp(minFee)} o retiro en el local.`}
+            {/* Mientras carga la carta no se sabe el despacho más barato: mejor no decir nada. */}
+            {menu &&
+              (minFee === null
+                ? 'Retiro en el local.'
+                : `Despacho desde ${formatClp(minFee)} o retiro en el local.`)}
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <a

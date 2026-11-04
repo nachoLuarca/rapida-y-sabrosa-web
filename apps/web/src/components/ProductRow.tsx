@@ -30,11 +30,21 @@ function ProductControl({ product, variant }: { product: Product; variant?: Prod
   return <AddButton itemName={itemName} onClick={() => addItem(selection)} />
 }
 
+/** Etiqueta de agotado: el texto se lee igual (sin bajar el contraste), pero ya no se puede agregar. */
+export function SoldOutTag() {
+  return (
+    <span className="shrink-0 rounded-full border border-carbon px-2.5 py-0.5 text-xs font-bold whitespace-nowrap text-carbon uppercase">
+      Agotado
+    </span>
+  )
+}
+
 export function ProductRow({ product }: ProductRowProps) {
   const titleId = `producto-${product.id}`
+  const soldOut = product.available === false
 
   return (
-    <article aria-labelledby={titleId} className="flex gap-4 py-5">
+    <article aria-labelledby={titleId} className={`flex gap-4 py-5 ${soldOut ? 'text-tinta' : ''}`}>
       {product.image && (
         <img
           src={product.image}
@@ -50,6 +60,7 @@ export function ProductRow({ product }: ProductRowProps) {
           <h4 id={titleId} className="text-lg leading-snug font-semibold">
             {product.name}
           </h4>
+          {soldOut && <SoldOutTag />}
           {product.tags?.map((tag) => (
             <span
               key={tag}
@@ -75,9 +86,11 @@ export function ProductRow({ product }: ProductRowProps) {
                   <span>{variant.label}</span>
                   <DottedLeader />
                   <span className="font-bold whitespace-nowrap tabular-nums">{formatClp(variant.price)}</span>
-                  <span className="ml-2 shrink-0">
-                    <ProductControl product={product} variant={variant} />
-                  </span>
+                  {!soldOut && (
+                    <span className="ml-2 shrink-0">
+                      <ProductControl product={product} variant={variant} />
+                    </span>
+                  )}
                 </li>
               ))}
             </ul>
@@ -85,9 +98,11 @@ export function ProductRow({ product }: ProductRowProps) {
         ) : (
           <div className="mt-1 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between sm:gap-6">
             {product.description ? <p className="text-sm text-tinta">{product.description}</p> : <span />}
-            <span className="shrink-0 self-end">
-              <ProductControl product={product} />
-            </span>
+            {!soldOut && (
+              <span className="shrink-0 self-end">
+                <ProductControl product={product} />
+              </span>
+            )}
           </div>
         )}
       </div>

@@ -63,10 +63,8 @@ describe('docs/data/business.json', () => {
       branch: businessData.branch,
       city: businessData.city,
       instagram: businessData.instagram,
-      pickupAddress: businessData.pickupAddress,
       paymentMethods: businessData.paymentMethods,
     })
-    expect(business.openingHours === null).toBe(businessData.openingHours === null)
   })
 })
 
