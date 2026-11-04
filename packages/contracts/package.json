@@ -4,6 +4,7 @@
   "version": "0.0.0",
   "description": "Esquemas Zod de requests, responses y errores de la API de Rápida y Sabrosa, con sus tipos.",
   "type": "module",
+  "sideEffects": false,
   "exports": {
     ".": "./src/index.ts"
   },
