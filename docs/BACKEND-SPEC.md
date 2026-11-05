@@ -287,6 +287,13 @@ normalizador del dominio; el horario con rangos `HH:MM` válidos.
 por SSE a los paneles conectados. Una sola instancia de la API, así que alcanza. El panel se reconecta solo
 (`EventSource`) y, al reconectar, vuelve a pedir la lista para no perder eventos.
 
+Detalles decididos en la Fase 8:
+
+- Cada evento trae un resumen (`{ code, status, fulfillment, total, createdAt }`, esquema `orderStreamEventSchema`),
+  sin datos del cliente: el panel vuelve a pedir la lista con cada evento y con cada (re)conexión.
+- El stream manda `retry: 3000` al conectarse y un comentario `: ping` cada 25 s. Si el navegador cierra la
+  conexión para siempre (por ejemplo, con un 401), el panel revisa la sesión y vuelve a conectarse a los 3 s.
+
 ## Modo demo de la API
 
 `DEMO_MODE=true`:
@@ -355,6 +362,24 @@ Detalles decididos en la Fase 7:
   El local los guarda únicamente para gestionarlo." En modo static dice que los datos van solo en el mensaje de
   WhatsApp.
 
+### Autenticación: detalles decididos en la Fase 8
+
+- La cookie es `Secure` solo con `NODE_ENV=production`: en desarrollo y en la demo la web va por HTTP.
+- El login también exige un `Origin` permitido (como toda mutación del panel).
+- Contraseña mala, email que no existe y usuario desactivado reciben el mismo 401 `INVALID_CREDENTIALS`; con un
+  email inexistente igual se verifica un hash, para que tarde lo mismo.
+- El rate limit del login cuenta solo los intentos fallidos (5 por IP cada 15 minutos).
+- La sesión se renueva con el uso, escribiendo en la base a lo más una vez por minuto, y la cookie se vuelve a mandar
+  con el vencimiento nuevo.
+- Un cambio de estado se aplica solo si el pedido sigue en el estado que se leyó: si otra persona lo cambió justo
+  antes, responde 409 `INVALID_TRANSITION`. Cancelar sin motivo responde 400 `VALIDATION_ERROR` con
+  `details.reason`.
+- `GET /api/admin/orders`: `status` acepta varios separados por coma; `from` (incluido) y `to` (excluido) filtran
+  por la fecha de creación; `q` busca en el código o en el nombre; `pageSize` hasta 100; el más nuevo primero.
+- `order_status_history.changed_by` apunta a `admin_users` (si el usuario se borra, queda en null).
+- `db:seed` crea los usuarios de demo solo si faltan (no les cambia la contraseña); el modo `reset` del seed, para
+  `demo:reset`, los deja con `DEMO_PASSWORD` y activos.
+
 ## Panel (apps/admin)
 
 Vite + React + TypeScript + Tailwind con los tokens de la marca. Pensado para notebook y tablet; usable en
@@ -373,6 +398,18 @@ celular.
 Con proxy de `/api` en desarrollo (mismo origen, la cookie funciona sin configuración extra). Accesible:
 foco visible, todo usable con teclado, estados anunciados a lectores de pantalla (`aria-live` para pedidos
 nuevos).
+
+Detalles decididos en la Fase 8:
+
+- Sin librería de rutas (CLAUDE.md): un router mínimo con la History API para `/login`, `/pedidos` y
+  `/pedidos/:code`. Sin sesión, cualquier ruta muestra el login y, al entrar, se queda en esa ruta.
+- El tablero no muestra los cancelados (se ven en el detalle). "Entregados de hoy" son los entregados creados desde
+  las 00:00 de Santiago.
+- Un pedido nuevo entra arriba de "Pendientes" con la etiqueta "Nuevo" hasta que alguien lo mueve. El aviso sonoro
+  son dos notas con Web Audio (sin archivos); se activa con el botón del header y se recuerda en `localStorage`.
+- El estado de la conexión en vivo se ve siempre en el header: "En vivo", "Conectando…" o "Sin conexión:
+  reintentando…".
+- Los colores, tipografías y el foco salen de `packages/tokens`, el mismo CSS que usa la web.
 
 ## Calidad
 

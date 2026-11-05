@@ -1,0 +1,9 @@
+@import 'tailwindcss';
+/* Colores, tipografías, foco y movimiento de la marca (docs/DESIGN.md), los mismos de la web */
+@import '@rys/tokens/theme.css';
+
+@layer base {
+  body {
+    @apply bg-fondo;
+  }
+}

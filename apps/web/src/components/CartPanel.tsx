@@ -73,7 +73,7 @@ export function CartPanel({ open, onClose }: CartPanelProps) {
           )}
           <h2 id="pedido-titulo" ref={titleRef} tabIndex={-1} className="display text-4xl">
             {step === 'sent'
-              ? sentOrderTitle(sentOrder?.code ?? null, sentOrder?.details?.demo ?? false)
+              ? sentOrderTitle(sentOrder?.code ?? null, sentOrder?.details?.demo ?? sentOrder?.demo === true)
               : titles[step]}
           </h2>
         </div>
@@ -103,6 +103,7 @@ export function CartPanel({ open, onClose }: CartPanelProps) {
         <OrderSent
           sent={sentOrder.details}
           code={sentOrder.code ?? null}
+          demo={sentOrder.details?.demo ?? sentOrder.demo === true}
           onBackToOrder={() => {
             reopenOrder()
             goTo('cart')

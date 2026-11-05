@@ -156,6 +156,15 @@ describe('marca de pedido enviado con código', () => {
     expect(parseSentMark(serializeSentMark(mark))).toEqual(mark)
   })
 
+  it('guarda si el pedido fue demo, solo junto con el código', () => {
+    const demo = { sentAt: 1_700_000_000_000, cart: 'suprema||*1', code: 'RYS-0042', demo: true as const }
+    expect(parseSentMark(serializeSentMark(demo))).toEqual(demo)
+    // Sin código no hay demo de la API que recordar; un demo que no es true no vale.
+    expect(JSON.parse(serializeSentMark({ sentAt: 1, cart: 'x', demo: true }))).toEqual({ sentAt: 1, cart: 'x' })
+    expect(parseSentMark(JSON.stringify({ sentAt: 1, cart: 'x', demo: true }))).toBeNull()
+    expect(parseSentMark(JSON.stringify({ sentAt: 1, cart: 'x', code: 'RYS-0042', demo: false }))).toBeNull()
+  })
+
   it('rechaza un código que no tiene la forma RYS-0000 o campos de más', () => {
     expect(parseSentMark(JSON.stringify({ sentAt: 1, cart: 'x', code: 'hola' }))).toBeNull()
     expect(parseSentMark(JSON.stringify({ sentAt: 1, cart: 'x', code: 'RYS-0042', message: 'Ana' }))).toBeNull()

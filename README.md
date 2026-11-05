@@ -9,8 +9,9 @@ La web tiene dos modos, según `VITE_DATA_SOURCE`:
 
 - **static** (el de la web publicada y de `build:demo`): la carta va en el bundle y el pedido sale directo a WhatsApp.
 - **api** (el de `npm run dev`): la carta viene de la API y el pedido se crea en la base con un código (`RYS-0042`);
-  después el cliente lo envía por WhatsApp. El panel del local llega en las fases siguientes
-  (`docs/BACKEND-SPEC.md`, por fases en `docs/PLAN-BACKEND.md`).
+  después el cliente lo envía por WhatsApp, y el pedido aparece al instante en el **panel del local** (`apps/admin`).
+  La gestión de la carta desde el panel llega en la Fase 9 (`docs/BACKEND-SPEC.md`, por fases en
+  `docs/PLAN-BACKEND.md`).
 
 ## Estructura del repositorio
 
@@ -19,15 +20,18 @@ Es un monorepo con npm workspaces:
 ```
 apps/
   web/                la web de pedidos (Vite + React): carta, carrito, Arma tu pizza y checkout
-  api/                @rys/api: API en Express 5 sobre PostgreSQL con Drizzle (carta y pedidos)
+  api/                @rys/api: API en Express 5 sobre PostgreSQL con Drizzle (carta, pedidos y panel)
+  admin/              @rys/admin: panel del local (Vite + React): login y pedidos en vivo
 packages/
   domain/             @rys/domain: reglas de negocio puras y sus tipos, compartidas entre apps
   contracts/          @rys/contracts: esquemas Zod de requests y responses de la API
+  tokens/             @rys/tokens: colores, tipografías y foco de la marca, para la web y el panel
+scripts/dev.mjs       npm run dev: API, web y panel a la vez
 docker-compose.yml    PostgreSQL 17 para desarrollo y tests
 docs/                 especificación, diseño, planes, arquitectura y datos de la carta
 ```
 
-Más adelante se suma `apps/admin` (panel del local). El detalle y el porqué están en `docs/ARCHITECTURE.md`.
+El detalle y el porqué están en `docs/ARCHITECTURE.md`.
 
 ## Cómo correr el proyecto
 
@@ -50,8 +54,8 @@ npm run db:up        # si la base no está arriba
 npm run dev
 ```
 
-`npm run dev` levanta la API en `http://localhost:3000` y la web en `http://localhost:5173`, con el prefijo `[api]` o
-`[web]` en cada línea. Ctrl+C cierra las dos. En desarrollo la web usa la API (`apps/web/.env.development`): `/api`
+`npm run dev` levanta la API en `http://localhost:3000`, la web en `http://localhost:5173` y el panel en
+`http://localhost:5174`, con el prefijo `[api]`, `[web]` o `[panel]` en cada línea. Ctrl+C cierra los tres. En desarrollo la web usa la API (`apps/web/.env.development`): `/api`
 va a la API por el proxy de Vite (mismo origen, sin CORS). Si la base no está arriba, la API lo dice y se detiene, y
 la web muestra "No pudimos cargar la carta" con un botón para reintentar. Para trabajar sin la API, pon
 `VITE_DATA_SOURCE=static` en `apps/web/.env.development.local`.
@@ -75,10 +79,28 @@ curl http://localhost:3000/api/docs
 docker compose exec postgres psql -U rys -d rys -c "select o.code, o.status, o.fulfillment, o.total, l.product_name, l.quantity, l.line_total from orders o join order_lines l on l.order_id = o.id order by o.created_at desc, l.position limit 20;"
 ```
 
+### El panel del local
+
+1. Crea un usuario (la contraseña se pide por consola, sin mostrarla; mínimo 10 caracteres):
+
+   ```
+   npm run user:create -- --email caja@local.cl --name "Caja" --role staff
+   ```
+
+   Los roles son `admin` y `staff`. Con `DEMO_MODE=true` en `apps/api/.env`, `npm run db:seed` crea además
+   `admin@demo.local` y `caja@demo.local` con la contraseña de `DEMO_PASSWORD`.
+2. Con `npm run dev` corriendo, abre `http://localhost:5174` y entra con ese usuario.
+3. En otra ventana, haz un pedido en `http://localhost:5173`: aparece al instante arriba de "Pendientes", destacado,
+   con el contador en el título de la pestaña (y un aviso sonoro, si lo activas en el header).
+4. Cada tarjeta tiene el botón del siguiente paso ("Confirmar", "A preparar"…). Al hacer clic en el código se abre el
+   detalle: líneas, cliente, historial, cancelar con motivo y el enlace al WhatsApp del cliente.
+
+Si la conexión en vivo se corta, el header dice "Sin conexión: reintentando…"; al volver, el tablero se recarga solo.
+
 | Comando              | Qué hace |
 |----------------------|----------|
-| `npm run dev`        | API (tsx en modo watch) y web (Vite) a la vez |
-| `npm run build`      | Build de producción de la web en `apps/web/dist/` (la API no tiene build: corre con tsx) |
+| `npm run dev`        | API (tsx en modo watch), web y panel (Vite) a la vez |
+| `npm run build`      | Builds de producción: web en `apps/web/dist/` y panel en `apps/admin/dist/` (la API no tiene build: corre con tsx) |
 | `npm run build:demo` | Un solo `index.html` autocontenido en modo demo, en `apps/web/dist-demo/` |
 | `npm test`           | Corre una vez los tests de todos los workspaces. Los de la API necesitan la base arriba |
 | `npm run lint`       | Revisa el código de todos los workspaces |
@@ -87,6 +109,7 @@ docker compose exec postgres psql -U rys -d rys -c "select o.code, o.status, o.f
 | `npm run db:down`    | Baja el contenedor. Los datos quedan en el volumen `rapida-y-sabrosa_postgres-data` |
 | `npm run db:migrate` | Aplica las migraciones pendientes a la base de `DATABASE_URL` |
 | `npm run db:seed`    | Inserta lo que falte de la carta de `docs/data` y los datos del local, sin pisar nada (ver abajo) |
+| `npm run user:create` | Crea un usuario del panel (ver "El panel del local") |
 
 Para correr un script en un solo workspace, agrega `--workspace`:
 

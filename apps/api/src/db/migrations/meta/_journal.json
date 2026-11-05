@@ -15,6 +15,13 @@
       "when": 1793818227500,
       "tag": "0001_pedidos",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1793822420302,
+      "tag": "0002_usuarios_y_sesiones",
+      "breakpoints": true
     }
   ]
 }

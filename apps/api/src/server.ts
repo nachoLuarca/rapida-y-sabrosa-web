@@ -33,7 +33,14 @@ if (state !== 'ok') {
 }
 
 const logger = createLogger(env.LOG_LEVEL)
-const { controllers } = createContainer({ database, demoMode: env.DEMO_MODE })
+const { controllers } = createContainer({
+  database,
+  demoMode: env.DEMO_MODE,
+  sessionTtlHours: env.SESSION_TTL_HOURS,
+  allowedOrigins: env.ALLOWED_ORIGINS,
+  // En desarrollo (y en la demo, que corre en desarrollo) la web va por HTTP: la cookie no puede ser Secure.
+  secureCookies: env.NODE_ENV === 'production',
+})
 // La documentación OpenAPI (/api/docs) solo se publica en desarrollo.
 const app = createApp({ controllers, logger, routes: { docs: env.NODE_ENV === 'development' } })
 

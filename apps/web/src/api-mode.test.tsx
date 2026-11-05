@@ -233,6 +233,14 @@ describe('checkout contra la API', () => {
     expect(within(sent).getByText('Modo demo: el pedido quedó registrado, pero no se envía por WhatsApp.')).toBeInTheDocument()
     expect(within(sent).queryByRole('button', { name: 'Abrir WhatsApp' })).not.toBeInTheDocument()
     expect(openSpy).not.toHaveBeenCalled()
+    expect(JSON.parse(localStorage.getItem(SENT_ORDER_STORAGE_KEY) ?? '{}')).toMatchObject({ code: 'RYS-0042', demo: true })
+
+    // Al recargar sigue siendo demo: el mismo título y nada de escribirle al local por WhatsApp.
+    cleanup()
+    await renderWithApi(api)
+    const reloaded = await screen.findByRole('dialog', { name: 'Pedido RYS-0042 recibido (demo)' })
+    expect(within(reloaded).getByText('Modo demo: el local no lo va a preparar.')).toBeInTheDocument()
+    expect(reloaded).not.toHaveTextContent(/WhatsApp/)
   })
 
   it('si cambió un precio, muestra los precios nuevos y pide confirmar de nuevo con el total nuevo', async () => {

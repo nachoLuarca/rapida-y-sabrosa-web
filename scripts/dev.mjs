@@ -1,6 +1,6 @@
-// npm run dev: levanta a la vez la API (tsx en modo watch) y la web (Vite), con el prefijo [api] o [web] en cada
-// línea. Requiere la base arriba (npm run db:up); si no lo está, la API lo explica y termina, y la web sigue.
-// Ctrl+C cierra los dos, incluidos sus procesos hijos.
+// npm run dev: levanta a la vez la API (tsx en modo watch), la web y el panel (Vite), con el prefijo [api], [web] o
+// [panel] en cada línea. Requiere la base arriba (npm run db:up); si no lo está, la API lo explica y termina, y la web
+// y el panel siguen. Ctrl+C cierra los tres, incluidos sus procesos hijos.
 import { spawn, spawnSync } from 'node:child_process'
 
 const isWindows = process.platform === 'win32'
@@ -8,6 +8,7 @@ const isWindows = process.platform === 'win32'
 const tasks = [
   { name: 'api', color: 36, workspace: 'apps/api' },
   { name: 'web', color: 35, workspace: 'apps/web' },
+  { name: 'panel', color: 33, workspace: 'apps/admin' },
 ]
 
 const useColor = process.stdout.isTTY && !process.env.NO_COLOR

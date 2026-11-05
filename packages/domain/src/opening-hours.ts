@@ -303,3 +303,9 @@ export function describeNextOpening(next: Date, now: Date, timezone: string = DE
   if (days < 7) return `el ${dayName} ${at}`
   return `el ${dayName} ${opening.dayOfMonth} de ${MONTH_NAMES[opening.month - 1]} ${at}`
 }
+
+/** El instante en que empieza el día local de `date` (00:00 en Santiago), para "Entregados de hoy". */
+export function startOfLocalDay(date: Date, timezone: string = DEFAULT_TIMEZONE): Date {
+  const local = localTime(date, timezone)
+  return new Date(zonedInstant(local.year, local.month, local.dayOfMonth, 0, timezone))
+}

@@ -1,4 +1,13 @@
 import { z } from 'zod'
+import {
+  adminOrderDetailSchema,
+  loginRequestSchema,
+  meResponseSchema,
+  ordersListResponseSchema,
+  orderStreamEventSchema,
+  SESSION_COOKIE,
+  statusChangeRequestSchema,
+} from './admin.ts'
 import { ERROR_CODES, errorResponseSchema } from './errors.ts'
 import { healthResponseSchema } from './health.ts'
 import { menuResponseSchema } from './menu.ts'
@@ -25,6 +34,85 @@ const toSchema = (schema: z.ZodType, io: 'input' | 'output'): JsonSchema => {
 const ref = (name: string) => ({ $ref: `#/components/schemas/${name}` })
 const json = (name: string) => ({ 'application/json': { schema: ref(name) } })
 const errorResponse = (description: string) => ({ description, content: json('ErrorResponse') })
+
+/** Rutas del panel: cookie de sesión y, en las mutaciones, Origin permitido. */
+const session = [{ session: [] }]
+const unauthenticated = errorResponse('UNAUTHENTICATED: falta la sesión o venció.')
+const invalidOrigin = errorResponse('INVALID_ORIGIN: el header Origin no está en ALLOWED_ORIGINS.')
+
+function adminPaths() {
+  const code = { name: 'code', in: 'path', required: true, schema: { type: 'string', example: 'RYS-0042' } }
+  return {
+    '/api/admin/session': {
+      post: {
+        summary: 'Inicia sesión (setea la cookie)',
+        description: 'Rate limit: 5 intentos fallidos por IP cada 15 minutos. El error es siempre el mismo.',
+        requestBody: { required: true, content: json('LoginRequest') },
+        responses: {
+          200: { description: 'Sesión iniciada.', content: json('MeResponse') },
+          401: errorResponse('INVALID_CREDENTIALS.'),
+          403: invalidOrigin,
+          429: errorResponse('RATE_LIMITED.'),
+        },
+      },
+      delete: {
+        summary: 'Cierra la sesión',
+        security: session,
+        responses: { 204: { description: 'Sesión cerrada.' }, 401: unauthenticated, 403: invalidOrigin },
+      },
+    },
+    '/api/admin/me': {
+      get: { summary: 'Usuario actual', security: session, responses: { 200: { description: 'El usuario.', content: json('MeResponse') }, 401: unauthenticated } },
+    },
+    '/api/admin/orders': {
+      get: {
+        summary: 'Pedidos, con filtros y paginado',
+        security: session,
+        parameters: [
+          { name: 'status', in: 'query', schema: { type: 'string' }, description: 'Uno o varios, separados por coma.' },
+          { name: 'from', in: 'query', schema: { type: 'string', format: 'date-time' } },
+          { name: 'to', in: 'query', schema: { type: 'string', format: 'date-time' } },
+          { name: 'q', in: 'query', schema: { type: 'string' }, description: 'Código o nombre del cliente.' },
+          { name: 'page', in: 'query', schema: { type: 'integer', minimum: 1 } },
+          { name: 'pageSize', in: 'query', schema: { type: 'integer', minimum: 1, maximum: 100 } },
+        ],
+        responses: { 200: { description: 'Una página de pedidos.', content: json('OrdersListResponse') }, 401: unauthenticated },
+      },
+    },
+    '/api/admin/orders/stream': {
+      get: {
+        summary: 'Pedidos en vivo (Server-Sent Events)',
+        description: 'Eventos order.created y order.updated con un OrderStreamEvent en data; heartbeat cada 25 s.',
+        security: session,
+        responses: { 200: { description: 'text/event-stream.' }, 401: unauthenticated },
+      },
+    },
+    '/api/admin/orders/{code}': {
+      get: {
+        summary: 'Detalle de un pedido, con líneas e historial',
+        security: session,
+        parameters: [code],
+        responses: { 200: { description: 'El pedido.', content: json('AdminOrderDetail') }, 401: unauthenticated, 404: errorResponse('NOT_FOUND.') },
+      },
+    },
+    '/api/admin/orders/{code}/status': {
+      patch: {
+        summary: 'Cambia el estado de un pedido',
+        security: session,
+        parameters: [code],
+        requestBody: { required: true, content: json('StatusChangeRequest') },
+        responses: {
+          200: { description: 'El pedido con su estado nuevo.', content: json('AdminOrderDetail') },
+          400: errorResponse('VALIDATION_ERROR: por ejemplo, cancelar sin motivo.'),
+          401: unauthenticated,
+          403: invalidOrigin,
+          404: errorResponse('NOT_FOUND.'),
+          409: errorResponse('INVALID_TRANSITION.'),
+        },
+      },
+    },
+  }
+}
 
 export function buildOpenApiDocument(): Record<string, unknown> {
   return {
@@ -62,6 +150,7 @@ export function buildOpenApiDocument(): Record<string, unknown> {
           },
         },
       },
+      ...adminPaths(),
       '/api/orders': {
         post: {
           summary: 'Crea un pedido',
@@ -94,7 +183,14 @@ export function buildOpenApiDocument(): Record<string, unknown> {
       },
     },
     components: {
+      securitySchemes: { session: { type: 'apiKey', in: 'cookie', name: SESSION_COOKIE } },
       schemas: {
+        LoginRequest: toSchema(loginRequestSchema, 'input'),
+        MeResponse: toSchema(meResponseSchema, 'output'),
+        OrdersListResponse: toSchema(ordersListResponseSchema, 'output'),
+        AdminOrderDetail: toSchema(adminOrderDetailSchema, 'output'),
+        StatusChangeRequest: toSchema(statusChangeRequestSchema, 'input'),
+        OrderStreamEvent: toSchema(orderStreamEventSchema, 'output'),
         HealthResponse: toSchema(healthResponseSchema, 'output'),
         MenuResponse: toSchema(menuResponseSchema, 'output'),
         OrderRequest: toSchema(orderRequestSchema, 'input'),
