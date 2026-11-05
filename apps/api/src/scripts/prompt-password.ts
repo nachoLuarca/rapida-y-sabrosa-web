@@ -4,14 +4,18 @@ import { createInterface } from 'node:readline'
  * Pide una contraseña por consola sin mostrarla. Si la entrada no es una terminal (por ejemplo, con un pipe), lee
  * la primera línea tal cual.
  */
-export function promptPassword(question: string): Promise<string> {
-  const { stdin, stdout } = process
-  if (!stdin.isTTY) {
+export function promptPassword(
+  question: string,
+  stdin: NodeJS.ReadStream | NodeJS.ReadableStream = process.stdin,
+  stdout: NodeJS.WritableStream = process.stdout,
+): Promise<string> {
+  if (!('isTTY' in stdin) || !stdin.isTTY || !('setRawMode' in stdin)) {
     return new Promise((resolve) => {
       const lines = createInterface({ input: stdin })
+      // resolve antes de close: close emite 'close' al tiro, y si no ganaría la contraseña vacía.
       lines.once('line', (line) => {
-        lines.close()
         resolve(line)
+        lines.close()
       })
       lines.once('close', () => resolve(''))
     })
