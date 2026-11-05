@@ -11,17 +11,19 @@ El repositorio es un monorepo con npm workspaces. Cada aplicación vive en `apps
 ```mermaid
 flowchart LR
   cliente([Cliente en el celular]) --> web[apps/web]
-  local([Local]) --> admin[apps/admin<br/>prevista]
+  local([Local]) --> admin[apps/admin<br/>panel]
   web -- pedido --> wa([WhatsApp del local])
   web -- "/api (modo api)" --> api[apps/api<br/>Express 5]
-  admin -. "/api (Fase 8)" .-> api
+  admin -- "/api/admin + SSE" --> api
   api --> db[(PostgreSQL 17)]
   web --> domain[packages/domain]
   api --> domain
-  admin -.-> domain
+  admin --> domain
   web --> contracts[packages/contracts]
   api --> contracts
-  admin -.-> contracts
+  admin --> contracts
+  web --> tokens[packages/tokens]
+  admin --> tokens
 ```
 
 | Parte                | Estado   | Qué hace |
@@ -29,8 +31,9 @@ flowchart LR
 | `apps/web`           | Existe   | Web pública: carta, carrito, Arma tu pizza y checkout. Vite + React. Con `VITE_DATA_SOURCE=static` usa la carta del bundle y manda el pedido directo a WhatsApp; con `api`, pide la carta a la API, crea el pedido ahí y el cliente lo envía por WhatsApp con su código. |
 | `packages/domain`    | Existe   | `@rys/domain`: reglas de negocio puras y sus tipos (precios, carrito, checkout, mensaje, horario, estados del pedido). Lo usan todas las apps. |
 | `packages/contracts` | Existe   | `@rys/contracts`: esquemas Zod de requests, responses y errores de la API, con sus tipos inferidos. |
-| `apps/api`           | Existe   | `@rys/api`: API en Express 5 sobre PostgreSQL con Drizzle: `GET /health`, `GET /api/menu` y `POST /api/orders` (OpenAPI en `/api/docs` en desarrollo). El panel llega en la Fase 8. |
-| `apps/admin`         | Prevista | `@rys/admin`: panel del local (pedidos en vivo, carta, zonas, horario y pausa) a través de la API. Fases 8 y 9. |
+| `apps/api`           | Existe   | `@rys/api`: API en Express 5 sobre PostgreSQL con Drizzle: `GET /health`, `GET /api/menu`, `POST /api/orders` y, para el panel, sesión con cookie, pedidos y SSE en `/api/admin` (OpenAPI en `/api/docs` en desarrollo). |
+| `apps/admin`         | Existe   | `@rys/admin`: panel del local (Vite + React, puerto 5174): login y pedidos en vivo por SSE. La gestión de carta, zonas, horario y pausa llega en la Fase 9. |
+| `packages/tokens`    | Existe   | `@rys/tokens`: solo CSS. Colores, tipografías, la utilidad `display`, el foco visible y el movimiento reducido de la marca, para la web y el panel (ADR-005). |
 | PostgreSQL           | Existe   | PostgreSQL 17 en Docker Compose (`docker-compose.yml` en la raíz), con las bases `rys` (desarrollo) y `rys_test` (tests). La carta de `docs/data` es su seed. |
 
 El detalle de qué construye cada fase está en `docs/BACKEND-SPEC.md` y `docs/PLAN-BACKEND.md`.
