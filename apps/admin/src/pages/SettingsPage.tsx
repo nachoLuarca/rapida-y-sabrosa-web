@@ -256,9 +256,10 @@ function DayEditor({ day, ranges, error, onChange }: DayEditorProps) {
 
   return (
     <fieldset className="py-3" aria-describedby={error ? errorId : undefined}>
-      <legend className="float-left w-28 pt-2 font-bold">{name}</legend>
-      <div className="ml-0 space-y-2 sm:ml-28">
-        {ranges.length === 0 && <p className="pt-2 text-tinta">Cerrado</p>}
+      {/* En celular el día va arriba de sus rangos; desde sm, a la izquierda. */}
+      <legend className="pb-1 font-bold sm:float-left sm:w-28 sm:pt-2 sm:pb-0">{name}</legend>
+      <div className="space-y-2 sm:ml-28">
+        {ranges.length === 0 && <p className="text-tinta sm:pt-2">Cerrado</p>}
         {ranges.map(([start, end], index) => (
           // Los rangos no tienen id propio y solo se agregan al final o se quitan: el índice sirve de key.
           <div key={index} className="flex flex-wrap items-center gap-2">

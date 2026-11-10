@@ -69,7 +69,8 @@ export function Layout({ children }: { children: ReactNode }) {
               Aviso sonoro
             </button>
             {user && (
-              <span className="text-sm">
+              // En celular el header va en dos filas: el nombre se deja solo para lectores de pantalla.
+              <span className="text-sm max-sm:sr-only">
                 {user.name} <span className="text-white/80">({user.role === 'admin' ? 'administración' : 'caja'})</span>
               </span>
             )}
@@ -89,7 +90,7 @@ export function Layout({ children }: { children: ReactNode }) {
           </div>
         </div>
         <nav aria-label="Secciones del panel" className="border-t border-white/15">
-          <ul className="mx-auto flex max-w-7xl flex-wrap gap-x-1 px-2">
+          <ul className="mx-auto flex max-w-7xl flex-wrap px-2 sm:gap-x-1">
             {SECTIONS.filter((section) => !section.adminOnly || user?.role === 'admin').map((section) => {
               const active = (section.routes as readonly string[]).includes(current)
               return (
@@ -97,7 +98,7 @@ export function Layout({ children }: { children: ReactNode }) {
                   <Link
                     href={section.href}
                     aria-current={active ? 'page' : undefined}
-                    className={`inline-flex h-11 items-center rounded-sm border-b-4 px-3 text-sm font-semibold ${
+                    className={`inline-flex h-11 items-center rounded-sm border-b-4 px-2.5 text-sm font-semibold sm:px-3 ${
                       active ? 'border-queso text-white' : 'border-transparent text-white/80 hover:text-white'
                     }`}
                   >
