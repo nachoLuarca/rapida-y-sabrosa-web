@@ -18,3 +18,13 @@ export function matchesSearch(query: string, ...texts: (string | undefined)[]): 
   const haystack = normalizeForSearch(texts.filter(Boolean).join(' '))
   return words.every((word) => haystack.includes(word))
 }
+
+/**
+ * Id de catálogo a partir de un nombre: "Villa Las Mercedes (norte)" → "villa-las-mercedes-norte". Devuelve ''
+ * si el nombre no tiene letras ni números.
+ */
+export function slugify(text: string): string {
+  return normalizeForSearch(text)
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+}

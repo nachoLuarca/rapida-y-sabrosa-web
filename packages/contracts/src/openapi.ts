@@ -10,6 +10,20 @@ import {
 } from './admin.ts'
 import { ERROR_CODES, errorResponseSchema } from './errors.ts'
 import { healthResponseSchema } from './health.ts'
+import {
+  adminIngredientSchema,
+  adminProductSchema,
+  adminSettingsSchema,
+  adminVariantSchema,
+  adminZoneSchema,
+  ingredientPatchSchema,
+  productPatchSchema,
+  settingsPatchSchema,
+  variantPatchSchema,
+  zoneCreateSchema,
+  zonePatchSchema,
+  zonesListResponseSchema,
+} from './management.ts'
 import { menuResponseSchema } from './menu.ts'
 import {
   IDEMPOTENCY_KEY_HEADER,
@@ -114,6 +128,88 @@ function adminPaths() {
   }
 }
 
+/** Gestión de la carta, las zonas y los ajustes (Fase 9). */
+function managementPaths() {
+  const id = { name: 'id', in: 'path', required: true, schema: { type: 'string', example: 'suprema' } }
+  const forbidden = errorResponse('FORBIDDEN (el rol no puede hacer ese cambio) o INVALID_ORIGIN.')
+  const patch = (summary: string, description: string, body: string, response: string) => ({
+    patch: {
+      summary,
+      description,
+      security: session,
+      parameters: [id],
+      requestBody: { required: true, content: json(body) },
+      responses: {
+        200: { description: 'El recurso con sus datos nuevos.', content: json(response) },
+        400: errorResponse('VALIDATION_ERROR: details trae un mensaje por campo.'),
+        401: unauthenticated,
+        403: forbidden,
+        404: errorResponse('NOT_FOUND.'),
+      },
+    },
+  })
+  return {
+    '/api/admin/products/{id}': patch(
+      'Cambia un producto',
+      'Caja (staff) solo puede cambiar available; administración, todo. El precio de un producto con variantes se cambia en cada variante.',
+      'ProductPatch',
+      'Product',
+    ),
+    '/api/admin/variants/{id}': patch('Cambia una variante', 'Solo administración.', 'VariantPatch', 'Variant'),
+    '/api/admin/ingredients/{id}': patch(
+      'Cambia un ingrediente',
+      'Caja (staff) solo puede cambiar available; administración, todo.',
+      'IngredientPatch',
+      'Ingredient',
+    ),
+    '/api/admin/zones': {
+      get: {
+        summary: 'Zonas de despacho, también las desactivadas',
+        description: 'Solo administración.',
+        security: session,
+        responses: { 200: { description: 'Las zonas.', content: json('ZonesListResponse') }, 401: unauthenticated, 403: forbidden },
+      },
+      post: {
+        summary: 'Crea una zona',
+        description: 'Solo administración. El id se arma desde el nombre.',
+        security: session,
+        requestBody: { required: true, content: json('ZoneCreate') },
+        responses: {
+          201: { description: 'La zona creada.', content: json('AdminZone') },
+          400: errorResponse('VALIDATION_ERROR: por ejemplo, ya existe una zona con ese nombre.'),
+          401: unauthenticated,
+          403: forbidden,
+        },
+      },
+    },
+    '/api/admin/zones/{id}': patch(
+      'Cambia una zona',
+      'Solo administración. Las zonas no se borran: se desactivan con active: false.',
+      'ZonePatch',
+      'AdminZone',
+    ),
+    '/api/admin/settings': {
+      get: {
+        summary: 'Ajustes del local',
+        security: session,
+        responses: { 200: { description: 'Los ajustes.', content: json('AdminSettings') }, 401: unauthenticated },
+      },
+      patch: {
+        summary: 'Cambia los ajustes del local',
+        description: 'Caja (staff) solo puede cambiar ordersPaused; administración, todo.',
+        security: session,
+        requestBody: { required: true, content: json('SettingsPatch') },
+        responses: {
+          200: { description: 'Los ajustes nuevos.', content: json('AdminSettings') },
+          400: errorResponse('VALIDATION_ERROR: details trae un mensaje por campo.'),
+          401: unauthenticated,
+          403: forbidden,
+        },
+      },
+    },
+  }
+}
+
 export function buildOpenApiDocument(): Record<string, unknown> {
   return {
     openapi: '3.1.0',
@@ -151,6 +247,7 @@ export function buildOpenApiDocument(): Record<string, unknown> {
         },
       },
       ...adminPaths(),
+      ...managementPaths(),
       '/api/orders': {
         post: {
           summary: 'Crea un pedido',
@@ -191,6 +288,18 @@ export function buildOpenApiDocument(): Record<string, unknown> {
         AdminOrderDetail: toSchema(adminOrderDetailSchema, 'output'),
         StatusChangeRequest: toSchema(statusChangeRequestSchema, 'input'),
         OrderStreamEvent: toSchema(orderStreamEventSchema, 'output'),
+        ProductPatch: toSchema(productPatchSchema, 'input'),
+        Product: toSchema(adminProductSchema, 'output'),
+        VariantPatch: toSchema(variantPatchSchema, 'input'),
+        Variant: toSchema(adminVariantSchema, 'output'),
+        IngredientPatch: toSchema(ingredientPatchSchema, 'input'),
+        Ingredient: toSchema(adminIngredientSchema, 'output'),
+        ZonesListResponse: toSchema(zonesListResponseSchema, 'output'),
+        ZoneCreate: toSchema(zoneCreateSchema, 'input'),
+        ZonePatch: toSchema(zonePatchSchema, 'input'),
+        AdminZone: toSchema(adminZoneSchema, 'output'),
+        AdminSettings: toSchema(adminSettingsSchema, 'output'),
+        SettingsPatch: toSchema(settingsPatchSchema, 'input'),
         HealthResponse: toSchema(healthResponseSchema, 'output'),
         MenuResponse: toSchema(menuResponseSchema, 'output'),
         OrderRequest: toSchema(orderRequestSchema, 'input'),
