@@ -1,5 +1,13 @@
 import type { RequestHandler } from 'express'
 import {
+  createAdminCatalogController,
+  createAdminSettingsController,
+  createAdminZoneController,
+  type AdminCatalogController,
+  type AdminSettingsController,
+  type AdminZoneController,
+} from './controllers/admin-management-controller.ts'
+import {
   createAdminOrderController,
   HEARTBEAT_MS,
   type AdminOrderController,
@@ -20,9 +28,12 @@ import { SettingsRepository } from './repositories/settings-repository.ts'
 import { UserRepository } from './repositories/user-repository.ts'
 import { AdminOrderService } from './services/admin-order-service.ts'
 import { AuthService } from './services/auth-service.ts'
+import { CatalogAdminService } from './services/catalog-admin-service.ts'
 import { CatalogService, type Clock } from './services/catalog-service.ts'
+import { DeliveryService } from './services/delivery-service.ts'
 import { HealthService } from './services/health-service.ts'
 import { OrderService } from './services/order-service.ts'
+import { SettingsService } from './services/settings-service.ts'
 
 // Arma repositorios, servicios y controladores a mano (inyección por constructor, sin framework de DI).
 
@@ -32,6 +43,9 @@ export interface Controllers {
   orders: OrderController
   auth: AuthController
   adminOrders: AdminOrderController
+  adminCatalog: AdminCatalogController
+  adminZones: AdminZoneController
+  adminSettings: AdminSettingsController
   /** Middlewares del panel que dependen de servicios o de la configuración. */
   guards: { session: RequestHandler; origin: RequestHandler }
 }
@@ -88,6 +102,9 @@ export function createContainer({
   )
   const authService = new AuthService({ users: userRepository, sessions: sessionRepository }, clock, sessionTtlHours)
   const adminOrderService = new AdminOrderService(orderRepository, bus, clock)
+  const catalogAdminService = new CatalogAdminService(catalogRepository)
+  const deliveryService = new DeliveryService(catalogRepository)
+  const settingsService = new SettingsService(settingsRepository, clock)
 
   return {
     bus,
@@ -97,6 +114,9 @@ export function createContainer({
       orders: createOrderController(orderService),
       auth: createAuthController(authService, secureCookies),
       adminOrders: createAdminOrderController(adminOrderService, bus, heartbeatMs),
+      adminCatalog: createAdminCatalogController(catalogAdminService),
+      adminZones: createAdminZoneController(deliveryService),
+      adminSettings: createAdminSettingsController(settingsService),
       guards: { session: requireSession(authService, secureCookies), origin: checkOrigin(allowedOrigins) },
     },
   }

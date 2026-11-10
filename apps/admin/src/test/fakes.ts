@@ -1,11 +1,13 @@
-import type { AdminOrderDetail, AdminOrderSummary, OrderStreamEvent, SessionUser } from '@rys/contracts'
+import type { AdminOrderDetail, AdminOrderSummary, AdminSettings, OrderStreamEvent, SessionUser } from '@rys/contracts'
 import { nextStatuses, ORDER_STATUS_LABELS, validateTransition } from '@rys/domain'
 import { vi } from 'vitest'
 import { ApiError, type AdminApi } from '../api/admin-api'
 import type { EventSourceLike } from '../api/order-stream'
 import type { PanelServices } from '../panel-context'
+import { createManagementFake } from './fake-management'
 
 export const CAJA: SessionUser = { id: '3f0e0b8c-6d3f-4a51-9c5e-2b1b5a1f8a10', email: 'caja@demo.local', name: 'Caja', role: 'staff' }
+export const ADMIN: SessionUser = { id: '8a1c2f6e-0b7d-4c39-9a44-5d2e7f3b6c21', email: 'admin@demo.local', name: 'Dueña', role: 'admin' }
 export const PASSWORD = 'clave-de-la-demo'
 
 let minute = 0
@@ -51,8 +53,13 @@ const toSummary = ({ code, status, fulfillment, zoneName, customerName, total, i
 })
 
 /** API del panel en memoria, con la misma tabla de transiciones del dominio que usa la API de verdad. */
-export function createFakeApi(options: { loggedIn?: boolean; orders?: AdminOrderDetail[] } = {}) {
-  let session: SessionUser | null = options.loggedIn === false ? null : CAJA
+export function createFakeApi(
+  options: { loggedIn?: boolean; user?: SessionUser; orders?: AdminOrderDetail[]; settings?: Partial<AdminSettings> } = {},
+) {
+  /** Quién usa el panel en este test: caja (por defecto) o administración. */
+  const account = options.user ?? CAJA
+  let session: SessionUser | null = options.loggedIn === false ? null : account
+  const management = createManagementFake(() => session, options.settings)
   const orders = new Map((options.orders ?? []).map((order) => [order.code, order]))
   const unauthenticated = () => new ApiError('UNAUTHENTICATED', 'Inicia sesión para continuar.', 401)
   const requireSession = () => {
@@ -62,11 +69,11 @@ export function createFakeApi(options: { loggedIn?: boolean; orders?: AdminOrder
   const api: AdminApi = {
     me: vi.fn(async () => session),
     login: vi.fn(async (email: string, password: string) => {
-      if (email.trim().toLowerCase() !== CAJA.email || password !== PASSWORD) {
+      if (email.trim().toLowerCase() !== account.email || password !== PASSWORD) {
         throw new ApiError('INVALID_CREDENTIALS', 'El email o la contraseña no son correctos.', 401)
       }
-      session = CAJA
-      return CAJA
+      session = account
+      return account
     }),
     logout: vi.fn(async () => {
       session = null
@@ -107,10 +114,15 @@ export function createFakeApi(options: { loggedIn?: boolean; orders?: AdminOrder
       orders.set(code, updated)
       return updated
     }),
+    ...management.api,
   }
 
   return {
     api,
+    menu: management.menu,
+    zones: management.zones,
+    settings: management.settings,
+    failNext: management.failNext,
     /** Como si otra persona o un cliente cambiara los pedidos en el servidor. */
     put(order: AdminOrderDetail) {
       orders.set(order.code, order)

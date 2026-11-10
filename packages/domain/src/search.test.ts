@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { matchesSearch, normalizeForSearch } from './search.ts'
+import { matchesSearch, normalizeForSearch, slugify } from './search.ts'
 
 describe('normalizeForSearch', () => {
   it('quita tildes, eñes, mayúsculas y espacios repetidos', () => {
@@ -32,5 +32,16 @@ describe('matchesSearch', () => {
   it('una búsqueda vacía coincide con todo y acepta textos opcionales', () => {
     expect(matchesSearch('   ', name)).toBe(true)
     expect(matchesSearch('coca', 'Coca-Cola', undefined)).toBe(true)
+  })
+})
+
+describe('slugify', () => {
+  it('arma un id en minúsculas, sin tildes y con guiones', () => {
+    expect(slugify('Villa Las Mercedes (norte)')).toBe('villa-las-mercedes-norte')
+    expect(slugify('  Ñuñoa   2 ')).toBe('nunoa-2')
+  })
+
+  it('sin letras ni números devuelve un texto vacío', () => {
+    expect(slugify(' ¡¿?! ')).toBe('')
   })
 })

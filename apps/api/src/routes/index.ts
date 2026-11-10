@@ -1,6 +1,7 @@
 import { buildOpenApiDocument } from '@rys/contracts'
 import { Router } from 'express'
 import type { Controllers } from '../container.ts'
+import { requireRole } from '../middlewares/auth.ts'
 import {
   createRateLimit,
   LOGIN_RATE_LIMIT,
@@ -8,8 +9,8 @@ import {
   type RateLimitOptions,
 } from '../middlewares/rate-limit.ts'
 
-// URLs y middlewares por módulo, sin lógica. Módulos: catalog, orders y auth (con los pedidos del panel); delivery y
-// settings llegan con la gestión del panel (Fase 9).
+// URLs y middlewares por módulo, sin lógica. Módulos: catalog, orders, auth (con los pedidos del panel), delivery y
+// settings.
 
 export interface RouteOptions {
   /** Sirve la documentación OpenAPI en /api/docs. Solo en desarrollo. */
@@ -48,7 +49,8 @@ function orderRoutes(controllers: Controllers, options: RouteOptions): Router {
 
 /** Panel: todo exige sesión, salvo el login. Las mutaciones exigen además un Origin permitido. */
 function adminRoutes(controllers: Controllers, options: RouteOptions): Router {
-  const { auth, adminOrders, guards } = controllers
+  const { auth, adminOrders, adminCatalog, adminZones, adminSettings, guards } = controllers
+  const adminOnly = requireRole('admin')
   const router = Router()
   router.use(guards.origin)
   router.post(
@@ -65,6 +67,17 @@ function adminRoutes(controllers: Controllers, options: RouteOptions): Router {
   router.get('/orders/stream', adminOrders.stream)
   router.get('/orders/:code', adminOrders.detail)
   router.patch('/orders/:code/status', adminOrders.changeStatus)
+
+  // Gestión. Donde caja (staff) puede cambiar solo algunos campos (disponible, pausa), el permiso lo revisa el
+  // servicio campo por campo; el resto es solo de administración.
+  router.patch('/products/:id', adminCatalog.updateProduct)
+  router.patch('/variants/:id', adminOnly, adminCatalog.updateVariant)
+  router.patch('/ingredients/:id', adminCatalog.updateIngredient)
+  router.get('/zones', adminOnly, adminZones.list)
+  router.post('/zones', adminOnly, adminZones.create)
+  router.patch('/zones/:id', adminOnly, adminZones.update)
+  router.get('/settings', adminSettings.get)
+  router.patch('/settings', adminSettings.update)
   return router
 }
 

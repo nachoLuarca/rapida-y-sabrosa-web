@@ -28,6 +28,23 @@ describe('buildOpenApiDocument', () => {
     expect(JSON.stringify(ErrorResponse)).toContain('PRODUCT_UNAVAILABLE')
   })
 
+  it('describe la gestión del panel: productos, variantes, ingredientes, zonas y ajustes', () => {
+    expect(Object.keys(doc.paths)).toEqual(
+      expect.arrayContaining([
+        '/api/admin/products/{id}',
+        '/api/admin/variants/{id}',
+        '/api/admin/ingredients/{id}',
+        '/api/admin/zones',
+        '/api/admin/zones/{id}',
+        '/api/admin/settings',
+      ]),
+    )
+    expect(Object.keys(doc.paths['/api/admin/zones'])).toEqual(['get', 'post'])
+    expect(Object.keys(doc.components.schemas.SettingsPatch.properties ?? {})).toEqual(
+      expect.arrayContaining(['ordersPaused', 'openingHours', 'whatsappNumber', 'pickupAddress', 'buildPizzaBasePrice']),
+    )
+  })
+
   it('cada $ref apunta a un esquema que existe', () => {
     const refs = [...JSON.stringify(doc).matchAll(/"#\/components\/schemas\/(\w+)"/g)].map((match) => match[1])
     expect(refs.length).toBeGreaterThan(0)

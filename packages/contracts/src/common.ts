@@ -8,6 +8,9 @@ export const slugSchema = z.string().max(100).regex(SLUG_PATTERN, { error: 'Id i
 /** Pesos chilenos enteros. El tope es el mismo que valida el panel. */
 export const MAX_PRICE = 1_000_000
 
+/** Tope de ingredientes incluidos en la promo de Arma tu pizza. */
+export const MAX_PROMO_INCLUDED = 30
+
 export const priceSchema = z.number().int().min(0).max(MAX_PRICE)
 
 /** Número de WhatsApp: solo dígitos con código país chileno (56 + 9 dígitos). */

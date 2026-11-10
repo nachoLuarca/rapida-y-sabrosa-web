@@ -10,8 +10,8 @@ La web tiene dos modos, según `VITE_DATA_SOURCE`:
 - **static** (el de la web publicada y de `build:demo`): la carta va en el bundle y el pedido sale directo a WhatsApp.
 - **api** (el de `npm run dev`): la carta viene de la API y el pedido se crea en la base con un código (`RYS-0042`);
   después el cliente lo envía por WhatsApp, y el pedido aparece al instante en el **panel del local** (`apps/admin`).
-  La gestión de la carta desde el panel llega en la Fase 9 (`docs/BACKEND-SPEC.md`, por fases en
-  `docs/PLAN-BACKEND.md`).
+  Desde el panel, el local también marca agotados, pausa los pedidos y edita precios, zonas y horario
+  (`docs/BACKEND-SPEC.md`, por fases en `docs/PLAN-BACKEND.md`).
 
 ## Estructura del repositorio
 
@@ -21,7 +21,7 @@ Es un monorepo con npm workspaces:
 apps/
   web/                la web de pedidos (Vite + React): carta, carrito, Arma tu pizza y checkout
   api/                @rys/api: API en Express 5 sobre PostgreSQL con Drizzle (carta, pedidos y panel)
-  admin/              @rys/admin: panel del local (Vite + React): login y pedidos en vivo
+  admin/              @rys/admin: panel del local (Vite + React): pedidos en vivo y gestión de la carta
 packages/
   domain/             @rys/domain: reglas de negocio puras y sus tipos, compartidas entre apps
   contracts/          @rys/contracts: esquemas Zod de requests y responses de la API
@@ -97,6 +97,25 @@ docker compose exec postgres psql -U rys -d rys -c "select o.code, o.status, o.f
 
 Si la conexión en vivo se corta, el header dice "Sin conexión: reintentando…"; al volver, el tablero se recarga solo.
 
+### Gestión desde el panel
+
+Desde el menú del header:
+
+| Sección | Caja (`staff`) | Administración (`admin`) |
+|---|---|---|
+| Carta | Marcar productos como agotados | Además, editar nombre, descripción y precios (también los de cada variante) |
+| Ingredientes | Marcar ingredientes como agotados | Además, editar nombre y precio |
+| Zonas | — | Agregar zonas, editar nombre y costo, activarlas o desactivarlas (no se borran) |
+| Ajustes | Pausar y reanudar los pedidos | Además, horario por día, dirección de retiro, número de WhatsApp y precios de Arma tu pizza |
+
+Los interruptores aplican el cambio al tiro; lo demás se edita con "Editar" y se aplica con "Guardar". La web ve
+los cambios al recargar o al volver a su pestaña: un agotado sale atenuado y sin botón, y con los pedidos pausados o
+el local cerrado aparece un aviso y no se puede enviar el pedido.
+
+Para probarlo: entra a `http://localhost:5174` con `caja@demo.local`, ve a **Carta** y apaga el interruptor de la
+Suprema; en `http://localhost:5173` (recargando o volviendo a la pestaña) aparece "Agotado". Vuelve a encenderlo al
+terminar.
+
 | Comando              | Qué hace |
 |----------------------|----------|
 | `npm run dev`        | API (tsx en modo watch), web y panel (Vite) a la vez |
@@ -147,8 +166,11 @@ del local mientras corren.
 
 ## Cómo cambiar los datos del local
 
+Con la API (`npm run dev` y la demo), precios, disponibilidad, zonas y los datos del local se cambian desde el
+panel (ver "Gestión desde el panel"); lo que sigue es para la web estática y para el seed.
+
 Los datos nunca van dentro de un componente. Después de cambiarlos, corre `npm test` y publica de nuevo. Mientras la
-web no use la API, la carta vive en dos lugares: el bundle de la web y la base (que se carga desde `docs/data` con
+web publicada no use la API, la carta vive en dos lugares: el bundle de la web y la base (que se carga desde `docs/data` con
 `npm run db:seed`). Ojo: `db:seed` solo agrega lo que falta, así que un cambio de precio en `docs/data` no llega a
 una base ya sembrada. Para eso, por ahora, empieza de cero con `docker compose down -v` (ver Base de datos).
 

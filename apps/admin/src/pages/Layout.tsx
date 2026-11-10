@@ -2,7 +2,7 @@ import { LogOut, Volume2, VolumeX } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 import { useAuth, useLive } from '../panel-context'
 import { Link } from '../router/RouterProvider'
-import { useRouter } from '../router/router-context'
+import { matchRoute, MANAGEMENT_ROUTES, useRouter } from '../router/router-context'
 
 const STATUS_TEXT = {
   online: 'En vivo',
@@ -10,11 +10,24 @@ const STATUS_TEXT = {
   offline: 'Sin conexión: reintentando…',
 } as const
 
-/** Marco de las páginas con sesión: header con el usuario, el estado de la conexión en vivo y el aviso sonoro. */
+/** Secciones del panel. Las zonas son solo de administración (caja no las ve en el menú). */
+const SECTIONS = [
+  { href: '/pedidos', label: 'Pedidos', routes: ['orders', 'order', 'login'], adminOnly: false },
+  { href: MANAGEMENT_ROUTES.menu, label: 'Carta', routes: ['menu'], adminOnly: false },
+  { href: MANAGEMENT_ROUTES.ingredients, label: 'Ingredientes', routes: ['ingredients'], adminOnly: false },
+  { href: MANAGEMENT_ROUTES.zones, label: 'Zonas', routes: ['zones'], adminOnly: true },
+  { href: MANAGEMENT_ROUTES.settings, label: 'Ajustes', routes: ['settings'], adminOnly: false },
+] as const
+
+/**
+ * Marco de las páginas con sesión: header con el usuario, el estado de la conexión en vivo, el aviso sonoro y el
+ * menú de secciones.
+ */
 export function Layout({ children }: { children: ReactNode }) {
   const { user, logout } = useAuth()
   const { status, soundOn, toggleSound } = useLive()
-  const { navigate } = useRouter()
+  const { navigate, path } = useRouter()
+  const current = matchRoute(path).name
   const [leaving, setLeaving] = useState(false)
 
   return (
@@ -56,7 +69,8 @@ export function Layout({ children }: { children: ReactNode }) {
               Aviso sonoro
             </button>
             {user && (
-              <span className="text-sm">
+              // En celular el header va en dos filas: el nombre se deja solo para lectores de pantalla.
+              <span className="text-sm max-sm:sr-only">
                 {user.name} <span className="text-white/80">({user.role === 'admin' ? 'administración' : 'caja'})</span>
               </span>
             )}
@@ -75,6 +89,26 @@ export function Layout({ children }: { children: ReactNode }) {
             </button>
           </div>
         </div>
+        <nav aria-label="Secciones del panel" className="border-t border-white/15">
+          <ul className="mx-auto flex max-w-7xl flex-wrap px-2 sm:gap-x-1">
+            {SECTIONS.filter((section) => !section.adminOnly || user?.role === 'admin').map((section) => {
+              const active = (section.routes as readonly string[]).includes(current)
+              return (
+                <li key={section.href}>
+                  <Link
+                    href={section.href}
+                    aria-current={active ? 'page' : undefined}
+                    className={`inline-flex h-11 items-center rounded-sm border-b-4 px-2.5 text-sm font-semibold sm:px-3 ${
+                      active ? 'border-queso text-white' : 'border-transparent text-white/80 hover:text-white'
+                    }`}
+                  >
+                    {section.label}
+                  </Link>
+                </li>
+              )
+            })}
+          </ul>
+        </nav>
       </header>
       <main id="contenido" className="mx-auto max-w-7xl px-4 py-6">
         {children}

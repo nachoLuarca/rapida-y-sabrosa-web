@@ -208,7 +208,7 @@ export function orderingStatus(
   }
 }
 
-const DAY_NAMES: Record<DayKey, string> = {
+export const DAY_NAMES: Record<DayKey, string> = {
   mon: 'Lunes',
   tue: 'Martes',
   wed: 'Miércoles',

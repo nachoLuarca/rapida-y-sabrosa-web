@@ -1,6 +1,6 @@
 import { isValidTime, type DayKey } from '@rys/domain'
 import { z } from 'zod'
-import { priceSchema, slugSchema, whatsappNumberSchema } from './common.ts'
+import { MAX_PROMO_INCLUDED, priceSchema, slugSchema, whatsappNumberSchema } from './common.ts'
 
 // GET /api/menu (docs/BACKEND-SPEC.md → API). Lo que el local no ha confirmado viaja como null.
 
@@ -75,7 +75,7 @@ export const buildPizzaSchema = z.object({
   description: z.string().nullable(),
   basePrice: priceSchema,
   promoPrice: priceSchema,
-  includedInPromo: z.number().int().min(0).max(30),
+  includedInPromo: z.number().int().min(0).max(MAX_PROMO_INCLUDED),
   available: z.boolean(),
 })
 
