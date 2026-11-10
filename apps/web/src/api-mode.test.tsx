@@ -178,6 +178,65 @@ describe('local cerrado o pedidos pausados', () => {
     const panel = await addAndOpenCart(user, 'Agregar Suprema')
     expect(within(panel).getByRole('button', { name: 'Continuar con mis datos' })).toBeDisabled()
   })
+
+  it('si el local pausa los pedidos desde el panel, el aviso aparece al volver a la pestaña y se va al reanudarlos', async () => {
+    const user = userEvent.setup()
+    const api = createFakeApi()
+    await renderWithApi(api)
+    const panel = await addAndOpenCart(user, 'Agregar Suprema')
+    const continueButton = within(panel).getByRole('button', { name: 'Continuar con mis datos' })
+    expect(screen.queryByText(/Por ahora no estamos recibiendo pedidos/)).not.toBeInTheDocument()
+    expect(continueButton).toBeEnabled()
+
+    api.updateMenu((menu) => {
+      menu.business.ordersPaused = true
+    })
+    returnToTab()
+    // El aviso sale arriba de la página y también en el panel del pedido, junto al botón.
+    expect(await screen.findAllByText(/Por ahora no estamos recibiendo pedidos/)).not.toHaveLength(0)
+    expect(continueButton).toBeDisabled()
+
+    api.updateMenu((menu) => {
+      menu.business.ordersPaused = false
+    })
+    returnToTab()
+    await vi.waitFor(() => expect(screen.queryAllByText(/Por ahora no estamos recibiendo pedidos/)).toHaveLength(0))
+    expect(continueButton).toBeEnabled()
+  })
+
+  it('si el local define un horario desde el panel y está cerrado, el aviso aparece al volver a la pestaña', async () => {
+    // Martes 3 de noviembre de 2026, 16:00 en Santiago.
+    vi.useFakeTimers({ toFake: ['Date'], now: new Date('2026-11-03T19:00:00Z') })
+    const api = createFakeApi()
+    await renderWithApi(api)
+    expect(screen.queryByText(/Estamos cerrados/)).not.toBeInTheDocument()
+
+    api.updateMenu((menu) => {
+      menu.business = {
+        ...menu.business,
+        isOpen: false,
+        nextOpening: '2026-11-03T22:00:00.000Z',
+        openingHours: { mon: [], tue: [['19:00', '23:30']], wed: [], thu: [], fri: [], sat: [], sun: [] },
+      }
+    })
+    returnToTab()
+    expect(await screen.findByText('Estamos cerrados. Abrimos hoy a las 19:00.', { exact: false })).toBeInTheDocument()
+  })
+
+  it('al recargar la página se ve lo último del panel: agotados y pausa', async () => {
+    const api = createFakeApi()
+    await renderWithApi(api)
+    api.updateMenu((menu) => {
+      menu.categories[0].products[0].available = false
+      menu.business.ordersPaused = true
+    })
+
+    // Recargar: la página parte de cero y vuelve a pedir la carta.
+    cleanup()
+    await renderWithApi(api)
+    expect(within(screen.getByRole('article', { name: 'Suprema' })).getByText('Agotado')).toBeInTheDocument()
+    expect(screen.getByText(/Por ahora no estamos recibiendo pedidos/)).toBeInTheDocument()
+  })
 })
 
 describe('checkout contra la API', () => {
