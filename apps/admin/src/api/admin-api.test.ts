@@ -42,4 +42,67 @@ describe('createAdminApi', () => {
     await api.logout()
     expect(fetchImpl.mock.calls[1][1]).toMatchObject({ method: 'DELETE' })
   })
+
+  it('la gestión usa las rutas del panel y la carta sale de /api/menu', async () => {
+    const product = { id: 'suprema', name: 'Suprema', description: null, price: 13500, variants: [], available: true }
+    const zone = { id: 'islita', name: 'Islita', fee: 2000, active: true }
+    const settings = {
+      whatsappNumber: '56974314602',
+      pickupAddress: null,
+      openingHours: null,
+      timezone: 'America/Santiago',
+      ordersPaused: true,
+      buildPizzaBasePrice: 10900,
+      buildPizzaPromoPrice: 13000,
+      buildPizzaPromoIncluded: 3,
+      updatedAt: '2026-11-03T22:00:00.000Z',
+    }
+    const menu = {
+      categories: [],
+      ingredients: [],
+      zones: [],
+      buildPizza: { productId: 'arma-tu-pizza', name: 'Arma tu pizza', description: null, basePrice: 1, promoPrice: 1, includedInPromo: 3, available: true },
+      business: { name: 'Rápida y Sabrosa', whatsappNumber: '56974314602', pickupAddress: null, openingHours: null, isOpen: true, nextOpening: null, ordersPaused: false },
+    }
+    const fetchImpl = vi
+      .fn()
+      .mockResolvedValueOnce(json(200, menu))
+      .mockResolvedValueOnce(json(200, product))
+      .mockResolvedValueOnce(json(200, { id: 'jugo-mango-500', label: '500 cc', price: 3600 }))
+      .mockResolvedValueOnce(json(200, { id: 'tocino', name: 'Tocino', price: 1500, available: false }))
+      .mockResolvedValueOnce(json(200, { zones: [zone] }))
+      .mockResolvedValueOnce(json(201, zone))
+      .mockResolvedValueOnce(json(200, zone))
+      .mockResolvedValueOnce(json(200, settings))
+      .mockResolvedValueOnce(json(200, settings))
+    const api = createAdminApi(fetchImpl)
+
+    await api.getMenu()
+    expect(await api.updateProduct('suprema', { price: 13500 })).toEqual(product)
+    await api.updateVariant('jugo-mango-500', { price: 3600 })
+    await api.updateIngredient('tocino', { available: false })
+    expect(await api.listZones()).toEqual([zone])
+    await api.createZone({ name: 'Islita', fee: 2000 })
+    await api.updateZone('islita', { active: true })
+    await api.getSettings()
+    expect((await api.updateSettings({ ordersPaused: true })).ordersPaused).toBe(true)
+
+    expect(fetchImpl.mock.calls.map(([url, init]) => `${init.method} ${url}`)).toEqual([
+      'GET /api/menu',
+      'PATCH /api/admin/products/suprema',
+      'PATCH /api/admin/variants/jugo-mango-500',
+      'PATCH /api/admin/ingredients/tocino',
+      'GET /api/admin/zones',
+      'POST /api/admin/zones',
+      'PATCH /api/admin/zones/islita',
+      'GET /api/admin/settings',
+      'PATCH /api/admin/settings',
+    ])
+    expect(JSON.parse(fetchImpl.mock.calls[1][1].body)).toEqual({ price: 13500 })
+  })
+
+  it('una respuesta que no cumple el contrato no se deja pasar', async () => {
+    const api = createAdminApi(vi.fn().mockResolvedValue(json(200, { zones: [{ id: 'islita', name: 'Islita' }] })))
+    await expect(api.listZones()).rejects.toThrow()
+  })
 })

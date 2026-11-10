@@ -1,12 +1,31 @@
 import {
+  adminIngredientSchema,
   adminOrderDetailSchema,
+  adminProductSchema,
+  adminSettingsSchema,
+  adminVariantSchema,
+  adminZoneSchema,
   errorResponseSchema,
+  menuResponseSchema,
   meResponseSchema,
   ordersListResponseSchema,
+  zonesListResponseSchema,
   type AdminOrderDetail,
+  type AdminProduct,
+  type AdminSettings,
+  type AdminZone,
+  type IngredientDto,
+  type IngredientPatch,
+  type MenuResponse,
   type OrdersListResponse,
+  type ProductPatch,
   type SessionUser,
+  type SettingsPatchInput,
   type StatusChangeRequest,
+  type VariantDto,
+  type VariantPatch,
+  type ZoneCreateInput,
+  type ZonePatch,
 } from '@rys/contracts'
 import type { OrderStatus } from '@rys/domain'
 
@@ -45,15 +64,33 @@ export interface AdminApi {
   listOrders(query: OrdersQuery): Promise<OrdersListResponse>
   getOrder(code: string): Promise<AdminOrderDetail>
   changeStatus(code: string, change: StatusChangeRequest): Promise<AdminOrderDetail>
+  /** La carta como la ve la web (GET /api/menu): productos, variantes e ingredientes con su disponibilidad. */
+  getMenu(): Promise<MenuResponse>
+  updateProduct(id: string, patch: ProductPatch): Promise<AdminProduct>
+  updateVariant(id: string, patch: VariantPatch): Promise<VariantDto>
+  updateIngredient(id: string, patch: IngredientPatch): Promise<IngredientDto>
+  /** Todas las zonas, también las desactivadas. Solo administración. */
+  listZones(): Promise<AdminZone[]>
+  createZone(zone: ZoneCreateInput): Promise<AdminZone>
+  updateZone(id: string, patch: ZonePatch): Promise<AdminZone>
+  getSettings(): Promise<AdminSettings>
+  updateSettings(patch: SettingsPatchInput): Promise<AdminSettings>
 }
 
 const NETWORK_MESSAGE = 'No pudimos conectar con el servidor. Revisa la conexión e inténtalo de nuevo.'
 
-export function createAdminApi(fetchImpl: typeof fetch = (...args) => fetch(...args), baseUrl = '/api/admin'): AdminApi {
-  async function call<T>(method: string, path: string, schema: { parse(value: unknown): T } | null, body?: unknown): Promise<T> {
+export function createAdminApi(
+  fetchImpl: typeof fetch = (...args) => fetch(...args),
+  baseUrl = '/api/admin',
+  menuUrl = '/api/menu',
+): AdminApi {
+  const call = <T>(method: string, path: string, schema: { parse(value: unknown): T } | null, body?: unknown) =>
+    request(method, `${baseUrl}${path}`, schema, body)
+
+  async function request<T>(method: string, url: string, schema: { parse(value: unknown): T } | null, body?: unknown): Promise<T> {
     let response: Response
     try {
-      response = await fetchImpl(`${baseUrl}${path}`, {
+      response = await fetchImpl(url, {
         method,
         credentials: 'same-origin',
         headers: { Accept: 'application/json', ...(body === undefined ? {} : { 'Content-Type': 'application/json' }) },
@@ -110,6 +147,33 @@ export function createAdminApi(fetchImpl: typeof fetch = (...args) => fetch(...a
     },
     changeStatus(code, change) {
       return call('PATCH', `/orders/${encodeURIComponent(code)}/status`, adminOrderDetailSchema, change)
+    },
+    getMenu() {
+      return request('GET', menuUrl, menuResponseSchema)
+    },
+    updateProduct(id, patch) {
+      return call('PATCH', `/products/${encodeURIComponent(id)}`, adminProductSchema, patch)
+    },
+    updateVariant(id, patch) {
+      return call('PATCH', `/variants/${encodeURIComponent(id)}`, adminVariantSchema, patch)
+    },
+    updateIngredient(id, patch) {
+      return call('PATCH', `/ingredients/${encodeURIComponent(id)}`, adminIngredientSchema, patch)
+    },
+    async listZones() {
+      return (await call('GET', '/zones', zonesListResponseSchema)).zones
+    },
+    createZone(zone) {
+      return call('POST', '/zones', adminZoneSchema, zone)
+    },
+    updateZone(id, patch) {
+      return call('PATCH', `/zones/${encodeURIComponent(id)}`, adminZoneSchema, patch)
+    },
+    getSettings() {
+      return call('GET', '/settings', adminSettingsSchema)
+    },
+    updateSettings(patch) {
+      return call('PATCH', '/settings', adminSettingsSchema, patch)
     },
   }
 }

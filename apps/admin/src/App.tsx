@@ -2,10 +2,14 @@ import { useState } from 'react'
 import { createAdminApi } from './api/admin-api'
 import { browserEventSource } from './api/order-stream'
 import { createWebAudioChime } from './lib/chime'
+import { IngredientsPage } from './pages/IngredientsPage'
 import { Layout } from './pages/Layout'
 import { LoginPage } from './pages/LoginPage'
+import { MenuPage } from './pages/MenuPage'
 import { OrderDetailPage } from './pages/OrderDetailPage'
 import { OrdersPage } from './pages/OrdersPage'
+import { SettingsPage } from './pages/SettingsPage'
+import { ZonesPage } from './pages/ZonesPage'
 import { ServicesContext, useAuth, type PanelServices } from './panel-context'
 import { AuthProvider, LiveProvider } from './providers'
 import { Link, RouterProvider } from './router/RouterProvider'
@@ -34,6 +38,14 @@ function Routes() {
           <OrdersPage />
         ) : route.name === 'order' ? (
           <OrderDetailPage key={route.code} code={route.code} />
+        ) : route.name === 'menu' ? (
+          <MenuPage />
+        ) : route.name === 'ingredients' ? (
+          <IngredientsPage />
+        ) : route.name === 'zones' ? (
+          <ZonesPage />
+        ) : route.name === 'settings' ? (
+          <SettingsPage />
         ) : (
           <div className="rounded-xl bg-white p-6">
             <h1 className="text-xl font-bold">No encontramos esa página.</h1>
