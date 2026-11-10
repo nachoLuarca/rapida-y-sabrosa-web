@@ -266,6 +266,31 @@ Detalles decididos en la Fase 7:
 Validaciones del panel: precios enteros entre 0 y 1.000.000; el número de WhatsApp con el mismo
 normalizador del dominio; el horario con rangos `HH:MM` válidos.
 
+Detalles decididos en la Fase 9:
+
+- Los esquemas están en `@rys/contracts` (`management.ts`). Todos los `PATCH` son parciales y estrictos: un campo
+  que no existe o un body sin cambios es `VALIDATION_ERROR` (`details._`). Los textos se recortan; una descripción o
+  una dirección de retiro vacía queda en `null` (la web la omite). Nombres hasta 80 caracteres, descripción hasta
+  300, dirección hasta 200.
+- **Permisos por campo:** caja (`staff`) puede cambiar solo `available` en productos e ingredientes y solo
+  `ordersPaused` en los ajustes. Si el cambio trae cualquier otro campo, responde 403 `FORBIDDEN` y no aplica nada.
+  Variantes y zonas (también el `GET`) son solo de administración. Ambos roles leen `GET /api/admin/settings`.
+- El precio vive en un solo lugar: un producto con variantes no acepta `price` (se cambia en cada variante) y Arma
+  tu pizza tampoco (sus precios están en los ajustes). Los dos casos son `VALIDATION_ERROR` en `details.price`.
+- **Zonas:** `POST /api/admin/zones` `{ name, fee, active? }` (activa por defecto) arma el id desde el nombre
+  (`slugify` de `@rys/domain`: "Villa Ñandú" → `villa-nandu`); si ya existe, le agrega `-2`, `-3`… No se aceptan
+  dos zonas con el mismo nombre (sin distinguir tildes ni mayúsculas). La zona nueva queda al final. No hay
+  `DELETE`.
+- **Ajustes:** `PATCH /api/admin/settings` acepta `ordersPaused`, `whatsappNumber` (como lo escriba el local:
+  `+56 9 1234 5678` → `56912345678`), `pickupAddress`, `openingHours` (los siete días, hasta 6 rangos por día, o
+  `null` para "sin horario definido") y los tres valores de Arma tu pizza (ingredientes incluidos entre 0 y 30). El
+  nombre del local y la zona horaria no se cambian desde el panel. Cada cambio actualiza `updated_at`.
+- Los `PATCH` responden el recurso actualizado (esquemas `adminProductSchema`, `adminVariantSchema`,
+  `adminIngredientSchema`, `adminZoneSchema` y `adminSettingsSchema`).
+- **ETag:** no hay que invalidar nada a mano. El ETag del menú es el SHA-256 del body, así que cambia con cualquier
+  cambio que la web vea (y no cambia, por ejemplo, al crear una zona inactiva).
+- El log registra quién cambió qué (recurso, id, nombres de los campos y usuario), nunca los valores.
+
 ## Autenticación y seguridad
 
 - **Sesión con cookie**, no JWT: cookie `rys_session`, `HttpOnly`, `SameSite=Lax`, `Secure` fuera de
@@ -410,6 +435,24 @@ Detalles decididos en la Fase 8:
 - El estado de la conexión en vivo se ve siempre en el header: "En vivo", "Conectando…" o "Sin conexión:
   reintentando…".
 - Los colores, tipografías y el foco salen de `packages/tokens`, el mismo CSS que usa la web.
+
+Detalles decididos en la Fase 9:
+
+- El header tiene un menú de secciones (Pedidos, Carta, Ingredientes, Zonas, Ajustes) con `aria-current` en la
+  actual. Caja no ve Zonas; si entra a `/zonas` por la URL, ve "Esta sección es solo para administración.". En
+  celular el nombre del usuario queda solo para lectores de pantalla, para que el header no ocupe media pantalla.
+- `/carta` e `/ingredientes` leen la carta de `GET /api/menu` (no hay un `GET` de productos propio). Arma tu pizza
+  aparece como producto de su categoría: se puede agotar, y su precio remite a Ajustes.
+- Los interruptores de disponible (y de zona activa) aplican el cambio al tiro: son `role="switch"` y, si falla,
+  quedan como estaban y el error se ve en la fila. Lo demás se edita en línea con "Editar" y no cambia nada hasta
+  "Guardar"; "Cancelar" descarta lo escrito, solo se manda lo que cambió y el foco vuelve al botón "Editar".
+- Los precios se pueden escribir con puntos o signo peso (`$13.500`). Los errores del panel y los de la API salen
+  junto a su campo (`aria-describedby`); los de una variante, en esa variante.
+- Pausar pide confirmación en un `<dialog>` nativo con el foco en "No pausar"; reanudar no la pide.
+- Horario: una casilla "El local tiene un horario definido" (desmarcada = `null`) y, por día, rangos con
+  "Agregar rango" y "Quitar" (hasta 6). No se guarda con un rango a medio llenar ni con todos los días cerrados.
+- En la web no cambió el código: ya volvía a pedir la carta al volver a la pestaña y al recargar, así que los
+  agotados, la pausa y el horario se ven ahí. Se agregaron tests que lo cubren.
 
 ## Calidad
 

@@ -31,8 +31,8 @@ flowchart LR
 | `apps/web`           | Existe   | Web pública: carta, carrito, Arma tu pizza y checkout. Vite + React. Con `VITE_DATA_SOURCE=static` usa la carta del bundle y manda el pedido directo a WhatsApp; con `api`, pide la carta a la API, crea el pedido ahí y el cliente lo envía por WhatsApp con su código. |
 | `packages/domain`    | Existe   | `@rys/domain`: reglas de negocio puras y sus tipos (precios, carrito, checkout, mensaje, horario, estados del pedido). Lo usan todas las apps. |
 | `packages/contracts` | Existe   | `@rys/contracts`: esquemas Zod de requests, responses y errores de la API, con sus tipos inferidos. |
-| `apps/api`           | Existe   | `@rys/api`: API en Express 5 sobre PostgreSQL con Drizzle: `GET /health`, `GET /api/menu`, `POST /api/orders` y, para el panel, sesión con cookie, pedidos y SSE en `/api/admin` (OpenAPI en `/api/docs` en desarrollo). |
-| `apps/admin`         | Existe   | `@rys/admin`: panel del local (Vite + React, puerto 5174): login y pedidos en vivo por SSE. La gestión de carta, zonas, horario y pausa llega en la Fase 9. |
+| `apps/api`           | Existe   | `@rys/api`: API en Express 5 sobre PostgreSQL con Drizzle: `GET /health`, `GET /api/menu`, `POST /api/orders` y, para el panel, sesión con cookie, pedidos y SSE, y gestión de carta, zonas y ajustes con permisos por rol en `/api/admin` (OpenAPI en `/api/docs` en desarrollo). |
+| `apps/admin`         | Existe   | `@rys/admin`: panel del local (Vite + React, puerto 5174): login, pedidos en vivo por SSE y gestión de la carta, ingredientes, zonas y ajustes (pausa, horario, datos del local y precios de Arma tu pizza). |
 | `packages/tokens`    | Existe   | `@rys/tokens`: solo CSS. Colores, tipografías, la utilidad `display`, el foco visible y el movimiento reducido de la marca, para la web y el panel (ADR-005). |
 | PostgreSQL           | Existe   | PostgreSQL 17 en Docker Compose (`docker-compose.yml` en la raíz), con las bases `rys` (desarrollo) y `rys_test` (tests). La carta de `docs/data` es su seed. |
 
@@ -52,6 +52,20 @@ routes/ → controllers/ → services/ → repositories/ → db/ (Drizzle)
   `createApp(deps)`, que los tests usan con supertest sin abrir un puerto.
 - `config/env.ts` valida las variables con Zod al arrancar: si falta algo, la API no arranca.
 - Corre con `tsx` (desarrollo y demo), que también lee `@rys/domain` y `@rys/contracts` desde `src/`.
+- Módulos: `catalog` (menú y gestión de productos, variantes e ingredientes), `orders`, `delivery` (zonas),
+  `settings` y `auth`. Los permisos por rol de toda una ruta van en `routes/` (`requireRole`); los que dependen
+  del campo (caja solo cambia la disponibilidad y la pausa) los revisa el servicio con `services/permissions.ts`.
+
+### apps/admin
+
+```
+src/api/          cliente de /api/admin y /api/menu (respuestas validadas con @rys/contracts) y el SSE
+src/router/       router mínimo con la History API (sin librería)
+src/pages/        una página por ruta: login, pedidos, detalle, carta, ingredientes, zonas y ajustes
+src/components/   piezas genéricas (interruptor, campo, diálogo de confirmación) y la lista con precio editable
+src/lib/          lógica pura del tablero y de los formularios (precios, horario), con tests
+src/test/         API y EventSource de mentira, con los mismos esquemas y permisos que la API
+```
 
 ### packages/contracts
 
