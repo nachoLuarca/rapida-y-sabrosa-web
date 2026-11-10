@@ -1,7 +1,7 @@
 import { normalizeChileanMobile } from '@rys/domain'
 import { z } from 'zod'
 import { MAX_PRICE, MAX_PROMO_INCLUDED, priceSchema, slugSchema, whatsappNumberSchema } from './common.ts'
-import { ingredientSchema, openingHoursSchema, productSchema, variantSchema } from './menu.ts'
+import { ingredientSchema, openingHoursSchema, variantSchema } from './menu.ts'
 
 // Gestión del panel (docs/BACKEND-SPEC.md → Panel): productos, variantes, ingredientes, zonas y ajustes.
 // Todos los PATCH son parciales: solo cambia lo que viene. Un campo desconocido o un body vacío es un
@@ -140,11 +140,22 @@ export const STAFF_PRODUCT_FIELDS = ['available'] as const
 export const STAFF_INGREDIENT_FIELDS = ['available'] as const
 export const STAFF_SETTINGS_FIELDS = ['ordersPaused'] as const
 
-/** Respuestas de los PATCH de la carta: el recurso como lo ve la web. */
-export const adminProductSchema = productSchema
+/**
+ * Respuestas de los PATCH de la carta. El producto es como el de la carta, pero sin la regla "precio o variantes":
+ * Arma tu pizza no tiene ninguno de los dos (su precio está en los ajustes).
+ */
+export const adminProductSchema = z.object({
+  id: slugSchema,
+  name: z.string().min(1),
+  description: z.string().nullable(),
+  price: priceSchema.nullable(),
+  variants: z.array(variantSchema),
+  available: z.boolean(),
+})
 export const adminVariantSchema = variantSchema
 export const adminIngredientSchema = ingredientSchema
 
+export type AdminProduct = z.infer<typeof adminProductSchema>
 export type ProductPatch = z.infer<typeof productPatchSchema>
 export type VariantPatch = z.infer<typeof variantPatchSchema>
 export type IngredientPatch = z.infer<typeof ingredientPatchSchema>
