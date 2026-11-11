@@ -3,6 +3,7 @@
 // pide por http://IP-del-notebook:5173 y el pedido llega al panel. Al final muestra las URL y los usuarios.
 // Ctrl+C cierra todo. La base queda arriba (npm run db:down la baja).
 import { existsSync } from 'node:fs'
+import { get } from 'node:http'
 import { connect } from 'node:net'
 import { networkInterfaces } from 'node:os'
 import { demoSummary, localNetworkAddresses } from './lib/network.mjs'
@@ -41,19 +42,32 @@ function portInUse(port) {
   return Promise.all([tryHost('127.0.0.1'), tryHost('::1')]).then((results) => results.some(Boolean))
 }
 
-async function waitUntilReady(urls) {
+/**
+ * ¿La URL responde 200? Con node:http y leyendo la respuesta entera: fetch (undici) se cae con un AssertionError
+ * cuando la respuesta queda sin leer y el servidor cierra la conexión.
+ */
+function responds(url) {
+  return new Promise((resolve) => {
+    const req = get(url, { timeout: 2000 }, (res) => {
+      res.resume()
+      res.once('end', () => resolve(res.statusCode === 200))
+      res.once('error', () => resolve(false))
+    })
+    req.once('timeout', () => req.destroy())
+    req.once('error', () => resolve(false))
+  })
+}
+
+/** Espera a cada grupo de URL en orden (primero la API, así el proxy de la web no reclama mientras arranca). */
+async function waitUntilReady(groups) {
   const deadline = Date.now() + READY_TIMEOUT_MS
-  const pending = new Set(urls)
-  while (pending.size > 0) {
-    if (Date.now() > deadline) return false
-    for (const url of [...pending]) {
-      try {
-        if ((await fetch(url, { signal: AbortSignal.timeout(2000) })).ok) pending.delete(url)
-      } catch {
-        // Todavía no responde.
-      }
+  for (const urls of groups) {
+    const pending = new Set(urls)
+    while (pending.size > 0) {
+      if (Date.now() > deadline) return false
+      for (const url of [...pending]) if (await responds(url)) pending.delete(url)
+      if (pending.size > 0) await new Promise((resolve) => setTimeout(resolve, 500))
     }
-    if (pending.size > 0) await new Promise((resolve) => setTimeout(resolve, 500))
   }
   return true
 }
@@ -95,11 +109,13 @@ const { stopAll } = startTasks(
 )
 
 const ready = await waitUntilReady([
-  `http://localhost:${API_PORT}/health`,
-  `http://localhost:${WEB_PORT}/`,
-  `http://localhost:${PANEL_PORT}/`,
-  // La web y el panel llegan a la API por su proxy.
-  `http://localhost:${WEB_PORT}/api/menu`,
+  [`http://localhost:${API_PORT}/health`],
+  [
+    `http://localhost:${WEB_PORT}/`,
+    `http://localhost:${PANEL_PORT}/`,
+    // La web y el panel llegan a la API por su proxy.
+    `http://localhost:${WEB_PORT}/api/menu`,
+  ],
 ])
 if (!ready) {
   console.error('\nLa demo no respondió a tiempo. Revisa los mensajes de arriba.')
