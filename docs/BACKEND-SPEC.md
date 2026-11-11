@@ -475,6 +475,16 @@ Detalles decididos en la Fase 9:
 - En la web no cambió el código: ya volvía a pedir la carta al volver a la pestaña y al recargar, así que los
   agotados, la pausa y el horario se ven ahí. Se agregaron tests que lo cubren.
 
+Detalles decididos en la Fase 10 (revisión con axe y con teclado):
+
+- Los botones ocupados mientras se guarda llevan `aria-disabled`, no `disabled`: un botón deshabilitado pierde el
+  foco y el teclado vuelve al inicio de la página. Cada acción ignora un segundo clic mientras guarda.
+- El texto visible de un interruptor no cambia con su estado ("Disponible", "Activa") y está en su nombre accesible
+  (WCAG 2.5.3); el estado apagado se muestra como una etiqueta ("Agotado", "Desactivada") junto al nombre.
+- Al cambiar de sección, el foco va al título de la página nueva. Al avanzar un pedido en el tablero, el foco lo sigue
+  hasta su tarjeta en la columna nueva. En el horario, "Agregar rango" lleva el foco a la hora de apertura del rango
+  nuevo y "Quitar" lo deja en "Agregar rango" del mismo día.
+
 ## Calidad
 
 - Lint, typecheck, tests y builds sin errores ni warnings en todos los workspaces.
