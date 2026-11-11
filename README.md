@@ -75,7 +75,9 @@ El guion completo de la demo está en `docs/DEMO.md`.
 
 | Carta en el celular | Tablero del panel |
 |---|---|
-| ![Carta de Rápida y Sabrosa en un celular](docs/img/carta-celular.png) | ![Tablero de pedidos del panel del local](docs/img/panel-tablero.png) |
+| <img src="docs/img/carta-celular.png" alt="Carta de Rápida y Sabrosa en un celular, con un producto en el pedido" width="240"> | <img src="docs/img/panel-tablero.png" alt="Tablero de pedidos del panel del local, con un pedido nuevo destacado en Pendientes" width="560"> |
+
+Tomadas con `npm run demo` y pedidos de ejemplo (nombres inventados).
 
 ## Decisiones de diseño
 
