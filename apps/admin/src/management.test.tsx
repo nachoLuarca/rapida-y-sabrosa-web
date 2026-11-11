@@ -603,6 +603,20 @@ describe('/ajustes: horario', () => {
     expect(fake.settings().openingHours).toBeNull()
   })
 
+  it('con el teclado: al agregar un rango el foco va a su hora de apertura, y al quitarlo, a "Agregar rango"', async () => {
+    const user = userEvent.setup()
+    await openPage('/ajustes', 'Ajustes', asAdmin())
+    await user.click(await within(hours()).findByRole('checkbox', { name: 'El local tiene un horario definido' }))
+
+    await user.click(within(hours()).getByRole('button', { name: 'Agregar rango al jueves' }))
+    await vi.waitFor(() => expect(within(hours()).getByLabelText('Jueves, rango 1: abre')).toHaveFocus())
+    await user.click(within(hours()).getByRole('button', { name: 'Agregar rango al jueves' }))
+    await vi.waitFor(() => expect(within(hours()).getByLabelText('Jueves, rango 2: abre')).toHaveFocus())
+
+    await user.click(within(hours()).getByRole('button', { name: 'Quitar el rango 2 del jueves' }))
+    await vi.waitFor(() => expect(within(hours()).getByRole('button', { name: 'Agregar rango al jueves' })).toHaveFocus())
+  })
+
   it('no deja agregar más de seis rangos en un día', async () => {
     const user = userEvent.setup()
     await openPage('/ajustes', 'Ajustes', asAdmin())
