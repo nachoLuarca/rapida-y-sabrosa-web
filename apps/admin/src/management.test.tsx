@@ -49,8 +49,10 @@ describe('menú del panel', () => {
     expect(nav.getAllByRole('link').map((link) => link.textContent)).toEqual(['Pedidos', 'Carta', 'Ingredientes', 'Zonas', 'Ajustes'])
 
     await user.click(nav.getByRole('link', { name: 'Zonas' }))
-    expect(await screen.findByRole('heading', { level: 1, name: 'Zonas de despacho' })).toBeInTheDocument()
+    const zonesTitle = await screen.findByRole('heading', { level: 1, name: 'Zonas de despacho' })
     expect(window.location.pathname).toBe('/zonas')
+    // El foco va al título de la página nueva: el lector de pantalla la anuncia y el teclado sigue desde ahí.
+    await vi.waitFor(() => expect(zonesTitle).toHaveFocus())
     await expectTitle('Zonas | Panel de Rápida y Sabrosa')
 
     await user.click(nav.getByRole('link', { name: 'Ajustes' }))
