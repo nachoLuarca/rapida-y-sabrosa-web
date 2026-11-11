@@ -19,7 +19,8 @@
     "db:down": "docker compose down",
     "db:migrate": "npm run db:migrate --workspace apps/api",
     "db:seed": "npm run db:seed --workspace apps/api",
-    "user:create": "npm run user:create --workspace apps/api --"
+    "user:create": "npm run user:create --workspace apps/api --",
+    "orders:anonymize": "npm run orders:anonymize --workspace apps/api --"
   },
   "engines": {
     "node": ">=24"

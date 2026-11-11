@@ -99,6 +99,8 @@ export const adminOrderDetailSchema = adminOrderSummarySchema.extend({
   history: z.array(statusHistoryEntrySchema),
   /** A qué estados puede pasar ahora, según la tabla de transiciones del dominio. */
   nextStatuses: z.array(orderStatusSchema),
+  /** Cuándo se reemplazaron los datos del cliente (orders:anonymize); null si siguen. */
+  anonymizedAt: isoDateTime.nullable(),
 })
 
 /** PATCH /api/admin/orders/:code/status. Cancelar exige `reason`. */

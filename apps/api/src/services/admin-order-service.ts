@@ -88,6 +88,7 @@ export class AdminOrderService {
       })),
       history: history.map((entry) => ({ ...entry, createdAt: entry.createdAt.toISOString() })),
       nextStatuses: nextStatuses(order.status, order.fulfillment),
+      anonymizedAt: order.anonymizedAt?.toISOString() ?? null,
     }
   }
 

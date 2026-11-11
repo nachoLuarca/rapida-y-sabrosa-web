@@ -1,5 +1,5 @@
 import type { OrderStatus } from '@rys/domain'
-import { and, asc, count, desc, eq, gte, ilike, inArray, lt, or, sql, sum, type SQL } from 'drizzle-orm'
+import { and, asc, count, desc, eq, gte, ilike, inArray, isNull, lt, or, sql, sum, type SQL } from 'drizzle-orm'
 import type { Db } from '../db/client.ts'
 import { adminUsers, orderLines, orders, orderStatusHistory } from '../db/schema/index.ts'
 
@@ -152,6 +152,36 @@ export class OrderRepository {
       })
       return true
     })
+  }
+
+  /** Pedidos creados antes de `cutoff` que todavía tienen los datos del cliente. */
+  async countToAnonymize(cutoff: Date): Promise<number> {
+    return this.db.$count(orders, and(lt(orders.createdAt, cutoff), isNull(orders.anonymizedAt)))
+  }
+
+  /**
+   * Reemplaza los datos del cliente de los pedidos creados antes de `cutoff` por `replacement` y los marca con
+   * `anonymized_at`. Los que ya estaban anonimizados no se tocan. Devuelve cuántos cambió.
+   */
+  async anonymizeCreatedBefore(
+    cutoff: Date,
+    replacement: { customerName: string; customerPhone: string; deliveryAddress: string; requestHash: string },
+    now: Date,
+  ): Promise<number> {
+    const changed = await this.db
+      .update(orders)
+      .set({
+        customerName: replacement.customerName,
+        customerPhone: replacement.customerPhone,
+        // Un despacho exige dirección (orders_delivery_check); un retiro no tiene.
+        address: sql`case when ${orders.fulfillment} = 'delivery' then ${replacement.deliveryAddress} else null end`,
+        notes: null,
+        requestHash: replacement.requestHash,
+        anonymizedAt: now,
+      })
+      .where(and(lt(orders.createdAt, cutoff), isNull(orders.anonymizedAt)))
+      .returning({ id: orders.id })
+    return changed.length
   }
 
   private async linesOf(orderId: string): Promise<OrderLineRow[]> {

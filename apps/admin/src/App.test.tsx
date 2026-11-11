@@ -296,6 +296,24 @@ describe('detalle del pedido', () => {
     expect(await screen.findByText('Confirmado', { selector: 'p.rounded-full' })).toBeInTheDocument()
   })
 
+  it('un pedido anonimizado muestra sus montos, pero no el celular ni el enlace a WhatsApp', async () => {
+    window.history.replaceState(null, '', '/pedidos/RYS-0003')
+    const anonymized = makeOrder('RYS-0003', {
+      customerName: 'Cliente anonimizado',
+      customerPhone: '',
+      status: 'delivered',
+      anonymizedAt: '2026-11-11T15:00:00.000Z',
+    })
+    await renderPanel(createFakeApi({ orders: [anonymized] }))
+    const client = await screen.findByRole('region', { name: 'Cliente' })
+    expect(within(client).getByText('Cliente anonimizado')).toBeInTheDocument()
+    expect(within(client).queryByText('Celular')).not.toBeInTheDocument()
+    expect(within(client).queryByRole('link', { name: /WhatsApp/ })).not.toBeInTheDocument()
+    expect(within(client).getByText(/Los datos del cliente se anonimizaron el/)).toBeInTheDocument()
+    // Subtotal y total siguen ahí.
+    expect(screen.getAllByText('$13.000', { selector: 'dd' })).toHaveLength(2)
+  })
+
   it('un pedido que no existe lo dice', async () => {
     window.history.replaceState(null, '', '/pedidos/RYS-9999')
     await renderPanel(createFakeApi())

@@ -22,6 +22,13 @@
       "when": 1793822420302,
       "tag": "0002_usuarios_y_sesiones",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1794422990409,
+      "tag": "0003_anonimizacion_de_pedidos",
+      "breakpoints": true
     }
   ]
 }

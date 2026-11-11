@@ -237,10 +237,12 @@ function OrderView(props: OrderViewProps) {
               <dt className="text-sm text-tinta">Nombre</dt>
               <dd className="font-semibold">{order.customerName}</dd>
             </div>
-            <div>
-              <dt className="text-sm text-tinta">Celular</dt>
-              <dd className="font-semibold">{formatChileanMobile(order.customerPhone)}</dd>
-            </div>
+            {!order.anonymizedAt && (
+              <div>
+                <dt className="text-sm text-tinta">Celular</dt>
+                <dd className="font-semibold">{formatChileanMobile(order.customerPhone)}</dd>
+              </div>
+            )}
             <div>
               <dt className="text-sm text-tinta">Entrega</dt>
               <dd className="font-semibold">
@@ -264,14 +266,21 @@ function OrderView(props: OrderViewProps) {
               </div>
             )}
           </dl>
-          <a
-            href={whatsappChatUrl(order.customerPhone)}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-4 inline-flex h-10 items-center rounded-full border-2 border-carbon px-4 font-semibold hover:bg-carbon hover:text-white"
-          >
-            Escribir al cliente por WhatsApp
-          </a>
+          {order.anonymizedAt ? (
+            <p className="mt-4 rounded-xl bg-fondo px-4 py-2 text-sm">
+              Los datos del cliente se anonimizaron el {formatDateTime(order.anonymizedAt)}: se conservan los montos y los
+              productos.
+            </p>
+          ) : (
+            <a
+              href={whatsappChatUrl(order.customerPhone)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-4 inline-flex h-10 items-center rounded-full border-2 border-carbon px-4 font-semibold hover:bg-carbon hover:text-white"
+            >
+              Escribir al cliente por WhatsApp
+            </a>
+          )}
         </section>
 
         {(forward.length > 0 || canCancel) && (
