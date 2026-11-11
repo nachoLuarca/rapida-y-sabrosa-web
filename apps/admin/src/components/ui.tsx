@@ -11,17 +11,20 @@ export const inputClass =
 
 interface SwitchProps {
   checked: boolean
-  /** Nombre accesible completo: "Suprema disponible". */
+  /** Nombre accesible completo: "Suprema disponible". Debe contener `text` (WCAG 2.5.3, la etiqueta en el nombre). */
   label: string
-  /** Texto visible junto al interruptor según su estado. */
-  onText: string
-  offText: string
+  /** Texto visible junto al interruptor, siempre el mismo ("Disponible"): el estado lo dicen el interruptor y aria-checked. */
+  text: string
   disabled?: boolean
   onChange: (checked: boolean) => void
 }
 
-/** Interruptor (role="switch"): se cambia con clic, Espacio o Enter y aplica el cambio al tiro. */
-export function Switch({ checked, label, onText, offText, disabled, onChange }: SwitchProps) {
+/**
+ * Interruptor (role="switch"): se cambia con clic, Espacio o Enter y aplica el cambio al tiro. Su texto visible no
+ * cambia con el estado, para que quien lo maneja por voz lo encuentre siempre por ese nombre; el estado apagado se
+ * muestra aparte, con una StateBadge junto al nombre del producto.
+ */
+export function Switch({ checked, label, text, disabled, onChange }: SwitchProps) {
   return (
     <button
       type="button"
@@ -42,11 +45,16 @@ export function Switch({ checked, label, onText, offText, disabled, onChange }: 
           className={`absolute top-0.5 size-4 rounded-full transition-[left] ${checked ? 'left-[22px] bg-queso' : 'left-0.5 bg-campo'}`}
         />
       </span>
-      <span aria-hidden="true" className={`min-w-20 text-left ${checked ? '' : 'text-rojo-oscuro'}`}>
-        {checked ? onText : offText}
+      <span aria-hidden="true" className="text-left">
+        {text}
       </span>
     </button>
   )
+}
+
+/** Etiqueta de estado junto a un nombre: "Agotado", "Desactivada". */
+export function StateBadge({ children }: { children: string }) {
+  return <span className="rounded-full bg-queso-claro px-2 py-0.5 text-xs font-bold text-carbon">{children}</span>
 }
 
 interface FieldProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'onChange' | 'value'> {

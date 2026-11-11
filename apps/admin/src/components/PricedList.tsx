@@ -2,7 +2,7 @@ import { formatClp } from '@rys/domain'
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { fieldErrors, NAME_ERROR, parsePrice, PRICE_ERROR } from '../lib/forms'
 import { useApiFailure } from '../lib/use-resource'
-import { ErrorNote, Field, primaryButton, SavedNote, secondaryButton, Switch } from './ui'
+import { ErrorNote, Field, primaryButton, SavedNote, secondaryButton, StateBadge, Switch } from './ui'
 
 /** Una fila con nombre, monto e interruptor: sirve para los ingredientes (precio, disponible) y las zonas (costo, activa). */
 export interface PricedItem {
@@ -19,7 +19,9 @@ export interface PricedChanges {
 
 export interface PricedListTexts {
   priceLabel: string
+  /** Texto visible del interruptor: "Disponible". */
   on: string
+  /** Etiqueta junto al nombre cuando está apagado: "Agotado". */
   off: string
   /** Nombre accesible del interruptor: "Tocino disponible". */
   switchLabel: (name: string) => string
@@ -133,14 +135,16 @@ function PricedRow({ item, canEdit, texts, onToggle, onSave }: Omit<PricedListPr
     <li className="py-3">
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
         <div className="min-w-0 flex-1 basis-44">
-          <p className={`font-semibold ${item.on ? '' : 'text-tinta'}`}>{item.name}</p>
+          <p className="flex flex-wrap items-baseline gap-x-2">
+            <span className={`font-semibold ${item.on ? '' : 'text-tinta'}`}>{item.name}</span>
+            {!item.on && <StateBadge>{texts.off}</StateBadge>}
+          </p>
           <p className="text-sm text-tinta tabular-nums">{formatClp(item.price)}</p>
         </div>
         <Switch
           checked={item.on}
           label={texts.switchLabel(item.name)}
-          onText={texts.on}
-          offText={texts.off}
+          text={texts.on}
           disabled={busy}
           onChange={(on) => void toggle(on)}
         />

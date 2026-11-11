@@ -68,6 +68,10 @@ describe('/carta', () => {
     expect(within(pizzas).getByRole('switch', { name: 'California disponible' })).not.toBeChecked()
     expect(within(rowOf('Suprema disponible')).getByText('$13.000')).toBeInTheDocument()
     expect(within(rowOf('California disponible')).getByText('Agotado')).toBeInTheDocument()
+    // El texto visible del interruptor no cambia con el estado y está en su nombre (WCAG 2.5.3); "Agotado" va aparte.
+    expect(screen.getByRole('switch', { name: 'California disponible' })).toHaveTextContent('Disponible')
+    expect(screen.getByRole('switch', { name: 'California disponible' })).not.toHaveTextContent('Agotado')
+    expect(within(rowOf('Suprema disponible')).queryByText('Agotado')).not.toBeInTheDocument()
     expect(within(rowOf('Mango disponible')).getByText('500 cc $3.500 · 1 L $5.000')).toBeInTheDocument()
     // Arma tu pizza también se puede agotar.
     const build = screen.getByRole('region', { name: 'Arma tu pizza' })
