@@ -131,6 +131,8 @@ describe('tablero de pedidos', () => {
     await user.click(await within(card('RYS-0001')).findByRole('button', { name: 'Confirmar RYS-0001' }))
     expect(fake.api.changeStatus).toHaveBeenCalledWith('RYS-0001', { status: 'confirmed' })
     expect(await within(column('Confirmados')).findByRole('article', { name: 'RYS-0001' })).toBeInTheDocument()
+    // La tarjeta cambió de columna: el foco la sigue hasta el botón del paso siguiente.
+    await vi.waitFor(() => expect(within(card('RYS-0001')).getByRole('button', { name: 'A preparar RYS-0001' })).toHaveFocus())
     await user.click(within(card('RYS-0001')).getByRole('button', { name: 'A preparar RYS-0001' }))
     expect(await within(column('En preparación')).findByRole('article', { name: 'RYS-0001' })).toBeInTheDocument()
     await expectTitle('Pedidos | Panel de Rápida y Sabrosa')

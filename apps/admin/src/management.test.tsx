@@ -104,6 +104,12 @@ describe('/carta', () => {
     await user.keyboard(' ')
     await vi.waitFor(() => expect(toggle).not.toBeChecked())
     expect(fake.menu().buildPizza.available).toBe(false)
+    // Mientras guarda no pierde el foco (no se deshabilita): se puede seguir con el teclado desde ahí.
+    expect(toggle).toHaveFocus()
+    expect(toggle).not.toHaveAttribute('aria-disabled')
+    await user.keyboard(' ')
+    await vi.waitFor(() => expect(toggle).toBeChecked())
+    expect(toggle).toHaveFocus()
   })
 
   it('si el cambio falla, lo avisa en la fila y el interruptor queda como estaba', async () => {
@@ -115,7 +121,7 @@ describe('/carta', () => {
     await user.click(toggle)
     expect(await within(rowOf('Suprema disponible')).findByText('No pudimos conectar con el servidor.')).toBeInTheDocument()
     expect(toggle).toBeChecked()
-    expect(toggle).toBeEnabled()
+    expect(toggle).not.toHaveAttribute('aria-disabled')
   })
 
   it('administración edita en línea: nada cambia hasta Guardar, y solo se manda lo que cambió', async () => {
@@ -266,7 +272,7 @@ describe('/carta', () => {
     await vi.waitFor(() => expect(name).toHaveAccessibleDescription('Puede tener hasta 80 caracteres.'))
     // El formulario sigue abierto con lo escrito.
     expect(name).toHaveValue('Suprema 2')
-    expect(within(form).getByRole('button', { name: 'Guardar' })).toBeEnabled()
+    expect(within(form).getByRole('button', { name: 'Guardar' })).not.toHaveAttribute('aria-disabled')
   })
 
   it('si la carta no carga, lo dice y deja reintentar', async () => {

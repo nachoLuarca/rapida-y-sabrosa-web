@@ -192,7 +192,7 @@ function ProductRow({ item, canEdit, onSaveProduct, onSaveVariant }: ProductRowP
           checked={item.available}
           label={`${item.name} disponible`}
           text="Disponible"
-          disabled={busy}
+          aria-disabled={busy || undefined}
           onChange={(available) => void toggle(available)}
         />
         {canEdit && !editing && (
@@ -254,6 +254,7 @@ function ProductForm({ item, onSaveProduct, onSaveVariant, onSaved, onCancel }: 
 
   const submit = async (event: FormEvent) => {
     event.preventDefault()
+    if (busy) return
     const found: Record<string, string> = {}
     const productPatch: ProductPatch = {}
 
@@ -371,7 +372,7 @@ function ProductForm({ item, onSaveProduct, onSaveVariant, onSaved, onCancel }: 
 
       <ErrorNote message={error} />
       <div className="mt-4 flex flex-wrap gap-3">
-        <button type="submit" disabled={busy} className={primaryButton}>
+        <button type="submit" aria-disabled={busy || undefined} className={primaryButton}>
           {busy ? 'Guardando…' : 'Guardar'}
         </button>
         <button type="button" onClick={onCancel} className={secondaryButton}>

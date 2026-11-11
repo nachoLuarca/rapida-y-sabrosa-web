@@ -71,6 +71,8 @@ function useSettingsSave(onSaved: (settings: AdminSettings) => void) {
   const [note, setNote] = useState<string | null>(null)
 
   const save = async (patch: SettingsPatchInput, savedText = 'Guardado.'): Promise<Record<string, string> | null> => {
+    // Un segundo envío mientras se guarda no hace nada (los botones no se deshabilitan, para no perder el foco).
+    if (busy) return null
     if (Object.keys(patch).length === 0) {
       setError(null)
       setNote('No hay cambios que guardar.')
@@ -102,6 +104,7 @@ function PauseSection({ settings, onSaved }: SectionProps) {
   const paused = settings.ordersPaused
 
   const setPaused = async (ordersPaused: boolean) => {
+    if (busy) return
     await save({ ordersPaused })
     setConfirming(false)
   }
@@ -122,11 +125,13 @@ function PauseSection({ settings, onSaved }: SectionProps) {
       <ErrorNote message={error} />
       <div className="mt-4">
         {paused ? (
-          <button type="button" disabled={busy} onClick={() => void setPaused(false)} className={primaryButton}>
+          <button type="button" aria-disabled={busy || undefined} onClick={() => void setPaused(false)} className={primaryButton}>
             Reanudar pedidos
           </button>
         ) : (
-          <button type="button" disabled={busy} onClick={() => setConfirming(true)} className={secondaryButton}>
+          <button type="button" aria-disabled={busy || undefined} onClick={() => {
+            if (!busy) setConfirming(true)
+          }} className={secondaryButton}>
             Pausar pedidos
           </button>
         )}
@@ -227,7 +232,7 @@ function HoursSection({ settings, onSaved }: SectionProps) {
 
         <ErrorNote message={formError ?? error} />
         <div className="mt-4 flex flex-wrap items-center gap-3">
-          <button type="submit" disabled={busy} className={primaryButton}>
+          <button type="submit" aria-disabled={busy || undefined} className={primaryButton}>
             {busy ? 'Guardando…' : 'Guardar horario'}
           </button>
           <SavedNote message={note} />
@@ -365,7 +370,7 @@ function BusinessSection({ settings, onSaved }: SectionProps) {
         </div>
         <ErrorNote message={error} />
         <div className="mt-4 flex flex-wrap items-center gap-3">
-          <button type="submit" disabled={busy} className={primaryButton}>
+          <button type="submit" aria-disabled={busy || undefined} className={primaryButton}>
             {busy ? 'Guardando…' : 'Guardar datos del local'}
           </button>
           <SavedNote message={note} />
@@ -432,7 +437,7 @@ function BuildPizzaSection({ settings, onSaved }: SectionProps) {
         </div>
         <ErrorNote message={error} />
         <div className="mt-4 flex flex-wrap items-center gap-3">
-          <button type="submit" disabled={busy} className={primaryButton}>
+          <button type="submit" aria-disabled={busy || undefined} className={primaryButton}>
             {busy ? 'Guardando…' : 'Guardar Arma tu pizza'}
           </button>
           <SavedNote message={note} />

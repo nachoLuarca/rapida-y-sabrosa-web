@@ -22,6 +22,7 @@ export function LoginPage({ redirectTo }: { redirectTo: string }) {
 
   const submit = async (event: FormEvent) => {
     event.preventDefault()
+    if (sending) return
     if (!email.trim() || !password) {
       setError('Ingresa tu email y tu contraseña.')
       return
@@ -80,8 +81,8 @@ export function LoginPage({ redirectTo }: { redirectTo: string }) {
           </div>
           <button
             type="submit"
-            disabled={sending}
-            className="inline-flex h-12 w-full items-center justify-center rounded-full bg-rojo px-6 font-semibold text-white hover:bg-rojo-oscuro disabled:opacity-60"
+            aria-disabled={sending || undefined}
+            className="inline-flex h-12 w-full items-center justify-center rounded-full bg-rojo px-6 font-semibold text-white hover:bg-rojo-oscuro aria-disabled:opacity-60"
           >
             {sending ? 'Entrando…' : 'Entrar'}
           </button>

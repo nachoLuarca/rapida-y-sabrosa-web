@@ -1,6 +1,6 @@
 import type { AdminOrderSummary } from '@rys/contracts'
 import { formatClp, ORDER_STATUS_ACTIONS, primaryNextStatus, startOfLocalDay } from '@rys/domain'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { ApiError, isUnauthenticated, type AdminApi } from '../api/admin-api'
 import { ACTIVE_STATUSES, BOARD_COLUMNS, boardTitle, formatTime, groupBoard } from '../lib/board'
 import { useDocumentTitle } from '../lib/use-document-title'
@@ -29,6 +29,17 @@ export function OrdersPage() {
   const [fresh, setFresh] = useState<ReadonlySet<string>>(() => new Set())
   const [busy, setBusy] = useState<string | null>(null)
   const [cardError, setCardError] = useState<{ code: string; message: string } | null>(null)
+  // Pedido que el teclado acaba de avanzar: cuando se pinte en su columna nueva, el foco va a su tarjeta.
+  const focusAfterMove = useRef<string | null>(null)
+
+  useEffect(() => {
+    const code = focusAfterMove.current
+    if (!code) return
+    // Una sola vez: si ya no está en el tablero (por ejemplo, se canceló), el foco no se mueve después por sorpresa.
+    focusAfterMove.current = null
+    const card = document.getElementById(`pedido-${code}`)?.closest('article')
+    ;(card?.querySelector<HTMLElement>('button') ?? card?.querySelector<HTMLElement>('a'))?.focus()
+  }, [orders])
 
   const load = useCallback(async () => {
     try {
@@ -79,7 +90,7 @@ export function OrdersPage() {
 
   const advance = async (order: AdminOrderSummary) => {
     const next = primaryNextStatus(order.status, order.fulfillment)
-    if (!next) return
+    if (!next || busy) return
     setBusy(order.code)
     setCardError(null)
     try {
@@ -97,6 +108,8 @@ export function OrdersPage() {
       })
     } finally {
       setBusy(null)
+      // El pedido pasa a otra columna (otra tarjeta): el foco lo sigue, al botón del paso siguiente o a su código.
+      focusAfterMove.current = order.code
       await load()
     }
   }
@@ -199,9 +212,9 @@ function OrderCard({ order, fresh, busy, onAdvance }: OrderCardProps) {
       {next && (
         <button
           type="button"
-          disabled={busy}
+          aria-disabled={busy || undefined}
           onClick={onAdvance}
-          className="mt-3 inline-flex h-10 w-full items-center justify-center rounded-full bg-carbon px-4 text-sm font-semibold text-white hover:bg-rojo disabled:opacity-60"
+          className="mt-3 inline-flex h-10 w-full items-center justify-center rounded-full bg-carbon px-4 text-sm font-semibold text-white hover:bg-rojo aria-disabled:opacity-60"
         >
           {ORDER_STATUS_ACTIONS[next]} <span className="sr-only">{order.code}</span>
         </button>

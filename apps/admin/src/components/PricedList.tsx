@@ -96,6 +96,7 @@ function PricedRow({ item, canEdit, texts, onToggle, onSave }: Omit<PricedListPr
 
   const submit = async (event: FormEvent) => {
     event.preventDefault()
+    if (busy) return
     const parsedPrice = parsePrice(price)
     const found: Record<string, string> = {}
     if (!name.trim()) found.name = NAME_ERROR
@@ -145,7 +146,7 @@ function PricedRow({ item, canEdit, texts, onToggle, onSave }: Omit<PricedListPr
           checked={item.on}
           label={texts.switchLabel(item.name)}
           text={texts.on}
-          disabled={busy}
+          aria-disabled={busy || undefined}
           onChange={(on) => void toggle(on)}
         />
         {canEdit && !editing && (
@@ -162,7 +163,7 @@ function PricedRow({ item, canEdit, texts, onToggle, onSave }: Omit<PricedListPr
             <Field label={texts.priceLabel} value={price} onChange={setPrice} error={errors.price} inputMode="numeric" />
           </div>
           <div className="mt-4 flex flex-wrap gap-3">
-            <button type="submit" disabled={busy} className={primaryButton}>
+            <button type="submit" aria-disabled={busy || undefined} className={primaryButton}>
               {busy ? 'Guardando…' : 'Guardar'}
             </button>
             <button type="button" onClick={stopEditing} className={secondaryButton}>

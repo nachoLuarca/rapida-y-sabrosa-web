@@ -2,10 +2,11 @@ import { useEffect, useId, useRef, type InputHTMLAttributes, type ReactNode } fr
 
 // Piezas genéricas de las pantallas de gestión.
 
+// Los botones ocupados llevan aria-disabled (no disabled, que les quita el foco): se ven atenuados igual.
 export const primaryButton =
-  'inline-flex h-10 items-center justify-center rounded-full bg-rojo px-5 font-semibold text-white hover:bg-rojo-oscuro disabled:opacity-60'
+  'inline-flex h-10 items-center justify-center rounded-full bg-rojo px-5 font-semibold text-white hover:bg-rojo-oscuro aria-disabled:opacity-60'
 export const secondaryButton =
-  'inline-flex h-10 items-center justify-center rounded-full border-2 border-carbon bg-white px-5 font-semibold hover:bg-carbon hover:text-white disabled:opacity-60'
+  'inline-flex h-10 items-center justify-center rounded-full border-2 border-carbon bg-white px-5 font-semibold hover:bg-carbon hover:text-white aria-disabled:opacity-60'
 export const inputClass =
   'mt-1.5 h-11 w-full rounded-xl border border-campo bg-white px-3 aria-invalid:border-2 aria-invalid:border-rojo'
 
@@ -31,9 +32,12 @@ export function Switch({ checked, label, text, disabled, onChange }: SwitchProps
       role="switch"
       aria-checked={checked}
       aria-label={label}
-      disabled={disabled}
-      onClick={() => onChange(!checked)}
-      className="inline-flex min-h-10 shrink-0 items-center gap-2 rounded-full pr-2 text-sm font-semibold disabled:opacity-60"
+      // aria-disabled y no disabled: un botón deshabilitado pierde el foco mientras se guarda el cambio.
+      aria-disabled={disabled || undefined}
+      onClick={() => {
+        if (!disabled) onChange(!checked)
+      }}
+      className="inline-flex min-h-10 shrink-0 items-center gap-2 rounded-full pr-2 text-sm font-semibold aria-disabled:opacity-60"
     >
       <span
         aria-hidden="true"
@@ -178,7 +182,14 @@ export function ConfirmDialog({ open, title, children, confirmLabel, cancelLabel
         <button type="button" onClick={onCancel} className={secondaryButton}>
           {cancelLabel}
         </button>
-        <button type="button" disabled={busy} onClick={onConfirm} className={primaryButton}>
+        <button
+          type="button"
+          aria-disabled={busy || undefined}
+          onClick={() => {
+            if (!busy) onConfirm()
+          }}
+          className={primaryButton}
+        >
           {confirmLabel}
         </button>
       </div>

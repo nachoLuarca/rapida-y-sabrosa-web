@@ -76,13 +76,14 @@ export function Layout({ children }: { children: ReactNode }) {
             )}
             <button
               type="button"
-              disabled={leaving}
+              aria-disabled={leaving || undefined}
               onClick={async () => {
+                if (leaving) return
                 setLeaving(true)
                 await logout().catch(() => undefined)
                 navigate('/login')
               }}
-              className="inline-flex h-10 items-center gap-2 rounded-full bg-white px-4 text-sm font-semibold text-carbon hover:bg-queso-claro disabled:opacity-60"
+              className="inline-flex h-10 items-center gap-2 rounded-full bg-white px-4 text-sm font-semibold text-carbon hover:bg-queso-claro aria-disabled:opacity-60"
             >
               <LogOut className="size-4" aria-hidden="true" />
               Cerrar sesión
