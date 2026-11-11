@@ -107,6 +107,24 @@ describe('POST /api/admin/session (login)', () => {
     expect(await ctx.db.$count(sessions)).toBe(0)
   })
 
+  it('en modo demo acepta el panel abierto por la IP de la red local; fuera de demo, no', async () => {
+    await createUser(ctx.db, 'staff', 'caja@local.test')
+    const body = { email: 'caja@local.test', password: TEST_PASSWORD }
+    const lanOrigin = 'http://192.168.1.20:5174'
+
+    const normal = await loginRequest(body, lanOrigin, app())
+    expect(normal.status).toBe(403)
+    expect(errorOf(normal.body).code).toBe('INVALID_ORIGIN')
+
+    const demo = ctx.app({ demoMode: true })
+    expect((await loginRequest(body, lanOrigin, demo)).status).toBe(200)
+    // Aun en demo: una IP pública o un puerto que no es el de la web ni el del panel siguen fuera.
+    for (const origin of ['http://8.8.8.8:5174', 'http://192.168.1.20:3000']) {
+      const response = await loginRequest(body, origin, demo)
+      expect(response.status, origin).toBe(403)
+    }
+  })
+
   it('valida el body', async () => {
     const response = await loginRequest({ email: '' })
     expect(response.status).toBe(400)
