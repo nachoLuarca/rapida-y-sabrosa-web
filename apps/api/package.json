@@ -14,7 +14,8 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx src/scripts/migrate.ts",
     "db:seed": "tsx src/scripts/seed.ts",
-    "user:create": "tsx src/scripts/user-create.ts"
+    "user:create": "tsx src/scripts/user-create.ts",
+    "demo:reset": "tsx src/scripts/demo-reset.ts"
   },
   "engines": {
     "node": ">=24"

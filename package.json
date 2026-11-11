@@ -9,6 +9,7 @@
   ],
   "scripts": {
     "dev": "node scripts/dev.mjs",
+    "demo:reset": "npm run db:up && npm run db:migrate && npm run demo:reset --workspace apps/api",
     "build": "npm run build --workspaces --if-present",
     "build:demo": "npm run build:demo --workspace apps/web",
     "lint": "npm run lint --workspaces --if-present",
