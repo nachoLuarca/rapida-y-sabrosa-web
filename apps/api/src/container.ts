@@ -117,7 +117,7 @@ export function createContainer({
       adminCatalog: createAdminCatalogController(catalogAdminService),
       adminZones: createAdminZoneController(deliveryService),
       adminSettings: createAdminSettingsController(settingsService),
-      guards: { session: requireSession(authService, secureCookies), origin: checkOrigin(allowedOrigins) },
+      guards: { session: requireSession(authService, secureCookies), origin: checkOrigin(allowedOrigins, { allowLocalNetwork: demoMode }) },
     },
   }
 }

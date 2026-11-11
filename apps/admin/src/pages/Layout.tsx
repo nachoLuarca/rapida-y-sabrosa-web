@@ -1,5 +1,5 @@
 import { LogOut, Volume2, VolumeX } from 'lucide-react'
-import { useState, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { useAuth, useLive } from '../panel-context'
 import { Link } from '../router/RouterProvider'
 import { matchRoute, MANAGEMENT_ROUTES, useRouter } from '../router/router-context'
@@ -28,6 +28,22 @@ export function Layout({ children }: { children: ReactNode }) {
   const { status, soundOn, toggleSound } = useLive()
   const { navigate, path } = useRouter()
   const current = matchRoute(path).name
+  const mainRef = useRef<HTMLElement>(null)
+  const previousPath = useRef(path)
+
+  // Al cambiar de página (sin recargar), el foco va al título nuevo: así el lector de pantalla anuncia la página y
+  // el teclado sigue desde el contenido. Al abrir el panel no se mueve. Si el título aún no está (el detalle de un
+  // pedido mientras carga), va al main.
+  useEffect(() => {
+    if (previousPath.current === path) return
+    previousPath.current = path
+    const main = mainRef.current
+    const heading = main?.querySelector<HTMLElement>('h1')
+    if (heading) {
+      heading.tabIndex = -1
+      heading.focus()
+    } else main?.focus()
+  }, [path])
   const [leaving, setLeaving] = useState(false)
 
   return (
@@ -76,13 +92,14 @@ export function Layout({ children }: { children: ReactNode }) {
             )}
             <button
               type="button"
-              disabled={leaving}
+              aria-disabled={leaving || undefined}
               onClick={async () => {
+                if (leaving) return
                 setLeaving(true)
                 await logout().catch(() => undefined)
                 navigate('/login')
               }}
-              className="inline-flex h-10 items-center gap-2 rounded-full bg-white px-4 text-sm font-semibold text-carbon hover:bg-queso-claro disabled:opacity-60"
+              className="inline-flex h-10 items-center gap-2 rounded-full bg-white px-4 text-sm font-semibold text-carbon hover:bg-queso-claro aria-disabled:opacity-60"
             >
               <LogOut className="size-4" aria-hidden="true" />
               Cerrar sesión
@@ -110,7 +127,7 @@ export function Layout({ children }: { children: ReactNode }) {
           </ul>
         </nav>
       </header>
-      <main id="contenido" className="mx-auto max-w-7xl px-4 py-6">
+      <main ref={mainRef} id="contenido" tabIndex={-1} className="mx-auto max-w-7xl px-4 py-6">
         {children}
       </main>
     </>

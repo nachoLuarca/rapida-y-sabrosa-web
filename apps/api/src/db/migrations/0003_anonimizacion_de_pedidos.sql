@@ -1,0 +1,1 @@
+ALTER TABLE "orders" ADD COLUMN "anonymized_at" timestamp with time zone;

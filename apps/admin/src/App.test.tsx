@@ -131,6 +131,8 @@ describe('tablero de pedidos', () => {
     await user.click(await within(card('RYS-0001')).findByRole('button', { name: 'Confirmar RYS-0001' }))
     expect(fake.api.changeStatus).toHaveBeenCalledWith('RYS-0001', { status: 'confirmed' })
     expect(await within(column('Confirmados')).findByRole('article', { name: 'RYS-0001' })).toBeInTheDocument()
+    // La tarjeta cambió de columna: el foco la sigue hasta el botón del paso siguiente.
+    await vi.waitFor(() => expect(within(card('RYS-0001')).getByRole('button', { name: 'A preparar RYS-0001' })).toHaveFocus())
     await user.click(within(card('RYS-0001')).getByRole('button', { name: 'A preparar RYS-0001' }))
     expect(await within(column('En preparación')).findByRole('article', { name: 'RYS-0001' })).toBeInTheDocument()
     await expectTitle('Pedidos | Panel de Rápida y Sabrosa')
@@ -294,6 +296,24 @@ describe('detalle del pedido', () => {
     fake.put({ ...detailed(), status: 'confirmed', nextStatuses: ['preparing', 'cancelled'] })
     act(() => FakeEventSource.latest().emit('order.updated', { ...eventOf(detailed()), status: 'confirmed' }))
     expect(await screen.findByText('Confirmado', { selector: 'p.rounded-full' })).toBeInTheDocument()
+  })
+
+  it('un pedido anonimizado muestra sus montos, pero no el celular ni el enlace a WhatsApp', async () => {
+    window.history.replaceState(null, '', '/pedidos/RYS-0003')
+    const anonymized = makeOrder('RYS-0003', {
+      customerName: 'Cliente anonimizado',
+      customerPhone: '',
+      status: 'delivered',
+      anonymizedAt: '2026-11-11T15:00:00.000Z',
+    })
+    await renderPanel(createFakeApi({ orders: [anonymized] }))
+    const client = await screen.findByRole('region', { name: 'Cliente' })
+    expect(within(client).getByText('Cliente anonimizado')).toBeInTheDocument()
+    expect(within(client).queryByText('Celular')).not.toBeInTheDocument()
+    expect(within(client).queryByRole('link', { name: /WhatsApp/ })).not.toBeInTheDocument()
+    expect(within(client).getByText(/Los datos del cliente se anonimizaron el/)).toBeInTheDocument()
+    // Subtotal y total siguen ahí.
+    expect(screen.getAllByText('$13.000', { selector: 'dd' })).toHaveLength(2)
   })
 
   it('un pedido que no existe lo dice', async () => {

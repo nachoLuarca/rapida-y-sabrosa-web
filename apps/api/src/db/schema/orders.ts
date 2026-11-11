@@ -52,6 +52,8 @@ export const orders = pgTable(
     requestHash: text('request_hash').notNull(),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+    /** Cuándo se reemplazaron los datos del cliente (npm run orders:anonymize); null si no se ha hecho. */
+    anonymizedAt: timestamp('anonymized_at', { withTimezone: true }),
   },
   (table) => [
     index('orders_status_idx').on(table.status),

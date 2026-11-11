@@ -2,7 +2,17 @@ import type { AdminProduct, MenuResponse, ProductPatch, VariantDto, VariantPatch
 import { formatClp } from '@rys/domain'
 import { useEffect, useId, useRef, useState, type FormEvent } from 'react'
 import type { AdminApi } from '../api/admin-api'
-import { ErrorNote, Field, inputClass, PageState, primaryButton, SavedNote, secondaryButton, Switch } from '../components/ui'
+import {
+  ErrorNote,
+  Field,
+  inputClass,
+  PageState,
+  primaryButton,
+  SavedNote,
+  secondaryButton,
+  StateBadge,
+  Switch,
+} from '../components/ui'
 import { fieldErrors, NAME_ERROR, parsePrice, PRICE_ERROR } from '../lib/forms'
 import { useDocumentTitle } from '../lib/use-document-title'
 import { useApiFailure, useResource } from '../lib/use-resource'
@@ -172,15 +182,17 @@ function ProductRow({ item, canEdit, onSaveProduct, onSaveVariant }: ProductRowP
     <li className="py-3">
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
         <div className="min-w-0 flex-1 basis-44">
-          <h3 className={`font-semibold ${item.available ? '' : 'text-tinta'}`}>{item.name}</h3>
+          <div className="flex flex-wrap items-baseline gap-x-2">
+            <h3 className={`font-semibold ${item.available ? '' : 'text-tinta'}`}>{item.name}</h3>
+            {!item.available && <StateBadge>Agotado</StateBadge>}
+          </div>
           <p className="text-sm text-tinta tabular-nums">{priceText(item)}</p>
         </div>
         <Switch
           checked={item.available}
           label={`${item.name} disponible`}
-          onText="Disponible"
-          offText="Agotado"
-          disabled={busy}
+          text="Disponible"
+          aria-disabled={busy || undefined}
           onChange={(available) => void toggle(available)}
         />
         {canEdit && !editing && (
@@ -242,6 +254,7 @@ function ProductForm({ item, onSaveProduct, onSaveVariant, onSaved, onCancel }: 
 
   const submit = async (event: FormEvent) => {
     event.preventDefault()
+    if (busy) return
     const found: Record<string, string> = {}
     const productPatch: ProductPatch = {}
 
@@ -359,7 +372,7 @@ function ProductForm({ item, onSaveProduct, onSaveVariant, onSaved, onCancel }: 
 
       <ErrorNote message={error} />
       <div className="mt-4 flex flex-wrap gap-3">
-        <button type="submit" disabled={busy} className={primaryButton}>
+        <button type="submit" aria-disabled={busy || undefined} className={primaryButton}>
           {busy ? 'Guardando…' : 'Guardar'}
         </button>
         <button type="button" onClick={onCancel} className={secondaryButton}>

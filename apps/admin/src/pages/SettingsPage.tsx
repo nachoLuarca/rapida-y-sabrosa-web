@@ -1,6 +1,6 @@
 import { MAX_PROMO_INCLUDED, type AdminSettings, type SettingsPatchInput } from '@rys/contracts'
 import { DAY_KEYS, DAY_NAMES, formatChileanMobile, normalizeChileanMobile, type DayKey } from '@rys/domain'
-import { useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 import type { AdminApi } from '../api/admin-api'
 import { ConfirmDialog, ErrorNote, Field, PageState, primaryButton, SavedNote, secondaryButton } from '../components/ui'
 import {
@@ -71,6 +71,8 @@ function useSettingsSave(onSaved: (settings: AdminSettings) => void) {
   const [note, setNote] = useState<string | null>(null)
 
   const save = async (patch: SettingsPatchInput, savedText = 'Guardado.'): Promise<Record<string, string> | null> => {
+    // Un segundo envío mientras se guarda no hace nada (los botones no se deshabilitan, para no perder el foco).
+    if (busy) return null
     if (Object.keys(patch).length === 0) {
       setError(null)
       setNote('No hay cambios que guardar.')
@@ -102,6 +104,7 @@ function PauseSection({ settings, onSaved }: SectionProps) {
   const paused = settings.ordersPaused
 
   const setPaused = async (ordersPaused: boolean) => {
+    if (busy) return
     await save({ ordersPaused })
     setConfirming(false)
   }
@@ -122,11 +125,13 @@ function PauseSection({ settings, onSaved }: SectionProps) {
       <ErrorNote message={error} />
       <div className="mt-4">
         {paused ? (
-          <button type="button" disabled={busy} onClick={() => void setPaused(false)} className={primaryButton}>
+          <button type="button" aria-disabled={busy || undefined} onClick={() => void setPaused(false)} className={primaryButton}>
             Reanudar pedidos
           </button>
         ) : (
-          <button type="button" disabled={busy} onClick={() => setConfirming(true)} className={secondaryButton}>
+          <button type="button" aria-disabled={busy || undefined} onClick={() => {
+            if (!busy) setConfirming(true)
+          }} className={secondaryButton}>
             Pausar pedidos
           </button>
         )}
@@ -227,7 +232,7 @@ function HoursSection({ settings, onSaved }: SectionProps) {
 
         <ErrorNote message={formError ?? error} />
         <div className="mt-4 flex flex-wrap items-center gap-3">
-          <button type="submit" disabled={busy} className={primaryButton}>
+          <button type="submit" aria-disabled={busy || undefined} className={primaryButton}>
             {busy ? 'Guardando…' : 'Guardar horario'}
           </button>
           <SavedNote message={note} />
@@ -249,13 +254,29 @@ const timeClass = 'h-11 rounded-xl border border-campo bg-white px-2 tabular-num
 function DayEditor({ day, ranges, error, onChange }: DayEditorProps) {
   const name = DAY_NAMES[day]
   const errorId = `horario-${day}-error`
+  const fieldsetRef = useRef<HTMLFieldSetElement>(null)
+  // Adónde va el foco después de agregar o quitar un rango (el botón que se usó puede desaparecer o quedar después).
+  const focusNext = useRef<'new-range' | 'add-button' | null>(null)
+
+  useEffect(() => {
+    const target = focusNext.current
+    if (!target) return
+    focusNext.current = null
+    const fieldset = fieldsetRef.current
+    const element =
+      target === 'new-range'
+        ? fieldset?.querySelector<HTMLElement>(`input[aria-label="${name}, rango ${ranges.length}: abre"]`)
+        : fieldset?.querySelector<HTMLElement>('[data-add-range]')
+    element?.focus()
+  }, [ranges, name])
+
   const setTime = (index: number, position: 0 | 1, value: string) =>
     onChange((current) =>
       current.map((range, i): [string, string] => (i !== index ? range : position === 0 ? [value, range[1]] : [range[0], value])),
     )
 
   return (
-    <fieldset className="py-3" aria-describedby={error ? errorId : undefined}>
+    <fieldset ref={fieldsetRef} className="py-3" aria-describedby={error ? errorId : undefined}>
       {/* En celular el día va arriba de sus rangos; desde sm, a la izquierda. */}
       <legend className="pb-1 font-bold sm:float-left sm:w-28 sm:pt-2 sm:pb-0">{name}</legend>
       <div className="space-y-2 sm:ml-28">
@@ -282,7 +303,11 @@ function DayEditor({ day, ranges, error, onChange }: DayEditorProps) {
             />
             <button
               type="button"
-              onClick={() => onChange((current) => current.filter((_, i) => i !== index))}
+              onClick={() => {
+                // El botón se va con su rango: el foco queda en "Agregar rango" del mismo día.
+                focusNext.current = 'add-button'
+                onChange((current) => current.filter((_, i) => i !== index))
+              }}
               className="inline-flex h-10 items-center rounded-full px-3 text-sm font-semibold underline underline-offset-4"
             >
               Quitar <span className="sr-only">el rango {index + 1} del {name.toLowerCase()}</span>
@@ -292,7 +317,12 @@ function DayEditor({ day, ranges, error, onChange }: DayEditorProps) {
         {ranges.length < MAX_RANGES_PER_DAY && (
           <button
             type="button"
-            onClick={() => onChange((current) => [...current, ['', '']])}
+            data-add-range
+            onClick={() => {
+              // El rango nuevo queda antes de este botón: el foco pasa a su hora de apertura.
+              focusNext.current = 'new-range'
+              onChange((current) => [...current, ['', '']])
+            }}
             className="inline-flex h-10 items-center rounded-full border border-campo px-4 text-sm font-semibold hover:bg-fondo"
           >
             Agregar rango <span className="sr-only">al {name.toLowerCase()}</span>
@@ -365,7 +395,7 @@ function BusinessSection({ settings, onSaved }: SectionProps) {
         </div>
         <ErrorNote message={error} />
         <div className="mt-4 flex flex-wrap items-center gap-3">
-          <button type="submit" disabled={busy} className={primaryButton}>
+          <button type="submit" aria-disabled={busy || undefined} className={primaryButton}>
             {busy ? 'Guardando…' : 'Guardar datos del local'}
           </button>
           <SavedNote message={note} />
@@ -432,7 +462,7 @@ function BuildPizzaSection({ settings, onSaved }: SectionProps) {
         </div>
         <ErrorNote message={error} />
         <div className="mt-4 flex flex-wrap items-center gap-3">
-          <button type="submit" disabled={busy} className={primaryButton}>
+          <button type="submit" aria-disabled={busy || undefined} className={primaryButton}>
             {busy ? 'Guardando…' : 'Guardar Arma tu pizza'}
           </button>
           <SavedNote message={note} />

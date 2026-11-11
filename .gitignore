@@ -3,6 +3,7 @@ node_modules
 dist
 dist-ssr
 dist-demo
+dist-api
 
 # Variables de entorno
 .env

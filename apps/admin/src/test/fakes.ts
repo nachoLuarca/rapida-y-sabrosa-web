@@ -35,6 +35,7 @@ export function makeOrder(code: string, overrides: Partial<AdminOrderDetail> = {
     ],
     history: [{ fromStatus: null, toStatus: 'pending', changedBy: null, reason: null, createdAt }],
     nextStatuses: [],
+    anonymizedAt: null,
   }
   const order = { ...base, ...overrides }
   return { ...order, nextStatuses: nextStatuses(order.status, order.fulfillment) }

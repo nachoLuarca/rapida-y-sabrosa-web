@@ -34,7 +34,8 @@ flowchart LR
 | `apps/api`           | Existe   | `@rys/api`: API en Express 5 sobre PostgreSQL con Drizzle: `GET /health`, `GET /api/menu`, `POST /api/orders` y, para el panel, sesión con cookie, pedidos y SSE, y gestión de carta, zonas y ajustes con permisos por rol en `/api/admin` (OpenAPI en `/api/docs` en desarrollo). |
 | `apps/admin`         | Existe   | `@rys/admin`: panel del local (Vite + React, puerto 5174): login, pedidos en vivo por SSE y gestión de la carta, ingredientes, zonas y ajustes (pausa, horario, datos del local y precios de Arma tu pizza). |
 | `packages/tokens`    | Existe   | `@rys/tokens`: solo CSS. Colores, tipografías, la utilidad `display`, el foco visible y el movimiento reducido de la marca, para la web y el panel (ADR-005). |
-| PostgreSQL           | Existe   | PostgreSQL 17 en Docker Compose (`docker-compose.yml` en la raíz), con las bases `rys` (desarrollo) y `rys_test` (tests). La carta de `docs/data` es su seed. |
+| PostgreSQL           | Existe   | PostgreSQL 17 en Docker Compose (`docker-compose.yml` en la raíz), con las bases `rys` (desarrollo y demo) y `rys_test` (tests). La carta de `docs/data` es su seed. |
+| `scripts/`           | Existe   | `npm run dev` y `npm run demo` (API, web y panel a la vez, con prefijo por proceso; la demo para la red local) y su lógica pura en `scripts/lib/`, con tests de `node --test`. |
 
 El detalle de qué construye cada fase está en `docs/BACKEND-SPEC.md` y `docs/PLAN-BACKEND.md`.
 
@@ -55,6 +56,8 @@ routes/ → controllers/ → services/ → repositories/ → db/ (Drizzle)
 - Módulos: `catalog` (menú y gestión de productos, variantes e ingredientes), `orders`, `delivery` (zonas),
   `settings` y `auth`. Los permisos por rol de toda una ruta van en `routes/` (`requireRole`); los que dependen
   del campo (caja solo cambia la disponibilidad y la pausa) los revisa el servicio con `services/permissions.ts`.
+- Comandos de consola en `scripts/` (migrar, sembrar, `user:create`, `demo:reset`, `orders:anonymize`): usan
+  `runScript`, que carga y valida el entorno, abre la base y muestra los errores esperables sin stack trace.
 
 ### apps/admin
 

@@ -76,7 +76,11 @@ describe('adminOrderDetailSchema', () => {
         },
       ],
       nextStatuses: ['preparing', 'cancelled'],
+      anonymizedAt: null,
     }
     expect(adminOrderDetailSchema.parse(detail)).toEqual(detail)
+    // Un pedido anonimizado trae cuándo se anonimizó.
+    const anonymized = { ...detail, customerName: 'Cliente anonimizado', customerPhone: '', anonymizedAt: '2026-11-11T15:00:00.000Z' }
+    expect(adminOrderDetailSchema.parse(anonymized)).toEqual(anonymized)
   })
 })

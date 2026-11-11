@@ -49,8 +49,10 @@ describe('menú del panel', () => {
     expect(nav.getAllByRole('link').map((link) => link.textContent)).toEqual(['Pedidos', 'Carta', 'Ingredientes', 'Zonas', 'Ajustes'])
 
     await user.click(nav.getByRole('link', { name: 'Zonas' }))
-    expect(await screen.findByRole('heading', { level: 1, name: 'Zonas de despacho' })).toBeInTheDocument()
+    const zonesTitle = await screen.findByRole('heading', { level: 1, name: 'Zonas de despacho' })
     expect(window.location.pathname).toBe('/zonas')
+    // El foco va al título de la página nueva: el lector de pantalla la anuncia y el teclado sigue desde ahí.
+    await vi.waitFor(() => expect(zonesTitle).toHaveFocus())
     await expectTitle('Zonas | Panel de Rápida y Sabrosa')
 
     await user.click(nav.getByRole('link', { name: 'Ajustes' }))
@@ -68,6 +70,10 @@ describe('/carta', () => {
     expect(within(pizzas).getByRole('switch', { name: 'California disponible' })).not.toBeChecked()
     expect(within(rowOf('Suprema disponible')).getByText('$13.000')).toBeInTheDocument()
     expect(within(rowOf('California disponible')).getByText('Agotado')).toBeInTheDocument()
+    // El texto visible del interruptor no cambia con el estado y está en su nombre (WCAG 2.5.3); "Agotado" va aparte.
+    expect(screen.getByRole('switch', { name: 'California disponible' })).toHaveTextContent('Disponible')
+    expect(screen.getByRole('switch', { name: 'California disponible' })).not.toHaveTextContent('Agotado')
+    expect(within(rowOf('Suprema disponible')).queryByText('Agotado')).not.toBeInTheDocument()
     expect(within(rowOf('Mango disponible')).getByText('500 cc $3.500 · 1 L $5.000')).toBeInTheDocument()
     // Arma tu pizza también se puede agotar.
     const build = screen.getByRole('region', { name: 'Arma tu pizza' })
@@ -100,6 +106,12 @@ describe('/carta', () => {
     await user.keyboard(' ')
     await vi.waitFor(() => expect(toggle).not.toBeChecked())
     expect(fake.menu().buildPizza.available).toBe(false)
+    // Mientras guarda no pierde el foco (no se deshabilita): se puede seguir con el teclado desde ahí.
+    expect(toggle).toHaveFocus()
+    expect(toggle).not.toHaveAttribute('aria-disabled')
+    await user.keyboard(' ')
+    await vi.waitFor(() => expect(toggle).toBeChecked())
+    expect(toggle).toHaveFocus()
   })
 
   it('si el cambio falla, lo avisa en la fila y el interruptor queda como estaba', async () => {
@@ -111,7 +123,7 @@ describe('/carta', () => {
     await user.click(toggle)
     expect(await within(rowOf('Suprema disponible')).findByText('No pudimos conectar con el servidor.')).toBeInTheDocument()
     expect(toggle).toBeChecked()
-    expect(toggle).toBeEnabled()
+    expect(toggle).not.toHaveAttribute('aria-disabled')
   })
 
   it('administración edita en línea: nada cambia hasta Guardar, y solo se manda lo que cambió', async () => {
@@ -262,7 +274,7 @@ describe('/carta', () => {
     await vi.waitFor(() => expect(name).toHaveAccessibleDescription('Puede tener hasta 80 caracteres.'))
     // El formulario sigue abierto con lo escrito.
     expect(name).toHaveValue('Suprema 2')
-    expect(within(form).getByRole('button', { name: 'Guardar' })).toBeEnabled()
+    expect(within(form).getByRole('button', { name: 'Guardar' })).not.toHaveAttribute('aria-disabled')
   })
 
   it('si la carta no carga, lo dice y deja reintentar', async () => {
@@ -589,6 +601,20 @@ describe('/ajustes: horario', () => {
     await user.click(within(hours()).getByRole('button', { name: 'Guardar horario' }))
     await vi.waitFor(() => expect(fake.api.updateSettings).toHaveBeenCalledExactlyOnceWith({ openingHours: null }))
     expect(fake.settings().openingHours).toBeNull()
+  })
+
+  it('con el teclado: al agregar un rango el foco va a su hora de apertura, y al quitarlo, a "Agregar rango"', async () => {
+    const user = userEvent.setup()
+    await openPage('/ajustes', 'Ajustes', asAdmin())
+    await user.click(await within(hours()).findByRole('checkbox', { name: 'El local tiene un horario definido' }))
+
+    await user.click(within(hours()).getByRole('button', { name: 'Agregar rango al jueves' }))
+    await vi.waitFor(() => expect(within(hours()).getByLabelText('Jueves, rango 1: abre')).toHaveFocus())
+    await user.click(within(hours()).getByRole('button', { name: 'Agregar rango al jueves' }))
+    await vi.waitFor(() => expect(within(hours()).getByLabelText('Jueves, rango 2: abre')).toHaveFocus())
+
+    await user.click(within(hours()).getByRole('button', { name: 'Quitar el rango 2 del jueves' }))
+    await vi.waitFor(() => expect(within(hours()).getByRole('button', { name: 'Agregar rango al jueves' })).toHaveFocus())
   })
 
   it('no deja agregar más de seis rangos en un día', async () => {

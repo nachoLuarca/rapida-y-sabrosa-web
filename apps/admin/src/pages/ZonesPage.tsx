@@ -81,6 +81,7 @@ function NewZoneForm({ onCreated }: { onCreated: (zone: AdminZone) => void }) {
 
   const submit = async (event: FormEvent) => {
     event.preventDefault()
+    if (busy) return
     const parsedFee = parsePrice(fee)
     const found: Record<string, string> = {}
     if (!name.trim()) found.name = NAME_ERROR
@@ -119,7 +120,7 @@ function NewZoneForm({ onCreated }: { onCreated: (zone: AdminZone) => void }) {
         </div>
         <ErrorNote message={error} />
         <div className="mt-4 flex flex-wrap items-center gap-3">
-          <button type="submit" disabled={busy} className={primaryButton}>
+          <button type="submit" aria-disabled={busy || undefined} className={primaryButton}>
             {busy ? 'Agregando…' : 'Agregar zona'}
           </button>
           <SavedNote message={created} />

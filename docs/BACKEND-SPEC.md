@@ -328,6 +328,27 @@ Detalles decididos en la Fase 8:
 - El seed crea los usuarios de demo.
 - `npm run demo:reset` vacía pedidos y sesiones y vuelve a cargar el seed.
 
+Detalles decididos en la Fase 10 (guion de la demo en `docs/DEMO.md`):
+
+- `npm run demo` (`scripts/demo.mjs`): revisa que exista `apps/api/.env` y que los puertos 3000, 5173 y 5174 estén
+  libres; levanta PostgreSQL, migra y siembra con `DEMO_MODE=true`; compila la web con `vite build --mode api`
+  (`apps/web/.env.api`, salida en `apps/web/dist-api/`, aparte de la web estática de `dist/`) y el panel; y los sirve
+  con `vite preview --host` en 5173 y 5174 (el proxy de `/api` de Vite también funciona en preview), con la API en
+  3000. Cuando los tres responden, muestra las URL locales y de la red y los usuarios de demo (sin la contraseña:
+  "la de `DEMO_PASSWORD`"). Si uno se cae, cierra todo. La API corre con `LOG_LEVEL=warn` salvo que se pida otro.
+- La IP para el celular sale de las interfaces de red: IPv4 de red privada, el Wi-Fi primero, luego cable; se
+  descartan los adaptadores virtuales y de VPN (WSL, Hyper-V, VirtualBox, TUN/TAP…). Si hay más de una, se ofrecen
+  las otras. Lógica pura en `scripts/lib/network.mjs`, con tests de `node --test` (`npm run test:scripts`, parte de
+  `npm test`).
+- **Orígenes:** con `DEMO_MODE=true`, `checkOrigin` acepta además un origen `http` con IP de red privada (10/8,
+  172.16/12, 192.168/16) y el puerto de alguno de `ALLOWED_ORIGINS` (5173 o 5174 por defecto). Así no hay que tocar
+  `ALLOWED_ORIGINS` cada vez que cambia la red. Fuera de demo no cambia nada.
+- **`demo:reset`** (`apps/api/src/db/demo-reset.ts`): en una transacción borra `orders` (con sus líneas e historial)
+  y `sessions` y reinicia la secuencia (el próximo pedido es `RYS-0001`); después aplica el modo `'reset'` del seed
+  (carta, zonas, ajustes y pausa como en `docs/data`) y deja los usuarios de demo activos y con `DEMO_PASSWORD`. No
+  toca zonas creadas en el panel ni otros usuarios. Se niega a correr sin `DEMO_MODE=true` en el entorno o en
+  `apps/api/.env`, porque borra todos los pedidos.
+
 ## Configuración (apps/api/.env, fuera de git; plantilla en .env.example)
 
 | Variable | Ejemplo | Notas |
@@ -454,6 +475,16 @@ Detalles decididos en la Fase 9:
 - En la web no cambió el código: ya volvía a pedir la carta al volver a la pestaña y al recargar, así que los
   agotados, la pausa y el horario se ven ahí. Se agregaron tests que lo cubren.
 
+Detalles decididos en la Fase 10 (revisión con axe y con teclado):
+
+- Los botones ocupados mientras se guarda llevan `aria-disabled`, no `disabled`: un botón deshabilitado pierde el
+  foco y el teclado vuelve al inicio de la página. Cada acción ignora un segundo clic mientras guarda.
+- El texto visible de un interruptor no cambia con su estado ("Disponible", "Activa") y está en su nombre accesible
+  (WCAG 2.5.3); el estado apagado se muestra como una etiqueta ("Agotado", "Desactivada") junto al nombre.
+- Al cambiar de sección, el foco va al título de la página nueva. Al avanzar un pedido en el tablero, el foco lo sigue
+  hasta su tarjeta en la columna nueva. En el horario, "Agregar rango" lleva el foco a la hora de apertura del rango
+  nuevo y "Quitar" lo deja en "Agregar rango" del mismo día.
+
 ## Calidad
 
 - Lint, typecheck, tests y builds sin errores ni warnings en todos los workspaces.
@@ -475,6 +506,18 @@ Los pedidos guardan nombre, teléfono y dirección del cliente.
 - `npm run orders:anonymize -- --older-than 90d` reemplaza nombre, teléfono, dirección y comentario de los
   pedidos antiguos y conserva montos y productos para estadísticas.
 - Nunca se registran en logs.
+
+Detalles decididos en la Fase 10:
+
+- `--older-than` va en días (`90d`, entre 1 y 3650) y se cuenta desde la fecha de creación del pedido. `--dry-run`
+  solo dice cuántos pedidos cambiaría.
+- Nombre → "Cliente anonimizado"; celular → vacío; dirección → "Dirección anonimizada" en los despachos (la tabla
+  exige dirección en un despacho) y `null` en los retiros; comentario → `null`. También se reemplaza `request_hash`,
+  porque es la huella de un body con esos datos. Montos, líneas, zona, pago, estados e historial se conservan.
+- La columna `orders.anonymized_at` (migración `0003`) marca cuándo se hizo: cada pedido se anonimiza una sola vez y
+  correrlo de nuevo no cambia nada. `GET /api/admin/orders/:code` la trae como `anonymizedAt`, y el panel muestra
+  que los datos se anonimizaron en vez del celular y el enlace a WhatsApp.
+- No se puede deshacer. Los motivos de cancelación del historial no se tocan (los escribe el local).
 
 ## Pendiente de confirmar con el local
 
