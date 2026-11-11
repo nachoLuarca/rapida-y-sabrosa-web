@@ -19,7 +19,8 @@ await runScript(async ({ env, database }) => {
   const orders = count === 1 ? '1 pedido' : `${count} pedidos`
   const before = `anteriores al ${dateFormat.format(cutoff)}`
   const where = describeDatabaseUrl(env.DATABASE_URL)
+  // La fecha termina en "p. m.": no va al final de una oración, para no repetir el punto.
   return args.dryRun
-    ? `Prueba (--dry-run) en ${where}: se anonimizarían ${orders} ${before}. No se cambió nada.`
-    : `Se anonimizaron ${orders} ${before} en ${where}. Montos y productos se conservan.`
+    ? `Prueba (--dry-run) en ${where}: se anonimizarían ${orders} ${before} (no se cambió nada).`
+    : `Se anonimizaron ${orders} ${before} en ${where}; montos y productos se conservan.`
 })
