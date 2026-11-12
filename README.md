@@ -2,6 +2,101 @@
 
 [![CI](https://github.com/nachoLuarca/rapida-y-sabrosa-web/actions/workflows/ci.yml/badge.svg)](https://github.com/nachoLuarca/rapida-y-sabrosa-web/actions/workflows/ci.yml)
 
+Una pizzería de Isla de Maipo deja su carta en LaCarte y pasa a recibir pedidos propios: el cliente pide desde el
+celular, el pedido llega en vivo a un panel del local y el local administra ahí su carta, zonas, horario y pausa.
+
+## Qué muestra este proyecto
+
+- **Monorepo con npm workspaces:** tres apps (web, panel y API) y tres paquetes compartidos: `@rys/domain` (reglas
+  de negocio puras), `@rys/contracts` (esquemas Zod de la API) y `@rys/tokens` (CSS de la marca). La web y la API
+  calculan los precios con el mismo código.
+- **API Express 5 en capas:** rutas → controladores → servicios → repositorios, con inyección por constructor y sin
+  framework de DI. Un solo formato de error y documentación OpenAPI generada desde los mismos esquemas Zod.
+- **PostgreSQL 17 con Drizzle:** 4 migraciones SQL versionadas en git y un seed idempotente desde `docs/data`.
+- **Pedidos confiables:** el cliente envía qué quiere y el total que vio; el servidor recalcula y responde
+  `PRICE_CHANGED` si no coincide. Cada pedido exige `Idempotency-Key`: un reintento con el mismo body devuelve el
+  mismo pedido, y dos requests simultáneos crean uno solo. Rate limit de 10 pedidos por IP cada 10 minutos.
+- **Panel con sesión en cookie:** cookie `HttpOnly` con token aleatorio (en la base solo su SHA-256), contraseñas
+  con argon2id, chequeo de `Origin` contra CSRF y roles `admin` y `staff` con permisos por campo (caja solo marca
+  agotados y pausa los pedidos).
+- **Tiempo real con SSE:** el pedido nuevo aparece en el tablero al instante, con heartbeat cada 25 s y reconexión
+  que vuelve a pedir la lista para no perder eventos.
+- **632 tests:** API 244 (integración con supertest contra PostgreSQL real), dominio 127, web 110, panel 89,
+  contratos 55 y scripts 7. GitHub Actions corre lint, typecheck, migraciones, tests y builds en cada push.
+- **Accesibilidad y rendimiento** (revisión final, Fase 10): Lighthouse en celular de la web en modo api con
+  Rendimiento 98, Accesibilidad 100, Buenas prácticas 100 y SEO 100; axe-core 4.14 sin violaciones en las siete
+  pantallas del panel y en la web; recorrido completo con teclado en ambas apps.
+
+## Stack
+
+| Parte | Tecnología |
+|---|---|
+| Web | React 19, Vite 8, TypeScript estricto, Tailwind CSS 4 |
+| Panel | React 19, Vite 8, TypeScript estricto, Tailwind CSS 4 (app aparte, mismos tokens de marca) |
+| API | Node 24, Express 5, Zod 4, Drizzle ORM, pino, helmet, argon2id |
+| Base de datos | PostgreSQL 17 en Docker Compose |
+| Tests | Vitest, Testing Library con jsdom, supertest, `node:test` |
+| CI | GitHub Actions con un servicio `postgres:17` |
+
+## Cómo se conecta
+
+```mermaid
+flowchart LR
+  cliente([Cliente en el celular]) --> web[Web<br/>apps/web]
+  local([Local]) --> panel[Panel<br/>apps/admin]
+  web -- "GET /api/menu<br/>POST /api/orders" --> api[API<br/>apps/api]
+  panel -- "/api/admin" --> api
+  api -- "SSE: order.created, order.updated" --> panel
+  api --> db[(PostgreSQL 17)]
+```
+
+## Probarlo en 2 minutos
+
+Requisitos: Node 24 y Docker Desktop abierto. Desde la raíz del repositorio:
+
+```
+npm ci
+cp apps/api/.env.example apps/api/.env    # define DEMO_PASSWORD (mínimo 10 caracteres)
+npm run demo
+```
+
+`npm run demo` levanta PostgreSQL, aplica las migraciones, carga la carta y deja la web en `http://localhost:5173`
+y el panel en `http://localhost:5174`, también accesibles desde un celular en la misma red Wi-Fi (muestra las URL al
+terminar; puede hacer falta abrir el puerto en el Firewall de Windows, ver `docs/DEMO.md`). En modo demo los pedidos se guardan y llegan al panel, pero no se envía nada al WhatsApp del local.
+
+Usuarios del panel (la contraseña es la de `DEMO_PASSWORD` en `apps/api/.env`):
+
+- `admin@demo.local`: administración, edita todo.
+- `caja@demo.local`: caja, gestiona pedidos, marca agotados y pausa los pedidos.
+
+El guion completo de la demo está en `docs/DEMO.md`.
+
+## Capturas
+
+| Carta en el celular | Tablero del panel |
+|---|---|
+| <img src="docs/img/carta-celular.png" alt="Carta de Rápida y Sabrosa en un celular, con un producto en el pedido" width="240"> | <img src="docs/img/panel-tablero.png" alt="Tablero de pedidos del panel del local, con un pedido nuevo destacado en Pendientes" width="560"> |
+
+Tomadas con `npm run demo` y pedidos de ejemplo (nombres inventados).
+
+## Decisiones de diseño
+
+El detalle, con las opciones consideradas y sus consecuencias, está en
+[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md). Las principales:
+
+- **Precio calculado en el servidor y pedidos idempotentes (ADR-008):** un precio manipulado en el navegador no
+  tiene efecto y un reintento no duplica el pedido.
+- **Sesión con cookie en vez de JWT (ADR-004):** el token no es accesible desde JavaScript, y el logout y desactivar
+  un usuario son inmediatos (se borra la fila), sin rotación de claves ni refresh tokens.
+- **Tiempo real con SSE y un bus en memoria (ADR-007):** solo el servidor emite, así que basta HTTP simple con la misma
+  cookie y la reconexión del navegador; con más de una instancia, el bus pasaría a `LISTEN/NOTIFY` de PostgreSQL.
+- **Monorepo con paquetes compartidos (ADR-001 y ADR-006):** reglas de negocio y contratos Zod en un solo lugar,
+  usados por la web, el panel y la API.
+
+---
+
+## El proyecto en detalle
+
 Web de la pizzería **Rápida y Sabrosa (Espacio 308)** de Isla de Maipo. El cliente ve la carta, arma su pedido
 (también "Arma tu pizza") y lo envía por WhatsApp al local. No tiene pago online. Además hay una API con PostgreSQL y
 un **panel del local** donde los pedidos aparecen al instante y el local marca agotados, pausa los pedidos y edita
